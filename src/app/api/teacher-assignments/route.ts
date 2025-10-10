@@ -31,8 +31,8 @@ const assignClassSchema = z.object({
 
 /**
  * GET /api/teacher-assignments
- * Get assignments for a specific teacher
- * Query params: teacherId (required)
+ * Get assignments for a specific teacher or class
+ * Query params: teacherId (optional), classId (optional)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -48,15 +48,51 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const teacherId = searchParams.get('teacherId');
-
-    if (!teacherId) {
-      return NextResponse.json({ error: 'Teacher ID is required' }, { status: 400 });
-    }
+    const classId = searchParams.get('classId');
 
     const schoolId = session.user.schoolId;
 
     if (!schoolId && !isSuperAdmin(session.user.role)) {
       return NextResponse.json({ error: 'School not found' }, { status: 400 });
+    }
+
+    // If classId is provided, get all teacher-subject assignments for that class
+    if (classId) {
+      const assignments = await db
+        .select({
+          id: teacherClasses.id,
+          teacherId: users.id,
+          teacherName: users.name,
+          teacherEmail: users.email,
+          classId: classes.id,
+          className: classes.name,
+          subjectId: subjects.id,
+          subjectName: subjects.name,
+          subjectCode: subjects.code,
+          academicYear: classes.academicYear,
+          createdAt: teacherClasses.createdAt,
+        })
+        .from(teacherClasses)
+        .innerJoin(users, eq(teacherClasses.teacherId, users.id))
+        .innerJoin(classes, eq(teacherClasses.classId, classes.id))
+        .innerJoin(subjects, eq(teacherClasses.subjectId, subjects.id))
+        .where(
+          schoolId
+            ? and(
+                eq(teacherClasses.classId, classId),
+                eq(teacherClasses.schoolId, schoolId)
+              )
+            : eq(teacherClasses.classId, classId)
+        );
+
+      return NextResponse.json({
+        assignments,
+      });
+    }
+
+    // Original teacher-specific logic
+    if (!teacherId) {
+      return NextResponse.json({ error: 'Teacher ID or Class ID is required' }, { status: 400 });
     }
 
     // Get teacher's subject assignments

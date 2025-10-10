@@ -91,6 +91,12 @@ const navigationItems: NavItem[] = [
     roles: ['admin'],
   },
   {
+    label: 'Time Slots',
+    href: '/dashboard/admin/time-slots',
+    icon: <Clock className="h-4 w-4" />,
+    roles: ['admin'],
+  },
+  {
     label: 'Timetables',
     href: '/dashboard/admin/timetables',
     icon: <Calendar className="h-4 w-4" />,
