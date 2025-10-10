@@ -1,0 +1,71 @@
+---
+alwaysApply: true
+---
+# ===================================================
+# Cursor Rules for Senegalese School Timetable MVP
+# Stack: Next.js + DrizzleORM + Turso SQLite + Shadcn/UI (TypeScript)
+# ===================================================
+
+# 🧠 GENERAL BEHAVIOR
+- Always use TypeScript with strict mode.
+- Use clean, modular, production-quality code.
+- Use functional React components and hooks.
+- Follow Next.js App Router conventions.
+- Assume Bun runtime.
+
+# ⚙️ FOLDER STRUCTURE
+- app/: for Next.js routes (App Router)
+- app/api/: for Next.js API routes
+- db/: for DrizzleORM schema, migrations, and database connection
+- components/: for shared UI components
+- components/ui/: for Shadcn UI components
+- lib/: for utilities, types, auth, and constants
+- styles/: for global CSS or theme files
+
+# 🧱 ARCHITECTURE PRINCIPLES
+- Multi-tenant system: every record includes `schoolId`.
+- Authenticated users have `role` (admin | teacher | student | parent).
+- Always check session and `schoolId` in API routes and database operations.
+- Keep all database operations validated with Zod.
+- Avoid hardcoding school data — everything must be dynamic.
+
+# 🖥 UI / UX RULES
+- Use Shadcn/UI components (Button, Card, Dialog, Table, Form, Input, etc.)
+- Use TailwindCSS utility classes for styling, no inline styles.
+- Prioritize responsive, mobile-first layouts.
+- Use clear, minimalist design.
+- Default language English; code should be i18n-ready (French support later).
+
+# 🧩 BACKEND RULES
+- Define schema in db/schema.ts with DrizzleORM.
+- Use NextAuth.js for session management.
+- Use strongly typed database operations and API routes.
+- Always isolate data by `schoolId`.
+- Create reusable CRUD functions for each table.
+
+# 🧠 DEVELOPMENT GUIDELINES
+- Comment purpose and data flow in main files.
+- Avoid duplication — prefer composition.
+- Use React Hook Form + Zod for all forms.
+- Use Lucide icons for visuals.
+- Keep code self-documenting and readable.
+- Document every task and project evolution in a structured way in '@/project_docs'
+
+# 🚀 FUTURE EXTENSIONS (Phase 2)
+- Attendance tracking
+- Grading system
+- Parent dashboard
+- Notifications (email/SMS)
+- Payment integration
+
+# ✅ EXAMPLES
+When generating code:
+- Example entities: School, Class, Subject, Teacher, Student, Timetable.
+- Example CRUD: createSchool, listClassesBySchool, updateTimetable.
+- Example dashboards: /dashboard/admin, /dashboard/teacher, /dashboard/student.
+
+# 💡 OUTPUT STYLE
+- Keep output concise and production-focused.
+- Prefer real-world naming (no placeholder variables).
+- Use consistent imports and formatting.
+
