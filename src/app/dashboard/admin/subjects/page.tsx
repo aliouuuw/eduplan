@@ -140,60 +140,60 @@ export default function AdminSubjectsPage() {
 
   const columns = [
     {
-      accessorKey: 'name',
-      header: 'Subject Name',
-      cell: ({ row }: { row: { original: Subject } }) => (
+      key: 'name' as keyof Subject,
+      label: 'Subject Name',
+      render: (_value: any, item: Subject) => (
         <div className="flex items-center space-x-3">
           <div className="h-8 w-8 bg-gray-100 rounded-lg flex items-center justify-center">
             <BookOpen className="h-4 w-4 text-gray-700" />
           </div>
-          <span className="font-medium text-black">{row.original.name}</span>
+          <span className="font-medium text-black">{item.name}</span>
         </div>
       ),
     },
     {
-      accessorKey: 'code',
-      header: 'Code',
-      cell: ({ row }: { row: { original: Subject } }) => (
+      key: 'code' as keyof Subject,
+      label: 'Code',
+      render: (_value: any, item: Subject) => (
         <div className="flex items-center space-x-2">
           <Hash className="h-4 w-4 text-gray-500" />
           <Badge variant="outline" className="border-gray-300 text-gray-700">
-            {row.original.code || 'N/A'}
+            {item.code || 'N/A'}
           </Badge>
         </div>
       ),
     },
     {
-      accessorKey: 'description',
-      header: 'Description',
-      cell: ({ row }: { row: { original: Subject } }) => (
+      key: 'description' as keyof Subject,
+      label: 'Description',
+      render: (_value: any, item: Subject) => (
         <div className="flex items-center space-x-2">
           <FileText className="h-4 w-4 text-gray-500" />
           <span className="text-sm text-gray-600 max-w-xs truncate">
-            {row.original.description || 'No description'}
+            {item.description || 'No description'}
           </span>
         </div>
       ),
     },
     {
-      accessorKey: 'createdAt',
-      header: 'Created',
-      cell: ({ row }: { row: { original: Subject } }) => (
+      key: 'createdAt' as keyof Subject,
+      label: 'Created',
+      render: (_value: any, item: Subject) => (
         <span className="text-sm text-gray-500">
-          {new Date(row.original.createdAt).toLocaleDateString()}
+          {new Date(item.createdAt).toLocaleDateString()}
         </span>
       ),
     },
     {
-      id: 'actions',
-      header: 'Actions',
-      cell: ({ row }: { row: { original: Subject } }) => (
+      key: 'id' as keyof Subject,
+      label: 'Actions',
+      render: (_value: any, item: Subject) => (
         <div className="flex space-x-2">
           <Button
             size="sm"
             variant="outline"
             onClick={() => {
-              setEditingSubject(row.original);
+              setEditingSubject(item);
               setShowForm(true);
             }}
           >
@@ -202,7 +202,7 @@ export default function AdminSubjectsPage() {
           <Button
             size="sm"
             variant="destructive"
-            onClick={() => handleDeleteSubject(row.original.id)}
+            onClick={() => handleDeleteSubject(item.id)}
           >
             Delete
           </Button>
@@ -289,7 +289,6 @@ export default function AdminSubjectsPage() {
               columns={columns}
               data={subjects}
               loading={loading}
-              searchKey="name"
               searchPlaceholder="Search subjects..."
             />
           </CardContent>

@@ -35,6 +35,8 @@ export type TeacherSubject = typeof schema.teacherSubjects.$inferSelect;
 export type NewTeacherSubject = typeof schema.teacherSubjects.$inferInsert;
 export type TeacherClass = typeof schema.teacherClasses.$inferSelect;
 export type NewTeacherClass = typeof schema.teacherClasses.$inferInsert;
+export type Invitation = typeof schema.invitations.$inferSelect;
+export type NewInvitation = typeof schema.invitations.$inferInsert;
 
 // Role type for better type safety
 export type UserRole = 'superadmin' | 'admin' | 'teacher' | 'parent' | 'student';

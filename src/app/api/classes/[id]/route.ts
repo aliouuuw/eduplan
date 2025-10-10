@@ -28,7 +28,7 @@ export async function GET(
       );
     }
 
-    const classId = params.id;
+    const classId = await params.id;
 
     const classData = await db
       .select()
@@ -86,7 +86,7 @@ export async function PUT(
       );
     }
 
-    const classId = params.id;
+    const classId = await params.id;
     const body = await request.json();
     const updateData = updateClassSchema.parse(body);
 
@@ -188,7 +188,7 @@ export async function DELETE(
       );
     }
 
-    const classId = params.id;
+    const classId = await params.id;
 
     // Check if class exists
     const existingClass = await db

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,6 +17,7 @@ const schoolSchema = z.object({
   phone: z.string().optional(),
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
   logo: z.string().url('Invalid URL').optional().or(z.literal('')),
+  adminEmail: z.string().email('Invalid email address').optional().or(z.literal('')),
 });
 
 type SchoolFormData = z.infer<typeof schoolSchema>;
@@ -35,13 +36,38 @@ export function SchoolForm({ open, onOpenChange, school, onSubmit, loading = fal
   const form = useForm<SchoolFormData>({
     resolver: zodResolver(schoolSchema),
     defaultValues: {
-      name: school?.name || '',
-      address: school?.address || '',
-      phone: school?.phone || '',
-      email: school?.email || '',
-      logo: school?.logo || '',
+      name: '',
+      address: '',
+      phone: '',
+      email: '',
+      logo: '',
+      adminEmail: '',
     },
   });
+
+  // Reset form when school prop changes
+  useEffect(() => {
+    if (school) {
+      form.reset({
+        name: school.name || '',
+        address: school.address || '',
+        phone: school.phone || '',
+        email: school.email || '',
+        logo: school.logo || '',
+        adminEmail: '',
+      });
+    } else {
+      // Reset to empty when creating new school
+      form.reset({
+        name: '',
+        address: '',
+        phone: '',
+        email: '',
+        logo: '',
+        adminEmail: '',
+      });
+    }
+  }, [school, form]);
 
   const handleSubmit = async (data: SchoolFormData) => {
     setIsSubmitting(true);
@@ -154,6 +180,30 @@ export function SchoolForm({ open, onOpenChange, school, onSubmit, loading = fal
                 </FormItem>
               )}
             />
+
+            {!school && (
+              <FormField
+                control={form.control}
+                name="adminEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Admin Email (Optional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="email" 
+                        placeholder="Invite school administrator" 
+                        {...field} 
+                        disabled={isSubmitting} 
+                      />
+                    </FormControl>
+                    <p className="text-sm text-gray-500">
+                      An invitation link will be generated for this email
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             
             <div className="flex justify-end gap-3 pt-4">
               <Button

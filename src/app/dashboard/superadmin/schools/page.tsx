@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { DataTable } from '@/components/ui/data-table';
 import { SchoolForm } from '@/components/forms/school-form';
 import { School } from '@/lib/db';
@@ -47,7 +46,38 @@ export default function SchoolsPage() {
       });
 
       if (response.ok) {
-        toast.success('School created successfully');
+        const result = await response.json();
+        
+        // If invitation link was generated, show it
+        if (result.invitationLink) {
+          toast.success(
+            <div className="space-y-2">
+              <p className="font-semibold">School created! Admin invitation sent to {result.adminEmail}</p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={result.invitationLink}
+                  readOnly
+                  className="text-xs bg-gray-100 p-1 rounded flex-1"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                />
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(result.invitationLink);
+                    toast.success('Link copied!');
+                  }}
+                  className="text-xs px-2 py-1 bg-black text-white rounded"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>,
+            { duration: 10000 }
+          );
+        } else {
+          toast.success('School created successfully');
+        }
+        
         fetchSchools();
       } else {
         const errorData = await response.json();
@@ -145,11 +175,12 @@ export default function SchoolsPage() {
   ];
 
   return (
-    <DashboardLayout 
-      title="Schools Management" 
-      description="Manage all schools in the system"
-    >
-      <div className="space-y-6">
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Schools Management</h1>
+        <p className="text-gray-600 mt-1">Manage all schools in the system</p>
+      </div>
         <DataTable
           data={schools}
           columns={columns}
@@ -176,7 +207,6 @@ export default function SchoolsPage() {
           school={editingSchool}
           onSubmit={editingSchool ? handleEditSchool : handleCreateSchool}
         />
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

@@ -26,7 +26,7 @@ export async function GET(
       );
     }
 
-    const levelId = params.id;
+    const levelId = await params.id;
 
     const levelData = await db
       .select()
@@ -84,7 +84,7 @@ export async function PUT(
       );
     }
 
-    const levelId = params.id;
+    const levelId = await params.id;
     const body = await request.json();
     const updateData = updateLevelSchema.parse(body);
 
@@ -185,7 +185,7 @@ export async function DELETE(
       );
     }
 
-    const levelId = params.id;
+    const levelId = await params.id;
 
     // Check if level exists
     const existingLevel = await db

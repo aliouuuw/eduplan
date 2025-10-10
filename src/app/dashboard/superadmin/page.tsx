@@ -1,212 +1,291 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { School, Users, BookOpen, Calendar } from 'lucide-react';
-import { DashboardStats } from '@/lib/types';
+import { School, Users, BookOpen, GraduationCap, UserCheck, Clock, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+
+interface DashboardStats {
+  totalSchools?: number;
+  activeSchools?: number;
+  inactiveSchools?: number;
+  totalUsers?: number;
+  totalAdmins?: number;
+  totalTeachers?: number;
+  totalStudents?: number;
+  totalParents?: number;
+  totalClasses?: number;
+  totalSubjects?: number;
+  totalLevels?: number;
+}
 
 export default function SuperAdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // TODO: Fetch actual stats from API
-    // For now, using mock data
-    setTimeout(() => {
-      setStats({
-        totalSchools: 12,
-        totalUsers: 1250,
-        totalClasses: 180,
-        totalSubjects: 45,
-      });
-      setLoading(false);
-    }, 1000);
+    const fetchDashboardData = async () => {
+      try {
+        const statsResponse = await fetch('/api/dashboard/superadmin/stats');
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          setStats(statsData);
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
   const statCards = [
     {
       title: 'Total Schools',
       value: stats.totalSchools || 0,
-      description: 'Active schools in the system',
-      icon: <School className="h-4 w-4 text-blue-600" />,
-      color: 'bg-blue-50 border-blue-200',
+      description: 'All schools in the system',
+      icon: <School className="h-5 w-5 text-gray-700" />,
+      href: '/dashboard/superadmin/schools',
+    },
+    {
+      title: 'Active Schools',
+      value: stats.activeSchools || 0,
+      description: 'Currently operational schools',
+      icon: <UserCheck className="h-5 w-5 text-gray-700" />,
+      href: '/dashboard/superadmin/schools',
     },
     {
       title: 'Total Users',
       value: stats.totalUsers || 0,
       description: 'All users across all schools',
-      icon: <Users className="h-4 w-4 text-green-600" />,
-      color: 'bg-green-50 border-green-200',
+      icon: <Users className="h-5 w-5 text-gray-700" />,
+      href: '/dashboard/superadmin/users',
     },
     {
       title: 'Total Classes',
       value: stats.totalClasses || 0,
       description: 'Classes across all schools',
-      icon: <BookOpen className="h-4 w-4 text-purple-600" />,
-      color: 'bg-purple-50 border-purple-200',
+      icon: <BookOpen className="h-5 w-5 text-gray-700" />,
+      href: '/dashboard/superadmin/schools',
+    },
+  ];
+
+  const quickActions = [
+    {
+      title: 'Manage Schools',
+      description: 'Create new schools and invite administrators',
+      icon: <School className="h-5 w-5" />,
+      href: '/dashboard/superadmin/schools',
     },
     {
-      title: 'Total Subjects',
-      value: stats.totalSubjects || 0,
-      description: 'Subjects taught across all schools',
-      icon: <Calendar className="h-4 w-4 text-orange-600" />,
-      color: 'bg-orange-50 border-orange-200',
+      title: 'System Users',
+      description: 'View all users across all schools',
+      icon: <Users className="h-5 w-5" />,
+      href: '/dashboard/superadmin/users',
+    },
+    {
+      title: 'Academic Overview',
+      description: 'System-wide academic structure and statistics',
+      icon: <GraduationCap className="h-5 w-5" />,
+      href: '/dashboard/superadmin/schools',
+    },
+    {
+      title: 'System Settings',
+      description: 'Configure global system parameters',
+      icon: <Clock className="h-5 w-5" />,
+      href: '/dashboard/superadmin',
     },
   ];
 
   return (
-    <DashboardLayout 
-      title="Superadmin Dashboard" 
-      description="System-wide overview and management"
-    >
-      <div className="space-y-6">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {statCards.map((stat, index) => (
-            <Card key={index} className={`${stat.color}`}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {stat.title}
-                </CardTitle>
-                {stat.icon}
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {loading ? (
-                    <div className="h-8 w-16 bg-gray-200 rounded animate-pulse" />
-                  ) : (
-                    stat.value.toLocaleString()
-                  )}
+    <div className="space-y-12">
+      <header className="space-y-2">
+        <h1 className="text-3xl font-semibold text-black">
+          System Administration
+        </h1>
+        <p className="max-w-2xl text-sm text-gray-600">
+          Monitor system-wide performance, manage schools, and oversee the entire education platform.
+        </p>
+      </header>
+
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Overview</h2>
+          <span className="text-xs text-gray-400">Updated moments ago</span>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {statCards.map((stat) => (
+            <Link key={stat.title} href={stat.href} className="group block h-full">
+              <article className="flex h-full flex-col justify-between rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-3">
+                    <p className="text-xs font-medium uppercase tracking-wider text-gray-500">{stat.title}</p>
+                    <div className="text-3xl font-semibold text-black">
+                      {loading ? (
+                        <div className="h-8 w-16 animate-pulse rounded bg-gray-200" />
+                      ) : (
+                        stat.value.toLocaleString()
+                      )}
+                    </div>
+                  </div>
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-600">
+                    {stat.icon}
+                  </span>
                 </div>
-                <p className="text-xs text-gray-600 mt-1">
-                  {stat.description}
-                </p>
-              </CardContent>
-            </Card>
+                <p className="mt-4 text-xs text-gray-500">{stat.description}</p>
+              </article>
+            </Link>
           ))}
         </div>
+      </section>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Schools</CardTitle>
-              <CardDescription>
-                Recently created schools in the system
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="space-y-3">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="flex items-center space-x-3">
-                      <div className="h-10 w-10 bg-gray-200 rounded-full animate-pulse" />
-                      <div className="space-y-1 flex-1">
-                        <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
-                        <div className="h-3 w-24 bg-gray-200 rounded animate-pulse" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <School className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">École Primaire Dakar</p>
-                      <p className="text-xs text-gray-500">Created 2 days ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
-                      <School className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Lycée Thiès</p>
-                      <p className="text-xs text-gray-500">Created 1 week ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center">
-                      <School className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Collège Saint-Louis</p>
-                      <p className="text-xs text-gray-500">Created 2 weeks ago</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>System Activity</CardTitle>
-              <CardDescription>
-                Recent activity across all schools
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="space-y-3">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="flex items-center space-x-3">
-                      <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
-                      <div className="space-y-1 flex-1">
-                        <div className="h-3 w-full bg-gray-200 rounded animate-pulse" />
-                        <div className="h-3 w-20 bg-gray-200 rounded animate-pulse" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <div className="h-8 w-8 bg-blue-100 rounded flex items-center justify-center">
-                      <Users className="h-4 w-4 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm">New teacher registered at École Primaire Dakar</p>
-                      <p className="text-xs text-gray-500">5 minutes ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="h-8 w-8 bg-green-100 rounded flex items-center justify-center">
-                      <BookOpen className="h-4 w-4 text-green-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm">New class created at Lycée Thiès</p>
-                      <p className="text-xs text-gray-500">1 hour ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="h-8 w-8 bg-purple-100 rounded flex items-center justify-center">
-                      <Calendar className="h-4 w-4 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm">Timetable updated at Collège Saint-Louis</p>
-                      <p className="text-xs text-gray-500">3 hours ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="h-8 w-8 bg-orange-100 rounded flex items-center justify-center">
-                      <School className="h-4 w-4 text-orange-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm">New school registration pending approval</p>
-                      <p className="text-xs text-gray-500">1 day ago</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Quick actions</h2>
+          <span className="text-xs text-gray-400">Jump straight into the workflows you manage most</span>
         </div>
-      </div>
-    </DashboardLayout>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {quickActions.map((action) => (
+            <Link key={action.title} href={action.href} className="group block h-full">
+              <article className="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-black hover:shadow-md">
+                <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-black text-white transition group-hover:scale-105">
+                  {action.icon}
+                </span>
+                <h3 className="mt-4 text-base font-semibold text-black">{action.title}</h3>
+                <p className="mt-2 text-sm text-gray-600">{action.description}</p>
+              </article>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card className="h-full rounded-2xl border border-gray-200 shadow-sm">
+          <CardHeader className="space-y-1">
+            <CardTitle className="flex items-center gap-2 text-base font-semibold text-black">
+              <AlertCircle className="h-5 w-5 text-gray-600" />
+              System alerts
+            </CardTitle>
+            <CardDescription className="text-sm text-gray-600">
+              Important notifications requiring your attention
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, index) => (
+                  <div key={index} className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50/60 p-4">
+                    <div className="h-11 w-11 animate-pulse rounded-lg bg-gray-200" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-full animate-pulse rounded bg-gray-200" />
+                      <div className="h-3 w-24 animate-pulse rounded bg-gray-200" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+                  <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
+                    <School className="h-5 w-5" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-black">{(stats.inactiveSchools || 0) > 0 ? `${stats.inactiveSchools} inactive schools` : 'All schools active'}</p>
+                    <p className="text-xs text-gray-500">Monitor school status</p>
+                  </div>
+                  <Button variant="outline" size="sm" asChild className="border-gray-300">
+                    <Link href="/dashboard/superadmin/schools">Review</Link>
+                  </Button>
+                </div>
+                <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+                  <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
+                    <Users className="h-5 w-5" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-black">System user growth</p>
+                    <p className="text-xs text-gray-500">{stats.totalUsers} total registered users</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+                  <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
+                    <BookOpen className="h-5 w-5" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-black">Academic structure</p>
+                    <p className="text-xs text-gray-500">{stats.totalSubjects} subjects, {stats.totalLevels} academic levels</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="h-full rounded-2xl border border-gray-200 shadow-sm">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-base font-semibold text-black">Recent activity</CardTitle>
+            <CardDescription className="text-sm text-gray-600">
+              Latest system-wide changes and updates
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="space-y-4">
+                {[...Array(4)].map((_, index) => (
+                  <div key={index} className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50/60 p-4">
+                    <div className="h-10 w-10 animate-pulse rounded-lg bg-gray-200" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-full animate-pulse rounded bg-gray-200" />
+                      <div className="h-3 w-24 animate-pulse rounded bg-gray-200" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
+                    <School className="h-5 w-5" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-black">New school registered</p>
+                    <p className="text-xs text-gray-500">School code: {stats.totalSchools ? `SCH-${String(stats.totalSchools).padStart(3, '0')}` : 'N/A'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
+                    <Users className="h-5 w-5" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-black">User registration surge</p>
+                    <p className="text-xs text-gray-500">{stats.totalTeachers} teachers, {stats.totalStudents} students</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
+                    <GraduationCap className="h-5 w-5" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-black">Academic levels updated</p>
+                    <p className="text-xs text-gray-500">{stats.totalLevels} academic levels configured</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
+                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
+                    <Clock className="h-5 w-5" />
+                  </span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-black">System operational</p>
+                    <p className="text-xs text-gray-500">All services running normally</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+    </div>
   );
 }

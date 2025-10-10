@@ -30,7 +30,7 @@ export async function GET(
       );
     }
 
-    const schoolId = params.id;
+    const schoolId = await params.id;
 
     // Check access permissions
     if (!isSuperAdmin(session.user.role) && !canAccessSchool(session.user.role, session.user.schoolId, schoolId)) {
@@ -78,7 +78,7 @@ export async function PUT(
       );
     }
 
-    const schoolId = params.id;
+    const schoolId = await params.id;
 
     // Only superadmin can update schools
     if (!isSuperAdmin(session.user.role)) {
@@ -124,7 +124,7 @@ export async function PUT(
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { message: 'Invalid input data', errors: error.errors },
+        { message: 'Invalid input data', errors: error.flatten().fieldErrors },
         { status: 400 }
       );
     }
@@ -151,7 +151,7 @@ export async function DELETE(
       );
     }
 
-    const schoolId = params.id;
+    const schoolId = await params.id;
 
     // Check if school exists
     const existingSchool = await db

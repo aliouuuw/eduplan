@@ -10,6 +10,7 @@ export const users = sqliteTable('users', {
   role: text('role', { enum: ['superadmin', 'admin', 'teacher', 'parent', 'student'] }).notNull(),
   schoolId: text('school_id'), // null for superadmin, required for others
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }), // null = not deleted, timestamp = soft deleted
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });
@@ -18,6 +19,7 @@ export const users = sqliteTable('users', {
 export const schools = sqliteTable('schools', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
+  schoolCode: text('school_code').notNull().unique(), // e.g., "DAKAR-HS-2025"
   address: text('address'),
   phone: text('phone'),
   email: text('email'),
@@ -25,6 +27,19 @@ export const schools = sqliteTable('schools', {
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+// Invitations table - for invitation-based registration
+export const invitations = sqliteTable('invitations', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  email: text('email').notNull(),
+  role: text('role', { enum: ['admin', 'teacher', 'parent', 'student'] }).notNull(),
+  token: text('token').notNull().unique(),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+  createdBy: text('created_by').notNull(), // userId who created the invitation
+  usedAt: integer('used_at', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
 
 // Academic levels (e.g., Primary, Secondary, etc.)
@@ -146,6 +161,7 @@ export const schoolsRelations = relations(schools, ({ many }) => ({
   subjects: many(subjects),
   timeSlots: many(timeSlots),
   timetables: many(timetables),
+  invitations: many(invitations),
 }));
 
 export const academicLevelsRelations = relations(academicLevels, ({ one, many }) => ({
@@ -256,5 +272,16 @@ export const timetablesRelations = relations(timetables, ({ one }) => ({
   timeSlot: one(timeSlots, {
     fields: [timetables.timeSlotId],
     references: [timeSlots.id],
+  }),
+}));
+
+export const invitationsRelations = relations(invitations, ({ one }) => ({
+  school: one(schools, {
+    fields: [invitations.schoolId],
+    references: [schools.id],
+  }),
+  creator: one(users, {
+    fields: [invitations.createdBy],
+    references: [users.id],
   }),
 }));

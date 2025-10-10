@@ -161,31 +161,31 @@ export default function AdminAcademicLevelsPage() {
 
   const columns = [
     {
-      accessorKey: 'name',
-      header: 'Level Name',
-      cell: ({ row }: { row: { original: AcademicLevel } }) => (
+      key: 'name' as keyof AcademicLevel,
+      label: 'Level Name',
+      render: (_value: any, item: AcademicLevel) => (
         <div className="flex items-center space-x-3">
           <div className="h-8 w-8 bg-gray-100 rounded-lg flex items-center justify-center">
             <GraduationCap className="h-4 w-4 text-gray-700" />
           </div>
-          <span className="font-medium text-black">{row.original.name}</span>
+          <span className="font-medium text-black">{item.name}</span>
         </div>
       ),
     },
     {
-      accessorKey: 'description',
-      header: 'Description',
-      cell: ({ row }: { row: { original: AcademicLevel } }) => (
+      key: 'description' as keyof AcademicLevel,
+      label: 'Description',
+      render: (_value: any, item: AcademicLevel) => (
         <span className="text-sm text-gray-600">
-          {row.original.description || 'No description'}
+          {item.description || 'No description'}
         </span>
       ),
     },
     {
-      accessorKey: 'classes',
-      header: 'Classes',
-      cell: ({ row }: { row: { original: AcademicLevel } }) => {
-        const count = classesCount[row.original.id] || 0;
+      key: 'classes' as any,
+      label: 'Classes',
+      render: (_value: any, item: AcademicLevel) => {
+        const count = classesCount[item.id] || 0;
         return (
           <div className="flex items-center space-x-2">
             <BookOpen className="h-4 w-4 text-gray-500" />
@@ -195,26 +195,26 @@ export default function AdminAcademicLevelsPage() {
       },
     },
     {
-      accessorKey: 'createdAt',
-      header: 'Created',
-      cell: ({ row }: { row: { original: AcademicLevel } }) => (
+      key: 'createdAt' as keyof AcademicLevel,
+      label: 'Created',
+      render: (_value: any, item: AcademicLevel) => (
         <span className="text-sm text-gray-500">
-          {new Date(row.original.createdAt).toLocaleDateString()}
+          {new Date(item.createdAt).toLocaleDateString()}
         </span>
       ),
     },
     {
-      id: 'actions',
-      header: 'Actions',
-      cell: ({ row }: { row: { original: AcademicLevel } }) => {
-        const classCount = classesCount[row.original.id] || 0;
+      key: 'actions' as any,
+      label: 'Actions',
+      render: (_value: any, item: AcademicLevel) => {
+        const classCount = classesCount[item.id] || 0;
         return (
           <div className="flex space-x-2">
             <Button
               size="sm"
               variant="outline"
               onClick={() => {
-                setEditingLevel(row.original);
+                setEditingLevel(item);
                 setShowForm(true);
               }}
             >
@@ -223,7 +223,7 @@ export default function AdminAcademicLevelsPage() {
             <Button
               size="sm"
               variant="destructive"
-              onClick={() => handleDeleteLevel(row.original.id)}
+              onClick={() => handleDeleteLevel(item.id)}
               disabled={classCount > 0}
             >
               Delete
@@ -318,7 +318,6 @@ export default function AdminAcademicLevelsPage() {
               columns={columns}
               data={levels}
               loading={loading}
-              searchKey="name"
               searchPlaceholder="Search academic levels..."
             />
           </CardContent>

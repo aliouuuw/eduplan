@@ -13,7 +13,8 @@ import {
   Settings,
   LogOut,
   X,
-  GraduationCap
+  GraduationCap,
+  Mail
 } from 'lucide-react';
 import type { User } from 'next-auth';
 
@@ -33,7 +34,7 @@ const navigationItems: NavItem[] = [
     roles: ['superadmin'],
   },
   {
-    label: 'All Users',
+    label: 'System Users',
     href: '/dashboard/superadmin/users',
     icon: <Users className="h-4 w-4" />,
     roles: ['superadmin'],
@@ -49,6 +50,12 @@ const navigationItems: NavItem[] = [
     label: 'Users',
     href: '/dashboard/admin/users',
     icon: <Users className="h-4 w-4" />,
+    roles: ['admin'],
+  },
+  {
+    label: 'Invitations',
+    href: '/dashboard/admin/invitations',
+    icon: <Mail className="h-4 w-4" />,
     roles: ['admin'],
   },
   {

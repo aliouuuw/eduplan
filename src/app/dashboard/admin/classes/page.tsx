@@ -154,54 +154,54 @@ export default function AdminClassesPage() {
 
   const columns = [
     {
-      accessorKey: 'name',
-      header: 'Class Name',
-      cell: ({ row }: { row: { original: ClassWithLevel } }) => (
+      key: 'name' as keyof ClassWithLevel,
+      label: 'Class Name',
+      render: (_value: any, item: ClassWithLevel) => (
         <div className="flex items-center space-x-3">
           <div className="h-8 w-8 bg-gray-100 rounded-lg flex items-center justify-center">
             <BookOpen className="h-4 w-4 text-gray-700" />
           </div>
-          <span className="font-medium text-black">{row.original.name}</span>
+          <span className="font-medium text-black">{item.name}</span>
         </div>
       ),
     },
     {
-      accessorKey: 'levelName',
-      header: 'Academic Level',
-      cell: ({ row }: { row: { original: ClassWithLevel } }) => (
-        <Badge variant="outline" className="border-gray-300 text-gray-700">{row.original.levelName}</Badge>
+      key: 'levelName' as keyof ClassWithLevel,
+      label: 'Academic Level',
+      render: (_value: any, item: ClassWithLevel) => (
+        <Badge variant="outline" className="border-gray-300 text-gray-700">{item.levelName}</Badge>
       ),
     },
     {
-      accessorKey: 'academicYear',
-      header: 'Academic Year',
-      cell: ({ row }: { row: { original: ClassWithLevel } }) => (
+      key: 'academicYear' as keyof ClassWithLevel,
+      label: 'Academic Year',
+      render: (_value: any, item: ClassWithLevel) => (
         <div className="flex items-center space-x-2">
           <Calendar className="h-4 w-4 text-gray-500" />
-          <span className="text-sm text-gray-700">{row.original.academicYear}</span>
+          <span className="text-sm text-gray-700">{item.academicYear}</span>
         </div>
       ),
     },
     {
-      accessorKey: 'capacity',
-      header: 'Capacity',
-      cell: ({ row }: { row: { original: ClassWithLevel } }) => (
+      key: 'capacity' as keyof ClassWithLevel,
+      label: 'Capacity',
+      render: (_value: any, item: ClassWithLevel) => (
         <div className="flex items-center space-x-2">
           <Users className="h-4 w-4 text-gray-500" />
-          <span className="text-sm text-gray-700">{row.original.capacity} students</span>
+          <span className="text-sm text-gray-700">{item.capacity} students</span>
         </div>
       ),
     },
     {
-      id: 'actions',
-      header: 'Actions',
-      cell: ({ row }: { row: { original: ClassWithLevel } }) => (
+      key: 'id' as keyof ClassWithLevel,
+      label: 'Actions',
+      render: (_value: any, item: ClassWithLevel) => (
         <div className="flex space-x-2">
           <Button
             size="sm"
             variant="outline"
             onClick={() => {
-              setEditingClass(row.original);
+              setEditingClass(item);
               setShowForm(true);
             }}
           >
@@ -210,7 +210,7 @@ export default function AdminClassesPage() {
           <Button
             size="sm"
             variant="destructive"
-            onClick={() => handleDeleteClass(row.original.id)}
+            onClick={() => handleDeleteClass(item.id)}
           >
             Delete
           </Button>
@@ -311,7 +311,6 @@ export default function AdminClassesPage() {
               columns={columns}
               data={classes}
               loading={loading}
-              searchKey="name"
               searchPlaceholder="Search classes..."
             />
           </CardContent>

@@ -27,7 +27,7 @@ export async function GET(
       );
     }
 
-    const subjectId = params.id;
+    const subjectId = await params.id;
 
     const subjectData = await db
       .select()
@@ -85,7 +85,7 @@ export async function PUT(
       );
     }
 
-    const subjectId = params.id;
+    const subjectId = await params.id;
     const body = await request.json();
     const updateData = updateSubjectSchema.parse(body);
 
@@ -205,7 +205,7 @@ export async function DELETE(
       );
     }
 
-    const subjectId = params.id;
+    const subjectId = await params.id;
 
     // Check if subject exists
     const existingSubject = await db

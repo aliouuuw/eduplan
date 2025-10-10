@@ -149,49 +149,49 @@ export default function AdminUsersPage() {
 
   const activeUsersColumns = [
     {
-      accessorKey: 'name',
-      header: 'Name',
-      cell: ({ row }: { row: { original: UserWithSchool } }) => (
+      key: 'name' as keyof UserWithSchool,
+      label: 'Name',
+      render: (_value: any, item: UserWithSchool) => (
         <div className="flex items-center space-x-3">
           <div className="h-8 w-8 bg-gray-100 rounded-lg flex items-center justify-center">
-            {getRoleIcon(row.original.role)}
+            {getRoleIcon(item.role)}
           </div>
-          <span className="font-medium text-black">{row.original.name}</span>
+          <span className="font-medium text-black">{item.name}</span>
         </div>
       ),
     },
     {
-      accessorKey: 'email',
-      header: 'Email',
-      cell: ({ row }: { row: { original: UserWithSchool } }) => (
-        <span className="text-sm text-gray-700">{row.original.email}</span>
+      key: 'email' as keyof UserWithSchool,
+      label: 'Email',
+      render: (_value: any, item: UserWithSchool) => (
+        <span className="text-sm text-gray-700">{item.email}</span>
       ),
     },
     {
-      accessorKey: 'role',
-      header: 'Role',
-      cell: ({ row }: { row: { original: UserWithSchool } }) => (
-        <Badge variant="outline" className={getRoleBadgeColor(row.original.role)}>
-          {row.original.role}
+      key: 'role' as keyof UserWithSchool,
+      label: 'Role',
+      render: (_value: any, item: UserWithSchool) => (
+        <Badge variant="outline" className={getRoleBadgeColor(item.role)}>
+          {item.role}
         </Badge>
       ),
     },
     {
-      accessorKey: 'isActive',
-      header: 'Status',
-      cell: ({ row }: { row: { original: UserWithSchool } }) => (
-        <Badge variant={row.original.isActive ? 'default' : 'secondary'} 
-          className={row.original.isActive ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'}>
-          {row.original.isActive ? 'Active' : 'Inactive'}
+      key: 'isActive' as keyof UserWithSchool,
+      label: 'Status',
+      render: (_value: any, item: UserWithSchool) => (
+        <Badge variant={item.isActive ? 'default' : 'secondary'}
+          className={item.isActive ? 'bg-black text-white' : 'bg-gray-200 text-gray-700'}>
+          {item.isActive ? 'Active' : 'Inactive'}
         </Badge>
       ),
     },
     {
-      accessorKey: 'createdAt',
-      header: 'Joined',
-      cell: ({ row }: { row: { original: UserWithSchool } }) => (
+      key: 'createdAt' as keyof UserWithSchool,
+      label: 'Joined',
+      render: (_value: any, item: UserWithSchool) => (
         <span className="text-sm text-gray-500">
-          {new Date(row.original.createdAt).toLocaleDateString()}
+          {new Date(item.createdAt).toLocaleDateString()}
         </span>
       ),
     },
@@ -199,36 +199,36 @@ export default function AdminUsersPage() {
 
   const pendingUsersColumns = [
     {
-      accessorKey: 'name',
-      header: 'Name',
-      cell: ({ row }: { row: { original: UserWithSchool } }) => (
-        <span className="font-medium text-black">{row.original.name}</span>
+      key: 'name' as keyof UserWithSchool,
+      label: 'Name',
+      render: (_value: any, item: UserWithSchool) => (
+        <span className="font-medium text-black">{item.name}</span>
       ),
     },
     {
-      accessorKey: 'email',
-      header: 'Email',
-      cell: ({ row }: { row: { original: UserWithSchool } }) => (
-        <span className="text-sm text-gray-700">{row.original.email}</span>
+      key: 'email' as keyof UserWithSchool,
+      label: 'Email',
+      render: (_value: any, item: UserWithSchool) => (
+        <span className="text-sm text-gray-700">{item.email}</span>
       ),
     },
     {
-      accessorKey: 'createdAt',
-      header: 'Registered',
-      cell: ({ row }: { row: { original: UserWithSchool } }) => (
+      key: 'createdAt' as keyof UserWithSchool,
+      label: 'Registered',
+      render: (_value: any, item: UserWithSchool) => (
         <span className="text-sm text-gray-500">
-          {new Date(row.original.createdAt).toLocaleDateString()}
+          {new Date(item.createdAt).toLocaleDateString()}
         </span>
       ),
     },
     {
-      id: 'actions',
-      header: 'Actions',
-      cell: ({ row }: { row: { original: UserWithSchool } }) => (
+      key: 'actions' as any,
+      label: 'Actions',
+      render: (_value: any, item: UserWithSchool) => (
         <div className="flex space-x-2">
           <Button
             size="sm"
-            onClick={() => approveUser(row.original.id, 'student')}
+            onClick={() => approveUser(item.id, 'student')}
             className="bg-black hover:bg-gray-800"
           >
             Student
@@ -236,21 +236,21 @@ export default function AdminUsersPage() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => approveUser(row.original.id, 'teacher')}
+            onClick={() => approveUser(item.id, 'teacher')}
           >
             Teacher
           </Button>
           <Button
             size="sm"
             variant="outline"
-            onClick={() => approveUser(row.original.id, 'parent')}
+            onClick={() => approveUser(item.id, 'parent')}
           >
             Parent
           </Button>
           <Button
             size="sm"
             variant="destructive"
-            onClick={() => rejectUser(row.original.id)}
+            onClick={() => rejectUser(item.id)}
           >
             Reject
           </Button>
@@ -361,7 +361,6 @@ export default function AdminUsersPage() {
                   columns={activeUsersColumns}
                   data={activeUsers}
                   loading={loading}
-                  searchKey="name"
                   searchPlaceholder="Search users..."
                 />
               </TabsContent>
@@ -386,7 +385,6 @@ export default function AdminUsersPage() {
                     columns={pendingUsersColumns}
                     data={pendingUsers}
                     loading={loading}
-                    searchKey="name"
                     searchPlaceholder="Search pending users..."
                   />
                 )}
