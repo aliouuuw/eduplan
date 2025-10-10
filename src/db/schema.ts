@@ -1,0 +1,260 @@
+import { sqliteTable, text, integer, real, primaryKey } from 'drizzle-orm/sqlite-core';
+import { relations } from 'drizzle-orm';
+
+// Users table with role hierarchy: superadmin > admin > teacher/parent > student
+export const users = sqliteTable('users', {
+  id: text('id').primaryKey(),
+  email: text('email').notNull().unique(),
+  password: text('password').notNull(),
+  name: text('name').notNull(),
+  role: text('role', { enum: ['superadmin', 'admin', 'teacher', 'parent', 'student'] }).notNull(),
+  schoolId: text('school_id'), // null for superadmin, required for others
+  isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+// Schools table - managed by superadmin
+export const schools = sqliteTable('schools', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  address: text('address'),
+  phone: text('phone'),
+  email: text('email'),
+  logo: text('logo'), // URL to logo image
+  isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+// Academic levels (e.g., Primary, Secondary, etc.)
+export const academicLevels = sqliteTable('academic_levels', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  name: text('name').notNull(), // e.g., "Primary", "Secondary"
+  description: text('description'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+// Classes/Grades within a school
+export const classes = sqliteTable('classes', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  levelId: text('level_id').notNull(),
+  name: text('name').notNull(), // e.g., "6ème A", "CM2 B"
+  academicYear: text('academic_year').notNull(), // e.g., "2024-2025"
+  capacity: integer('capacity').default(30),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+// Subjects taught in the school
+export const subjects = sqliteTable('subjects', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  name: text('name').notNull(), // e.g., "Mathematics", "French"
+  code: text('code'), // e.g., "MATH", "FR"
+  description: text('description'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+// Teachers and their subject assignments
+export const teacherSubjects = sqliteTable('teacher_subjects', {
+  id: text('id').primaryKey(),
+  teacherId: text('teacher_id').notNull(),
+  subjectId: text('subject_id').notNull(),
+  schoolId: text('school_id').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
+// Teacher-Class assignments (which classes a teacher teaches)
+export const teacherClasses = sqliteTable('teacher_classes', {
+  id: text('id').primaryKey(),
+  teacherId: text('teacher_id').notNull(),
+  classId: text('class_id').notNull(),
+  subjectId: text('subject_id').notNull(),
+  schoolId: text('school_id').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
+// Student enrollments in classes
+export const studentEnrollments = sqliteTable('student_enrollments', {
+  id: text('id').primaryKey(),
+  studentId: text('student_id').notNull(),
+  classId: text('class_id').notNull(),
+  schoolId: text('school_id').notNull(),
+  academicYear: text('academic_year').notNull(),
+  enrollmentDate: integer('enrollment_date', { mode: 'timestamp' }).notNull(),
+  isActive: integer('is_active', { mode: 'boolean' }).default(true),
+});
+
+// Parent-Student relationships
+export const parentStudents = sqliteTable('parent_students', {
+  parentId: text('parent_id').notNull(),
+  studentId: text('student_id').notNull(),
+  schoolId: text('school_id').notNull(),
+  relationship: text('relationship').notNull(), // e.g., "father", "mother", "guardian"
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.parentId, table.studentId] }),
+}));
+
+// Time slots for timetables
+export const timeSlots = sqliteTable('time_slots', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  dayOfWeek: integer('day_of_week').notNull(), // 1-7 (Monday-Sunday)
+  startTime: text('start_time').notNull(), // HH:MM format
+  endTime: text('end_time').notNull(), // HH:MM format
+  name: text('name'), // e.g., "1st Period", "Morning Break"
+  isBreak: integer('is_break', { mode: 'boolean' }).default(false),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
+// Timetable entries
+export const timetables = sqliteTable('timetables', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  classId: text('class_id').notNull(),
+  subjectId: text('subject_id'),
+  teacherId: text('teacher_id'),
+  timeSlotId: text('time_slot_id').notNull(),
+  academicYear: text('academic_year').notNull(),
+  status: text('status', { enum: ['draft', 'active'] }).default('draft'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+// Relations
+export const usersRelations = relations(users, ({ one, many }) => ({
+  school: one(schools, {
+    fields: [users.schoolId],
+    references: [schools.id],
+  }),
+  teacherSubjects: many(teacherSubjects),
+  teacherClasses: many(teacherClasses),
+  studentEnrollments: many(studentEnrollments),
+  parentStudents: many(parentStudents),
+}));
+
+export const schoolsRelations = relations(schools, ({ many }) => ({
+  users: many(users),
+  academicLevels: many(academicLevels),
+  classes: many(classes),
+  subjects: many(subjects),
+  timeSlots: many(timeSlots),
+  timetables: many(timetables),
+}));
+
+export const academicLevelsRelations = relations(academicLevels, ({ one, many }) => ({
+  school: one(schools, {
+    fields: [academicLevels.schoolId],
+    references: [schools.id],
+  }),
+  classes: many(classes),
+}));
+
+export const classesRelations = relations(classes, ({ one, many }) => ({
+  school: one(schools, {
+    fields: [classes.schoolId],
+    references: [schools.id],
+  }),
+  level: one(academicLevels, {
+    fields: [classes.levelId],
+    references: [academicLevels.id],
+  }),
+  teacherClasses: many(teacherClasses),
+  studentEnrollments: many(studentEnrollments),
+  timetables: many(timetables),
+}));
+
+export const subjectsRelations = relations(subjects, ({ one, many }) => ({
+  school: one(schools, {
+    fields: [subjects.schoolId],
+    references: [schools.id],
+  }),
+  teacherSubjects: many(teacherSubjects),
+  teacherClasses: many(teacherClasses),
+  timetables: many(timetables),
+}));
+
+export const teacherSubjectsRelations = relations(teacherSubjects, ({ one }) => ({
+  teacher: one(users, {
+    fields: [teacherSubjects.teacherId],
+    references: [users.id],
+  }),
+  subject: one(subjects, {
+    fields: [teacherSubjects.subjectId],
+    references: [subjects.id],
+  }),
+}));
+
+export const teacherClassesRelations = relations(teacherClasses, ({ one }) => ({
+  teacher: one(users, {
+    fields: [teacherClasses.teacherId],
+    references: [users.id],
+  }),
+  class: one(classes, {
+    fields: [teacherClasses.classId],
+    references: [classes.id],
+  }),
+  subject: one(subjects, {
+    fields: [teacherClasses.subjectId],
+    references: [subjects.id],
+  }),
+}));
+
+export const studentEnrollmentsRelations = relations(studentEnrollments, ({ one }) => ({
+  student: one(users, {
+    fields: [studentEnrollments.studentId],
+    references: [users.id],
+  }),
+  class: one(classes, {
+    fields: [studentEnrollments.classId],
+    references: [classes.id],
+  }),
+}));
+
+export const parentStudentsRelations = relations(parentStudents, ({ one }) => ({
+  parent: one(users, {
+    fields: [parentStudents.parentId],
+    references: [users.id],
+  }),
+  student: one(users, {
+    fields: [parentStudents.studentId],
+    references: [users.id],
+  }),
+}));
+
+export const timeSlotsRelations = relations(timeSlots, ({ one, many }) => ({
+  school: one(schools, {
+    fields: [timeSlots.schoolId],
+    references: [schools.id],
+  }),
+  timetables: many(timetables),
+}));
+
+export const timetablesRelations = relations(timetables, ({ one }) => ({
+  school: one(schools, {
+    fields: [timetables.schoolId],
+    references: [schools.id],
+  }),
+  class: one(classes, {
+    fields: [timetables.classId],
+    references: [classes.id],
+  }),
+  subject: one(subjects, {
+    fields: [timetables.subjectId],
+    references: [subjects.id],
+  }),
+  teacher: one(users, {
+    fields: [timetables.teacherId],
+    references: [users.id],
+  }),
+  timeSlot: one(timeSlots, {
+    fields: [timetables.timeSlotId],
+    references: [timeSlots.id],
+  }),
+}));

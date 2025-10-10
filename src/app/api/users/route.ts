@@ -1,0 +1,194 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { eq, and, or } from 'drizzle-orm';
+import { auth } from '@/lib/auth';
+import { db, getCurrentTimestamp } from '@/lib/db';
+import { users } from '@/db/schema';
+import { canAccessSchool, isSuperAdmin, isSchoolAdmin } from '@/lib/auth';
+
+const updateUserSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters').optional(),
+  schoolId: z.string().optional(),
+  isActive: z.boolean().optional(),
+  role: z.enum(['admin', 'teacher', 'parent', 'student']).optional(),
+});
+
+// GET /api/users - List users
+export async function GET(request: NextRequest) {
+  try {
+    const session = await auth();
+    
+    if (!session?.user) {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const schoolId = searchParams.get('schoolId');
+    const role = searchParams.get('role');
+    const pending = searchParams.get('pending') === 'true';
+
+    // Build query conditions
+    let conditions = [];
+
+    // School filtering
+    if (schoolId) {
+      if (!canAccessSchool(session.user.role, session.user.schoolId, schoolId)) {
+        return NextResponse.json(
+          { message: 'Forbidden - Cannot access this school' },
+          { status: 403 }
+        );
+      }
+      conditions.push(eq(users.schoolId, schoolId));
+    } else if (!isSuperAdmin(session.user.role) && session.user.schoolId) {
+      // Non-superadmin users can only see users from their school
+      conditions.push(eq(users.schoolId, session.user.schoolId));
+    }
+
+    // Role filtering
+    if (role) {
+      conditions.push(eq(users.role, role));
+    }
+
+    // Pending users (inactive users without schoolId)
+    if (pending) {
+      conditions.push(eq(users.isActive, false));
+      conditions.push(eq(users.schoolId, null));
+    }
+
+    let query = db
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        role: users.role,
+        schoolId: users.schoolId,
+        isActive: users.isActive,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users);
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    const allUsers = await query.orderBy(users.createdAt);
+
+    return NextResponse.json({ users: allUsers });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT /api/users - Update user (for approving users, assigning to schools, etc.)
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await auth();
+    
+    if (!session?.user) {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // Only superadmin and school admin can update users
+    if (!isSuperAdmin(session.user.role) && !isSchoolAdmin(session.user.role)) {
+      return NextResponse.json(
+        { message: 'Forbidden - Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+
+    if (!userId) {
+      return NextResponse.json(
+        { message: 'User ID is required' },
+        { status: 400 }
+      );
+    }
+
+    const body = await request.json();
+    const updateData = updateUserSchema.parse(body);
+
+    // Check if user exists
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!existingUser.length) {
+      return NextResponse.json(
+        { message: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    const user = existingUser[0];
+
+    // School admin can only update users in their school or assign pending users to their school
+    if (isSchoolAdmin(session.user.role)) {
+      if (updateData.schoolId && updateData.schoolId !== session.user.schoolId) {
+        return NextResponse.json(
+          { message: 'Forbidden - Can only assign users to your school' },
+          { status: 403 }
+        );
+      }
+      
+      if (user.schoolId && user.schoolId !== session.user.schoolId) {
+        return NextResponse.json(
+          { message: 'Forbidden - Cannot update users from other schools' },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Update user
+    const updatedUser = await db
+      .update(users)
+      .set({
+        ...updateData,
+        updatedAt: getCurrentTimestamp(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return NextResponse.json({
+      message: 'User updated successfully',
+      user: {
+        id: updatedUser[0].id,
+        email: updatedUser[0].email,
+        name: updatedUser[0].name,
+        role: updatedUser[0].role,
+        schoolId: updatedUser[0].schoolId,
+        isActive: updatedUser[0].isActive,
+        createdAt: updatedUser[0].createdAt,
+        updatedAt: updatedUser[0].updatedAt,
+      }
+    });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { message: 'Invalid input data', errors: error.errors },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
