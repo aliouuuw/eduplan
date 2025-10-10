@@ -17,7 +17,6 @@ const updateAvailabilitySchema = z.object({
   endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format (HH:MM)').optional(),
   isRecurring: z.boolean().optional(),
   notes: z.string().optional(),
-  isActive: z.boolean().optional(),
 });
 
 /**
@@ -81,8 +80,7 @@ export async function PUT(
           and(
             eq(teacherAvailability.teacherId, availability.teacherId),
             eq(teacherAvailability.schoolId, availability.schoolId),
-            eq(teacherAvailability.dayOfWeek, dayToCheck),
-            eq(teacherAvailability.isActive, true)
+            eq(teacherAvailability.dayOfWeek, dayToCheck)
           )
         );
 
@@ -126,7 +124,7 @@ export async function PUT(
 
 /**
  * DELETE /api/teacher-availability/[id]
- * Delete (soft delete) availability slot
+ * Hard delete availability slot
  */
 export async function DELETE(
   request: NextRequest,
@@ -170,15 +168,9 @@ export async function DELETE(
       );
     }
 
-    // Soft delete by setting isActive to false
-    const now = getCurrentTimestamp();
-
+    // Hard delete the availability slot
     await db
-      .update(teacherAvailability)
-      .set({
-        isActive: false,
-        updatedAt: now,
-      })
+      .delete(teacherAvailability)
       .where(eq(teacherAvailability.id, id));
 
     return NextResponse.json({ message: 'Availability deleted successfully' });

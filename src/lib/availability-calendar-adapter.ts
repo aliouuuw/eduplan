@@ -10,7 +10,6 @@ export interface AvailabilitySlot {
   endTime: string; // HH:MM
   isRecurring: boolean;
   notes: string | null;
-  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,8 +25,6 @@ export function availabilityToCalendarEvents(
   const weekStart = startOfWeek(referenceDate, { weekStartsOn: 1 }); // Monday
 
   availability.forEach((slot) => {
-    if (!slot.isActive) return;
-
     // Calculate the date for this slot's day of week
     // dayOfWeek: 1=Monday, 7=Sunday
     const eventDate = addDays(weekStart, slot.dayOfWeek - 1);
@@ -76,7 +73,6 @@ export function calendarEventToAvailability(
     startTime,
     endTime,
     isRecurring: true, // Default to recurring
-    isActive: true,
   };
 
   // Only include notes if not default "Available"

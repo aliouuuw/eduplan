@@ -197,7 +197,7 @@ export default function CalendarEvent({
             isDeleting && 'opacity-50',
             hasConflict 
               ? 'bg-yellow-500/20 hover:bg-yellow-500/30 border-2 border-yellow-500 ring-2 ring-yellow-500/30' 
-              : `bg-${event.color}-500/10 hover:bg-${event.color}-500/20 border border-${event.color}-500`,
+              : `bg-${event.color}-500/20 hover:bg-${event.color}-500/30 border border-${event.color}-500`,
             !month && 'absolute',
             className
           )}

@@ -128,7 +128,6 @@ export const teacherAvailability = sqliteTable('teacher_availability', {
   endTime: text('end_time').notNull(), // HH:MM format
   isRecurring: integer('is_recurring', { mode: 'boolean' }).default(true), // true = every week
   notes: text('notes'), // e.g., "Prefer morning classes", "Available for substitute"
-  isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });

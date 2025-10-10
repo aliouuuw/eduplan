@@ -24,7 +24,6 @@ const availabilitySchema = z.object({
   endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format (HH:MM)'),
   isRecurring: z.boolean().default(true),
   notes: z.string().optional(),
-  isActive: z.boolean().default(true),
 });
 
 /**
@@ -56,8 +55,7 @@ export async function GET(request: NextRequest) {
         .where(
           and(
             eq(teacherAvailability.teacherId, session.user.id),
-            eq(teacherAvailability.schoolId, schoolId),
-            eq(teacherAvailability.isActive, true)
+            eq(teacherAvailability.schoolId, schoolId)
           )
         )
         .orderBy(teacherAvailability.dayOfWeek, teacherAvailability.startTime);
@@ -80,7 +78,6 @@ export async function GET(request: NextRequest) {
             endTime: teacherAvailability.endTime,
             isRecurring: teacherAvailability.isRecurring,
             notes: teacherAvailability.notes,
-            isActive: teacherAvailability.isActive,
             createdAt: teacherAvailability.createdAt,
             updatedAt: teacherAvailability.updatedAt,
           })
@@ -89,8 +86,7 @@ export async function GET(request: NextRequest) {
           .where(
             and(
               eq(teacherAvailability.teacherId, teacherId),
-              eq(teacherAvailability.schoolId, schoolId),
-              eq(teacherAvailability.isActive, true)
+              eq(teacherAvailability.schoolId, schoolId)
             )
           )
           .orderBy(teacherAvailability.dayOfWeek, teacherAvailability.startTime);
@@ -109,18 +105,12 @@ export async function GET(request: NextRequest) {
             endTime: teacherAvailability.endTime,
             isRecurring: teacherAvailability.isRecurring,
             notes: teacherAvailability.notes,
-            isActive: teacherAvailability.isActive,
             createdAt: teacherAvailability.createdAt,
             updatedAt: teacherAvailability.updatedAt,
           })
           .from(teacherAvailability)
           .innerJoin(users, eq(teacherAvailability.teacherId, users.id))
-          .where(
-            and(
-              eq(teacherAvailability.schoolId, schoolId),
-              eq(teacherAvailability.isActive, true)
-            )
-          )
+          .where(eq(teacherAvailability.schoolId, schoolId))
           .orderBy(users.name, teacherAvailability.dayOfWeek, teacherAvailability.startTime);
 
         return NextResponse.json(availability)
@@ -200,8 +190,7 @@ export async function POST(request: NextRequest) {
         and(
           eq(teacherAvailability.teacherId, validated.teacherId),
           eq(teacherAvailability.schoolId, validated.schoolId),
-          eq(teacherAvailability.dayOfWeek, validated.dayOfWeek),
-          eq(teacherAvailability.isActive, true)
+          eq(teacherAvailability.dayOfWeek, validated.dayOfWeek)
         )
       )
 
@@ -244,7 +233,6 @@ export async function POST(request: NextRequest) {
         endTime: validated.endTime,
         isRecurring: validated.isRecurring,
         notes: validated.notes,
-        isActive: validated.isActive,
         createdAt: now,
         updatedAt: now,
       })
