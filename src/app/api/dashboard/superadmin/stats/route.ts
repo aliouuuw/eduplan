@@ -50,8 +50,8 @@ export async function GET(request: NextRequest) {
     // Process stats
     const stats = {
       totalSchools: totalSchools[0]?.count || 0,
-      activeSchools: schoolStatus.find(stat => stat.isActive === 1)?.count || 0,
-      inactiveSchools: schoolStatus.find(stat => stat.isActive === 0)?.count || 0,
+      activeSchools: schoolStatus.find(stat => stat.isActive === true)?.count || 0,
+      inactiveSchools: schoolStatus.find(stat => stat.isActive === false)?.count || 0,
       totalUsers: userStats.reduce((sum, stat) => sum + stat.count, 0),
       totalAdmins: userStats.find(stat => stat.role === 'admin')?.count || 0,
       totalTeachers: userStats.find(stat => stat.role === 'teacher')?.count || 0,
