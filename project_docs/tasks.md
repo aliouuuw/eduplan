@@ -245,7 +245,7 @@
 - ✅ Navigation and layout system
 - ✅ Toast notifications system (Sonner)
 
-**Current Phase:** Phase 5 - Intelligent Timetable Management
+**Current Phase:** Phase 5 - Intelligent Timetable Management (Foundation Complete)
 
 **Priority Order:**
 1. ~~School Admin Dashboard~~ ✅ **COMPLETED**
@@ -275,7 +275,15 @@
 - ✅ Student enrollment management API
 - ✅ Assignment conflict detection
 
-**Week 5:** Intelligent Timetable System ← **CURRENT FOCUS**
+**~~Week 5:~~ Database Seeding & Foundation** ✅ **COMPLETED**
+- ✅ Comprehensive database seeding script with realistic data
+- ✅ Fixed teacher-subject-class assignment logic
+- ✅ Created 24 classes, 17 teachers, 480+ students, 280+ time slots
+- ✅ All classes have complete subject assignments with qualified teachers
+- ✅ Teacher availability set for conflict detection
+- ✅ Ready for realistic timetable building
+
+**Week 6:** Intelligent Timetable System ← **CURRENT FOCUS**
 - Time slots management
 - Visual timetable builder with drag-and-drop
 - Real-time conflict detection (availability, double-booking)
@@ -292,6 +300,14 @@
 - ✅ Missing toast notification hook
   - Created `hooks/use-toast.ts` wrapper for Sonner
   - Added toast support across all admin pages
+- ✅ **Runtime TypeError in Admin Teachers Page** - Fixed `.map is not a function` error
+  - **Root Cause:** API responses return objects with nested arrays (`{users: [...]}`, `{subjects: [...]}`)
+  - **Fix:** Updated data fetching to access correct properties (`data.users`, `data.subjects`, `data.classes`)
+  - **Impact:** Teachers and subjects now display correctly in assignment dialogs
+- ✅ **Database Seeding Issues** - Fixed teacher-class assignment logic
+  - **Root Cause:** Incomplete subject assignments, missing level-specific teachers
+  - **Fix:** Restructured teacher data with level assignments, ensured ALL classes get ALL required subjects
+  - **Impact:** Each class now has complete curriculum with qualified teachers
 
 **Known Issues:**
 - ⚠️ **Duplicate Availability Saves** - React Strict Mode causes multiple API calls when dragging to create teacher availability slots
@@ -353,15 +369,28 @@ bun run db:push
 # 2. Create superadmin account
 bun run seed:superadmin
 
-# 3. Start dev server
+# 3. Seed realistic school data (NEW!)
+bun run seed:timetable
+
+# 4. Start dev server
 bun run dev
 
-# 4. Login as superadmin
-# Email: superadmin@eduplan.com
+# 5. Login as school admin
+# Email: admin@ecole-dakar.edu
 # Password: Admin@123
 ```
 
+**Database Seeding Results:**
+- 🏫 1 School: École Internationale de Dakar
+- 📚 2 Academic Levels (Primary, Secondary)
+- 🏫 24 Classes (10 Primary + 14 Secondary)
+- 📖 19 Subjects (8 Primary + 11 Secondary)
+- 👨‍🏫 17 Teachers (7 Primary + 10 Secondary)
+- 👨‍🎓 480 Students (20 per class)
+- ⏱️ 55 Time Slots (complete weekly schedule)
+- 🔗 234 Teacher-Class-Subject Assignments
+
 ---
 
-*Last Updated: October 10, 2025*
-*Phase 4.3 Completed | 55+ files created/modified | ~10,000+ lines of code*
+*Last Updated: January 10, 2025*
+*Phase 5.0 Foundation Complete | 60+ files created/modified | ~12,000+ lines of code*

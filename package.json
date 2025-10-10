@@ -10,7 +10,8 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "seed:superadmin": "bun run scripts/seed-superadmin.ts"
+    "seed:superadmin": "bun run scripts/seed-superadmin.ts",
+    "seed:timetable": "bun run scripts/seed-timetable-data.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
