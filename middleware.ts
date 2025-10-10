@@ -15,9 +15,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // If authenticated and trying to access auth pages, redirect to dashboard
+  // If authenticated and trying to access auth pages, redirect to role-specific dashboard
   if (session && (pathname.startsWith('/login') || pathname.startsWith('/register'))) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    const userRole = session.user.role;
+    const roleRoutes = {
+      superadmin: '/dashboard/superadmin',
+      admin: '/dashboard/admin',
+      teacher: '/dashboard/teacher',
+      parent: '/dashboard/parent',
+      student: '/dashboard/student',
+    };
+    const defaultRoute = roleRoutes[userRole as keyof typeof roleRoutes];
+    if (defaultRoute) {
+      return NextResponse.redirect(new URL(defaultRoute, request.url));
+    }
   }
 
   // Role-based route protection
