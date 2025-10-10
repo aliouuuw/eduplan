@@ -26,3 +26,4 @@ export default async function DashboardPage() {
   // Fallback if role is not recognized
   redirect('/login');
 }
+

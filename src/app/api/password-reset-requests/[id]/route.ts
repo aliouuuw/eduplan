@@ -18,7 +18,7 @@ const updatePasswordResetRequestSchema = z.object({
  */
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -38,7 +38,7 @@ export async function PUT(
       );
     }
 
-    const requestId = params.id;
+    const { id: requestId } = await params;
     const body = await req.json();
     const validatedData = updatePasswordResetRequestSchema.parse(body);
 

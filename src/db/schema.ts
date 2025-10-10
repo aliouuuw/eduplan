@@ -118,6 +118,21 @@ export const teacherClasses = sqliteTable('teacher_classes', {
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
 
+// Teacher availability (when teachers are available to teach)
+export const teacherAvailability = sqliteTable('teacher_availability', {
+  id: text('id').primaryKey(),
+  teacherId: text('teacher_id').notNull(),
+  schoolId: text('school_id').notNull(),
+  dayOfWeek: integer('day_of_week').notNull(), // 1-7 (Monday-Sunday)
+  startTime: text('start_time').notNull(), // HH:MM format
+  endTime: text('end_time').notNull(), // HH:MM format
+  isRecurring: integer('is_recurring', { mode: 'boolean' }).default(true), // true = every week
+  notes: text('notes'), // e.g., "Prefer morning classes", "Available for substitute"
+  isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
 // Student enrollments in classes
 export const studentEnrollments = sqliteTable('student_enrollments', {
   id: text('id').primaryKey(),
@@ -174,6 +189,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
   teacherSubjects: many(teacherSubjects),
   teacherClasses: many(teacherClasses),
+  teacherAvailability: many(teacherAvailability),
   studentEnrollments: many(studentEnrollments),
   parentStudents: many(parentStudents),
 }));
@@ -186,6 +202,7 @@ export const schoolsRelations = relations(schools, ({ many }) => ({
   timeSlots: many(timeSlots),
   timetables: many(timetables),
   invitations: many(invitations),
+  teacherAvailability: many(teacherAvailability),
 }));
 
 export const academicLevelsRelations = relations(academicLevels, ({ one, many }) => ({
@@ -243,6 +260,17 @@ export const teacherClassesRelations = relations(teacherClasses, ({ one }) => ({
   subject: one(subjects, {
     fields: [teacherClasses.subjectId],
     references: [subjects.id],
+  }),
+}));
+
+export const teacherAvailabilityRelations = relations(teacherAvailability, ({ one }) => ({
+  teacher: one(users, {
+    fields: [teacherAvailability.teacherId],
+    references: [users.id],
+  }),
+  school: one(schools, {
+    fields: [teacherAvailability.schoolId],
+    references: [schools.id],
   }),
 }));
 

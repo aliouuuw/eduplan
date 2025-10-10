@@ -15,7 +15,8 @@ import {
   X,
   GraduationCap,
   Mail,
-  Key
+  Key,
+  Clock
 } from 'lucide-react';
 import type { User } from 'next-auth';
 
@@ -84,6 +85,12 @@ const navigationItems: NavItem[] = [
     roles: ['admin'],
   },
   {
+    label: 'Teachers',
+    href: '/dashboard/admin/teachers',
+    icon: <Users className="h-4 w-4" />,
+    roles: ['admin'],
+  },
+  {
     label: 'Timetables',
     href: '/dashboard/admin/timetables',
     icon: <Calendar className="h-4 w-4" />,
@@ -94,6 +101,12 @@ const navigationItems: NavItem[] = [
     label: 'Dashboard',
     href: '/dashboard/teacher',
     icon: <Settings className="h-4 w-4" />,
+    roles: ['teacher'],
+  },
+  {
+    label: 'My Availability',
+    href: '/dashboard/teacher/availability',
+    icon: <Clock className="h-4 w-4" />,
     roles: ['teacher'],
   },
   {
