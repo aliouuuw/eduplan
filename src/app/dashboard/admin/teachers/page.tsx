@@ -86,9 +86,18 @@ export default function AdminTeachersPage() {
         fetch('/api/classes'),
       ]);
 
-      if (teachersRes.ok) setTeachers(await teachersRes.json());
-      if (subjectsRes.ok) setSubjects(await subjectsRes.json());
-      if (classesRes.ok) setClasses(await classesRes.json());
+      if (teachersRes.ok) {
+        const data = await teachersRes.json();
+        setTeachers(Array.isArray(data.users) ? data.users : []);
+      }
+      if (subjectsRes.ok) {
+        const data = await subjectsRes.json();
+        setSubjects(Array.isArray(data.subjects) ? data.subjects : []);
+      }
+      if (classesRes.ok) {
+        const data = await classesRes.json();
+        setClasses(Array.isArray(data.classes) ? data.classes : []);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -105,10 +114,15 @@ export default function AdminTeachersPage() {
       ]);
 
       if (assignmentsRes.ok) {
-        setTeacherAssignments(await assignmentsRes.json());
+        const data = await assignmentsRes.json();
+        setTeacherAssignments({
+          subjects: Array.isArray(data.subjects) ? data.subjects : [],
+          classes: Array.isArray(data.classes) ? data.classes : [],
+        });
       }
       if (availabilityRes.ok) {
-        setTeacherAvailability(await availabilityRes.json());
+        const data = await availabilityRes.json();
+        setTeacherAvailability(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error('Error fetching teacher details:', error);
@@ -429,18 +443,21 @@ export default function AdminTeachersPage() {
                   <SelectValue placeholder="Select a subject" />
                 </SelectTrigger>
                 <SelectContent>
-                  {(assignmentType === 'subject'
-                    ? subjects
-                    : teacherAssignments.subjects.map((a) => ({
-                        id: a.subjectId!,
-                        name: a.subjectName!,
-                        code: a.subjectCode,
-                      }))
-                  ).map((subject) => (
-                    <SelectItem key={subject.id} value={subject.id}>
-                      {subject.name} {subject.code && `(${subject.code})`}
-                    </SelectItem>
-                  ))}
+                  {(() => {
+                    const subjectsList = assignmentType === 'subject'
+                      ? (Array.isArray(subjects) ? subjects : [])
+                      : (teacherAssignments.subjects || []).map((a) => ({
+                          id: a.subjectId!,
+                          name: a.subjectName!,
+                          code: a.subjectCode,
+                        }));
+                    
+                    return subjectsList.map((subject) => (
+                      <SelectItem key={subject.id} value={subject.id}>
+                        {subject.name} {subject.code && `(${subject.code})`}
+                      </SelectItem>
+                    ));
+                  })()}
                 </SelectContent>
               </Select>
             </div>
