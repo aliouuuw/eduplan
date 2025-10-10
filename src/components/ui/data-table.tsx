@@ -27,6 +27,7 @@ interface DataTableProps<T> {
   onAdd?: () => void;
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
+  customActions?: (item: T) => React.ReactNode;
   addLabel?: string;
   loading?: boolean;
   emptyMessage?: string;
@@ -40,6 +41,7 @@ export function DataTable<T extends { id: string }>({
   onAdd,
   onEdit,
   onDelete,
+  customActions,
   addLabel = 'Add New',
   loading = false,
   emptyMessage = 'No data available',
@@ -104,14 +106,14 @@ export function DataTable<T extends { id: string }>({
                   {column.label}
                 </TableHead>
               ))}
-              {(onEdit || onDelete) && <TableHead className="w-24 text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</TableHead>}
+              {(onEdit || onDelete || customActions) && <TableHead className="w-24 text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredData.length === 0 ? (
               <TableRow className="hover:bg-white">
                 <TableCell
-                  colSpan={columns.length + (onEdit || onDelete ? 1 : 0)}
+                  colSpan={columns.length + (onEdit || onDelete || customActions ? 1 : 0)}
                   className="text-center py-12 text-gray-500"
                 >
                   {emptyMessage}
@@ -127,7 +129,7 @@ export function DataTable<T extends { id: string }>({
                         : String(item[column.key] || '')}
                     </TableCell>
                   ))}
-                  {(onEdit || onDelete) && (
+                  {(onEdit || onDelete || customActions) && (
                     <TableCell className="py-4">
                       <div className="flex items-center gap-2">
                         {onEdit && (
@@ -150,6 +152,7 @@ export function DataTable<T extends { id: string }>({
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
+                        {customActions && customActions(item)}
                       </div>
                     </TableCell>
                   )}

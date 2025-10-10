@@ -14,7 +14,8 @@ import {
   LogOut,
   X,
   GraduationCap,
-  Mail
+  Mail,
+  Key
 } from 'lucide-react';
 import type { User } from 'next-auth';
 
@@ -37,6 +38,12 @@ const navigationItems: NavItem[] = [
     label: 'System Users',
     href: '/dashboard/superadmin/users',
     icon: <Users className="h-4 w-4" />,
+    roles: ['superadmin'],
+  },
+  {
+    label: 'Password Resets',
+    href: '/dashboard/superadmin/password-resets',
+    icon: <Key className="h-4 w-4" />,
     roles: ['superadmin'],
   },
   // Admin
@@ -83,6 +90,12 @@ const navigationItems: NavItem[] = [
     roles: ['admin'],
   },
   // Teacher
+  {
+    label: 'Dashboard',
+    href: '/dashboard/teacher',
+    icon: <Settings className="h-4 w-4" />,
+    roles: ['teacher'],
+  },
   {
     label: 'My Timetable',
     href: '/dashboard/teacher/timetable',
@@ -170,7 +183,8 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
           {allowedNavItems.map((item) => {
             // Dashboard should only be active on exact match, other items can be active on sub-routes
-            const isActive = item.href === '/dashboard/admin' 
+            const isDashboardHome = item.href === '/dashboard/admin' || item.href === '/dashboard/teacher' || item.href === '/dashboard/superadmin';
+            const isActive = isDashboardHome
               ? pathname === item.href
               : pathname === item.href || pathname?.startsWith(item.href + '/');
             return (

@@ -18,7 +18,7 @@ const updateSchoolSchema = z.object({
 // GET /api/schools/[id] - Get school by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -30,7 +30,9 @@ export async function GET(
       );
     }
 
-    const schoolId = await params.id;
+    const { id } = await params;
+
+    const schoolId = id;
 
     // Check access permissions
     if (!isSuperAdmin(session.user.role) && !canAccessSchool(session.user.role, session.user.schoolId, schoolId)) {

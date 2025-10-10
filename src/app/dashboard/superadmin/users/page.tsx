@@ -7,9 +7,16 @@ import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, UserCheck, GraduationCap, UserPlus, AlertCircle, Building, Shield } from 'lucide-react';
+import { Users, UserCheck, GraduationCap, UserPlus, AlertCircle, Building, Shield, Key } from 'lucide-react';
 import { UserForm } from '@/components/forms/user-form';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface UserWithSchool {
   id: string;
@@ -53,6 +60,9 @@ export default function SuperAdminUsersPage() {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [formOpen, setFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserWithSchool | null>(null);
+  const [passwordResetDialogOpen, setPasswordResetDialogOpen] = useState(false);
+  const [passwordResetLink, setPasswordResetLink] = useState<string>('');
+  const [generatingReset, setGeneratingReset] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -134,6 +144,41 @@ export default function SuperAdminUsersPage() {
       console.error('Error deleting user:', error);
       toast.error(error.message || 'Failed to deactivate user');
     }
+  };
+
+  const handleGeneratePasswordReset = async (user: UserWithSchool) => {
+    if (!confirm(`Generate a password reset link for ${user.name}?`)) {
+      return;
+    }
+
+    try {
+      setGeneratingReset(true);
+      const response = await fetch('/api/password-resets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPasswordResetLink(data.passwordReset.resetLink);
+        setPasswordResetDialogOpen(true);
+        toast.success('Password reset link generated successfully');
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+      }
+    } catch (error: any) {
+      console.error('Error generating password reset:', error);
+      toast.error(error.message || 'Failed to generate password reset link');
+    } finally {
+      setGeneratingReset(false);
+    }
+  };
+
+  const handleCopyResetLink = () => {
+    navigator.clipboard.writeText(passwordResetLink);
+    toast.success('Password reset link copied to clipboard');
   };
 
   const getRoleIcon = (role: string) => {
@@ -374,6 +419,18 @@ export default function SuperAdminUsersPage() {
               setFormOpen(true);
             }}
             onDelete={handleDeleteUser}
+            customActions={(user) => (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => handleGeneratePasswordReset(user)}
+                disabled={generatingReset || !user.isActive}
+                className="flex items-center gap-2"
+              >
+                <Key className="h-4 w-4" />
+                Reset Password
+              </Button>
+            )}
           />
         </CardContent>
       </section>
@@ -391,6 +448,36 @@ export default function SuperAdminUsersPage() {
         schools={schools}
         onSubmit={handleEditUser}
       />
+
+      {/* Password Reset Link Dialog */}
+      <Dialog open={passwordResetDialogOpen} onOpenChange={setPasswordResetDialogOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Password Reset Link Generated</DialogTitle>
+            <DialogDescription>
+              Share this link with the user. The link will expire in 24 hours.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p className="break-all text-sm font-mono text-gray-700">
+                {passwordResetLink}
+              </p>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setPasswordResetDialogOpen(false)}
+              >
+                Close
+              </Button>
+              <Button onClick={handleCopyResetLink}>
+                Copy Link
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
