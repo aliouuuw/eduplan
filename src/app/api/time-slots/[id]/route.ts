@@ -25,7 +25,7 @@ const timeSlotUpdateSchema = z.object({
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -35,6 +35,7 @@ export async function GET(
     }
 
     const schoolId = session.user.schoolId;
+    const { id } = await params;
 
     if (!schoolId) {
       return NextResponse.json({ error: 'School not found' }, { status: 400 });
@@ -50,7 +51,7 @@ export async function GET(
       .from(timeSlots)
       .where(
         and(
-          eq(timeSlots.id, params.id),
+          eq(timeSlots.id, id),
           eq(timeSlots.schoolId, schoolId)
         )
       )
@@ -73,7 +74,7 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -83,6 +84,7 @@ export async function PUT(
     }
 
     const schoolId = session.user.schoolId;
+    const { id } = await params;
 
     if (!schoolId) {
       return NextResponse.json({ error: 'School not found' }, { status: 400 });
@@ -102,7 +104,7 @@ export async function PUT(
       .from(timeSlots)
       .where(
         and(
-          eq(timeSlots.id, params.id),
+          eq(timeSlots.id, id),
           eq(timeSlots.schoolId, schoolId)
         )
       )
@@ -142,7 +144,7 @@ export async function PUT(
 
     for (const existing of existingSlots) {
       // Skip the current slot being updated
-      if (existing.id === params.id) continue;
+      if (existing.id === id) continue;
 
       const newStart = startTime;
       const newEnd = endTime;
@@ -171,11 +173,10 @@ export async function PUT(
       .update(timeSlots)
       .set({
         ...validated,
-        updatedAt: getCurrentTimestamp(),
       })
       .where(
         and(
-          eq(timeSlots.id, params.id),
+          eq(timeSlots.id, id),
           eq(timeSlots.schoolId, schoolId)
         )
       )
@@ -185,7 +186,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.flatten().fieldErrors },
         { status: 400 }
       );
     }
@@ -201,7 +202,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -211,6 +212,7 @@ export async function DELETE(
     }
 
     const schoolId = session.user.schoolId;
+    const { id } = await params;
 
     if (!schoolId) {
       return NextResponse.json({ error: 'School not found' }, { status: 400 });
@@ -227,7 +229,7 @@ export async function DELETE(
       .from(timeSlots)
       .where(
         and(
-          eq(timeSlots.id, params.id),
+          eq(timeSlots.id, id),
           eq(timeSlots.schoolId, schoolId)
         )
       )
@@ -243,7 +245,7 @@ export async function DELETE(
       .from(timetables)
       .where(
         and(
-          eq(timetables.timeSlotId, params.id),
+          eq(timetables.timeSlotId, id),
           eq(timetables.schoolId, schoolId)
         )
       )
@@ -261,7 +263,7 @@ export async function DELETE(
       .delete(timeSlots)
       .where(
         and(
-          eq(timeSlots.id, params.id),
+          eq(timeSlots.id, id),
           eq(timeSlots.schoolId, schoolId)
         )
       );

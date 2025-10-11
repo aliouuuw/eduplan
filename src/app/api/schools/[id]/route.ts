@@ -68,7 +68,7 @@ export async function GET(
 // PUT /api/schools/[id] - Update school
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -80,7 +80,7 @@ export async function PUT(
       );
     }
 
-    const schoolId = await params.id;
+    const { id: schoolId } = await params;
 
     // Only superadmin can update schools
     if (!isSuperAdmin(session.user.role)) {
@@ -141,7 +141,7 @@ export async function PUT(
 // DELETE /api/schools/[id] - Delete school (soft delete)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -153,7 +153,7 @@ export async function DELETE(
       );
     }
 
-    const schoolId = await params.id;
+    const { id: schoolId } = await params;
 
     // Check if school exists
     const existingSchool = await db

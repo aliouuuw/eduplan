@@ -38,16 +38,21 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    let query = db.select().from(subjects);
+    // Build query with appropriate filters
+    let allSubjects;
+    const baseQuery = db.select().from(subjects);
 
-    // Filter by school if specified or user's school
     if (schoolId) {
-      query = query.where(eq(subjects.schoolId, schoolId));
+      allSubjects = await baseQuery
+        .where(eq(subjects.schoolId, schoolId))
+        .orderBy(subjects.name);
     } else if (!isSuperAdmin(session.user.role) && session.user.schoolId) {
-      query = query.where(eq(subjects.schoolId, session.user.schoolId));
+      allSubjects = await baseQuery
+        .where(eq(subjects.schoolId, session.user.schoolId))
+        .orderBy(subjects.name);
+    } else {
+      allSubjects = await baseQuery.orderBy(subjects.name);
     }
-
-    const allSubjects = await query.orderBy(subjects.name);
 
     return NextResponse.json({ subjects: allSubjects });
   } catch (error) {
@@ -151,7 +156,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { message: 'Invalid input data', errors: error.errors },
+        { message: 'Invalid input data', errors: error.flatten().fieldErrors },
         { status: 400 }
       );
     }

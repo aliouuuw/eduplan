@@ -16,7 +16,7 @@ const updateClassSchema = z.object({
 // GET /api/classes/[id] - Get specific class
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -28,7 +28,7 @@ export async function GET(
       );
     }
 
-    const classId = await params.id;
+    const { id: classId } = await params;
 
     const classData = await db
       .select()
@@ -66,7 +66,7 @@ export async function GET(
 // PUT /api/classes/[id] - Update class
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -86,7 +86,7 @@ export async function PUT(
       );
     }
 
-    const classId = await params.id;
+    const { id: classId } = await params;
     const body = await request.json();
     const updateData = updateClassSchema.parse(body);
 
@@ -153,7 +153,7 @@ export async function PUT(
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { message: 'Invalid input data', errors: error.errors },
+        { message: 'Invalid input data', errors: error.flatten().fieldErrors },
         { status: 400 }
       );
     }
@@ -168,7 +168,7 @@ export async function PUT(
 // DELETE /api/classes/[id] - Delete class
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -188,7 +188,7 @@ export async function DELETE(
       );
     }
 
-    const classId = await params.id;
+    const { id: classId } = await params;
 
     // Check if class exists
     const existingClass = await db

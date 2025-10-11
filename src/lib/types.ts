@@ -16,13 +16,6 @@ declare module 'next-auth' {
   }
 }
 
-declare module 'next-auth/jwt' {
-  interface JWT {
-    role: string;
-    schoolId: string | null;
-  }
-}
-
 // Application types
 export type UserRole = 'superadmin' | 'admin' | 'teacher' | 'parent' | 'student';
 

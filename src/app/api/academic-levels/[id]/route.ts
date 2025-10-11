@@ -14,7 +14,7 @@ const updateLevelSchema = z.object({
 // GET /api/academic-levels/[id] - Get specific academic level
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -26,7 +26,7 @@ export async function GET(
       );
     }
 
-    const levelId = await params.id;
+    const { id: levelId } = await params;
 
     const levelData = await db
       .select()
@@ -64,7 +64,7 @@ export async function GET(
 // PUT /api/academic-levels/[id] - Update academic level
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -84,7 +84,7 @@ export async function PUT(
       );
     }
 
-    const levelId = await params.id;
+    const { id: levelId } = await params;
     const body = await request.json();
     const updateData = updateLevelSchema.parse(body);
 
@@ -150,7 +150,7 @@ export async function PUT(
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { message: 'Invalid input data', errors: error.errors },
+        { message: 'Invalid input data', errors: error.flatten().fieldErrors },
         { status: 400 }
       );
     }
@@ -165,7 +165,7 @@ export async function PUT(
 // DELETE /api/academic-levels/[id] - Delete academic level
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -185,7 +185,7 @@ export async function DELETE(
       );
     }
 
-    const levelId = await params.id;
+    const { id: levelId } = await params;
 
     // Check if level exists
     const existingLevel = await db

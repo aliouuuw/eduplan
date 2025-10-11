@@ -37,16 +37,20 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    let query = db.select().from(academicLevels);
-
-    // Filter by school if specified or user's school
+    // Build query with appropriate filters
+    let levels;
     if (schoolId) {
-      query = query.where(eq(academicLevels.schoolId, schoolId));
+      levels = await db.select().from(academicLevels)
+        .where(eq(academicLevels.schoolId, schoolId))
+        .orderBy(academicLevels.name);
     } else if (!isSuperAdmin(session.user.role) && session.user.schoolId) {
-      query = query.where(eq(academicLevels.schoolId, session.user.schoolId));
+      levels = await db.select().from(academicLevels)
+        .where(eq(academicLevels.schoolId, session.user.schoolId))
+        .orderBy(academicLevels.name);
+    } else {
+      levels = await db.select().from(academicLevels)
+        .orderBy(academicLevels.name);
     }
-
-    const levels = await query.orderBy(academicLevels.name);
 
     return NextResponse.json({ levels });
   } catch (error) {
@@ -130,7 +134,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { message: 'Invalid input data', errors: error.errors },
+        { message: 'Invalid input data', errors: error.flatten().fieldErrors },
         { status: 400 }
       );
     }

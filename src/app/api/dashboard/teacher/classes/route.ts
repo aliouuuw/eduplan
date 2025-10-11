@@ -89,10 +89,10 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * GET /api/dashboard/teacher/classes/:classId/students
- * Returns students enrolled in a specific class (only if teacher teaches it)
+ * Helper function to get students enrolled in a specific class (only if teacher teaches it)
+ * This is not a route handler - it's a helper function
  */
-export async function getClassStudents(classId: string, teacherId: string, schoolId: string) {
+async function getClassStudents(classId: string, teacherId: string, schoolId: string) {
   try {
     // Verify teacher teaches this class
     const teacherClass = await db

@@ -39,7 +39,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    let query = db
+    // Build query with appropriate filters
+    let allClasses;
+    const baseQuery = db
       .select({
         id: classes.id,
         schoolId: classes.schoolId,
@@ -54,14 +56,17 @@ export async function GET(request: NextRequest) {
       .from(classes)
       .leftJoin(academicLevels, eq(classes.levelId, academicLevels.id));
 
-    // Filter by school if specified or user's school
     if (schoolId) {
-      query = query.where(eq(classes.schoolId, schoolId));
+      allClasses = await baseQuery
+        .where(eq(classes.schoolId, schoolId))
+        .orderBy(classes.createdAt);
     } else if (!isSuperAdmin(session.user.role) && session.user.schoolId) {
-      query = query.where(eq(classes.schoolId, session.user.schoolId));
+      allClasses = await baseQuery
+        .where(eq(classes.schoolId, session.user.schoolId))
+        .orderBy(classes.createdAt);
+    } else {
+      allClasses = await baseQuery.orderBy(classes.createdAt);
     }
-
-    const allClasses = await query.orderBy(classes.createdAt);
 
     return NextResponse.json({ classes: allClasses });
   } catch (error) {
@@ -165,7 +170,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { message: 'Invalid input data', errors: error.errors },
+        { message: 'Invalid input data', errors: error.flatten().fieldErrors },
         { status: 400 }
       );
     }

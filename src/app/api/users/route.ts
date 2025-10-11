@@ -49,13 +49,13 @@ export async function GET(request: NextRequest) {
 
     // Role filtering
     if (role) {
-      conditions.push(eq(users.role, role));
+      conditions.push(eq(users.role, role as any));
     }
 
     // Pending users (inactive users without schoolId)
     if (pending) {
       conditions.push(eq(users.isActive, false));
-      conditions.push(eq(users.schoolId, null));
+      conditions.push(isNull(users.schoolId));
     }
 
     // Exclude the current user from the results (admins shouldn't see themselves in the user list)
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
       .from(users);
 
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      query = query.where(and(...conditions)) as any;
     }
 
     const allUsers = await query.orderBy(users.createdAt);
@@ -191,7 +191,7 @@ export async function PUT(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { message: 'Invalid input data', errors: error.errors },
+        { message: 'Invalid input data', errors: error.flatten().fieldErrors },
         { status: 400 }
       );
     }

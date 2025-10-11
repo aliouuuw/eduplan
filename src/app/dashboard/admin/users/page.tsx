@@ -11,7 +11,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Users, UserCheck, GraduationCap, UserPlus, AlertCircle } from 'lucide-react';
 import type { User } from 'next-auth';
 
-interface UserWithSchool extends User {
+interface UserWithSchool {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
   schoolId: string | null;
   isActive: boolean;
   createdAt: number;
@@ -222,7 +226,7 @@ export default function AdminUsersPage() {
       ),
     },
     {
-      key: 'actions' as any,
+      key: 'id' as keyof UserWithSchool,
       label: 'Actions',
       render: (_value: any, item: UserWithSchool) => (
         <div className="flex space-x-2">

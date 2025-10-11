@@ -12,9 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const invitationSchema = z.object({
   email: z.string().email('Invalid email address'),
-  role: z.enum(['admin', 'teacher', 'parent', 'student'], {
-    required_error: 'Please select a role',
-  }),
+  role: z.enum(['admin', 'teacher', 'parent', 'student']),
 });
 
 type InvitationFormData = z.infer<typeof invitationSchema>;

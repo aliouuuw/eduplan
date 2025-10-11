@@ -24,7 +24,7 @@ const timetableUpdateSchema = z.object({
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -39,12 +39,14 @@ export async function GET(
       return NextResponse.json({ error: 'School not found' }, { status: 400 });
     }
 
+    const { id } = await params;
+
     const entry = await db
       .select()
       .from(timetables)
       .where(
         and(
-          eq(timetables.id, params.id),
+          eq(timetables.id, id),
           eq(timetables.schoolId, schoolId)
         )
       )
@@ -67,7 +69,7 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -87,6 +89,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Access denied. Admins only.' }, { status: 403 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     const validated = timetableUpdateSchema.parse(body);
 
@@ -96,7 +99,7 @@ export async function PUT(
       .from(timetables)
       .where(
         and(
-          eq(timetables.id, params.id),
+          eq(timetables.id, id),
           eq(timetables.schoolId, schoolId)
         )
       )
@@ -185,7 +188,7 @@ export async function PUT(
         )
         .limit(1);
 
-      if (teacherConflict.length > 0 && teacherConflict[0].id !== params.id) {
+      if (teacherConflict.length > 0 && teacherConflict[0].id !== id) {
         return NextResponse.json(
           { error: 'Teacher is already scheduled at this time slot' },
           { status: 400 }
@@ -202,7 +205,7 @@ export async function PUT(
       })
       .where(
         and(
-          eq(timetables.id, params.id),
+          eq(timetables.id, id),
           eq(timetables.schoolId, schoolId)
         )
       )
@@ -212,7 +215,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.flatten().fieldErrors },
         { status: 400 }
       );
     }
@@ -228,7 +231,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -248,13 +251,15 @@ export async function DELETE(
       return NextResponse.json({ error: 'Access denied. Admins only.' }, { status: 403 });
     }
 
+    const { id } = await params;
+
     // Check if timetable entry exists
     const existingEntry = await db
       .select()
       .from(timetables)
       .where(
         and(
-          eq(timetables.id, params.id),
+          eq(timetables.id, id),
           eq(timetables.schoolId, schoolId)
         )
       )
@@ -269,7 +274,7 @@ export async function DELETE(
       .delete(timetables)
       .where(
         and(
-          eq(timetables.id, params.id),
+          eq(timetables.id, id),
           eq(timetables.schoolId, schoolId)
         )
       );

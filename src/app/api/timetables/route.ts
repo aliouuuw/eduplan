@@ -46,8 +46,14 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const classId = searchParams.get('classId');
 
+    // Build query conditions
+    const conditions = [eq(timetables.schoolId, schoolId)];
+    if (classId) {
+      conditions.push(eq(timetables.classId, classId));
+    }
+
     // Build query
-    let query = db
+    const query = db
       .select({
         id: timetables.id,
         classId: timetables.classId,
@@ -72,11 +78,7 @@ export async function GET(request: NextRequest) {
       .leftJoin(subjects, eq(timetables.subjectId, subjects.id))
       .leftJoin(users, eq(timetables.teacherId, users.id))
       .innerJoin(timeSlots, eq(timetables.timeSlotId, timeSlots.id))
-      .where(eq(timetables.schoolId, schoolId));
-
-    if (classId) {
-      query = query.where(eq(timetables.classId, classId)) as any;
-    }
+      .where(and(...conditions));
 
     const entries = await query;
 
@@ -239,7 +241,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.flatten().fieldErrors },
         { status: 400 }
       );
     }

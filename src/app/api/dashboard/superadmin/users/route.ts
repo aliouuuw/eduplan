@@ -26,8 +26,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Role filtering
-    if (role) {
-      conditions.push(eq(users.role, role));
+    if (role && ['superadmin', 'admin', 'teacher', 'parent', 'student'].includes(role)) {
+      conditions.push(eq(users.role, role as 'superadmin' | 'admin' | 'teacher' | 'parent' | 'student'));
     }
 
     // Status filtering
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     conditions.push(isNull(users.deletedAt));
 
     // Get users with school information
-    let query = db
+    const baseQuery = db
       .select({
         id: users.id,
         email: users.email,
@@ -57,11 +57,9 @@ export async function GET(request: NextRequest) {
       .from(users)
       .leftJoin(schools, eq(users.schoolId, schools.id));
 
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-
-    const allUsers = await query.orderBy(users.createdAt);
+    const allUsers = conditions.length > 0 
+      ? await baseQuery.where(and(...conditions)).orderBy(users.createdAt)
+      : await baseQuery.orderBy(users.createdAt);
 
     // Get summary stats (excluding soft-deleted users)
     const stats = await db
@@ -76,15 +74,15 @@ export async function GET(request: NextRequest) {
 
     // Process stats
     const totalUsers = stats.reduce((sum, stat) => sum + stat.count, 0);
-    const activeUsers = stats.filter(stat => stat.isActive === 1).reduce((sum, stat) => sum + stat.count, 0);
-    const inactiveUsers = stats.filter(stat => stat.isActive === 0).reduce((sum, stat) => sum + stat.count, 0);
+    const activeUsers = stats.filter(stat => stat.isActive === true).reduce((sum, stat) => sum + stat.count, 0);
+    const inactiveUsers = stats.filter(stat => stat.isActive === false).reduce((sum, stat) => sum + stat.count, 0);
 
     const usersByRole = {
-      superadmin: stats.find(stat => stat.role === 'superadmin' && stat.isActive === 1)?.count || 0,
-      admin: stats.find(stat => stat.role === 'admin' && stat.isActive === 1)?.count || 0,
-      teacher: stats.find(stat => stat.role === 'teacher' && stat.isActive === 1)?.count || 0,
-      student: stats.find(stat => stat.role === 'student' && stat.isActive === 1)?.count || 0,
-      parent: stats.find(stat => stat.role === 'parent' && stat.isActive === 1)?.count || 0,
+      superadmin: stats.find(stat => stat.role === 'superadmin' && stat.isActive === true)?.count || 0,
+      admin: stats.find(stat => stat.role === 'admin' && stat.isActive === true)?.count || 0,
+      teacher: stats.find(stat => stat.role === 'teacher' && stat.isActive === true)?.count || 0,
+      student: stats.find(stat => stat.role === 'student' && stat.isActive === true)?.count || 0,
+      parent: stats.find(stat => stat.role === 'parent' && stat.isActive === true)?.count || 0,
     };
 
     return NextResponse.json({

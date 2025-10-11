@@ -15,7 +15,7 @@ const updateSubjectSchema = z.object({
 // GET /api/subjects/[id] - Get specific subject
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -27,7 +27,7 @@ export async function GET(
       );
     }
 
-    const subjectId = await params.id;
+    const { id: subjectId } = await params;
 
     const subjectData = await db
       .select()
@@ -65,7 +65,7 @@ export async function GET(
 // PUT /api/subjects/[id] - Update subject
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -85,7 +85,7 @@ export async function PUT(
       );
     }
 
-    const subjectId = await params.id;
+    const { id: subjectId } = await params;
     const body = await request.json();
     const updateData = updateSubjectSchema.parse(body);
 
@@ -170,7 +170,7 @@ export async function PUT(
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { message: 'Invalid input data', errors: error.errors },
+        { message: 'Invalid input data', errors: error.flatten().fieldErrors },
         { status: 400 }
       );
     }
@@ -185,7 +185,7 @@ export async function PUT(
 // DELETE /api/subjects/[id] - Delete subject
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -205,7 +205,7 @@ export async function DELETE(
       );
     }
 
-    const subjectId = await params.id;
+    const { id: subjectId } = await params;
 
     // Check if subject exists
     const existingSubject = await db

@@ -17,7 +17,7 @@ const timeSlotSchema = z.object({
   startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format (HH:MM)'),
   endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format (HH:MM)'),
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
-  isBreak: z.boolean().default(false),
+  isBreak: z.boolean(),
 }).refine((data) => data.startTime < data.endTime, {
   message: 'Start time must be before end time',
   path: ['endTime'],

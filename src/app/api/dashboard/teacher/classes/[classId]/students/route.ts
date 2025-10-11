@@ -10,7 +10,7 @@ import { eq, and } from 'drizzle-orm';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { classId: string } }
+  { params }: { params: Promise<{ classId: string }> }
 ) {
   try {
     const session = await auth();
@@ -25,7 +25,7 @@ export async function GET(
 
     const teacherId = session.user.id;
     const schoolId = session.user.schoolId;
-    const { classId } = params;
+    const { classId } = await params;
 
     if (!schoolId) {
       return NextResponse.json({ error: 'School not found' }, { status: 400 });
