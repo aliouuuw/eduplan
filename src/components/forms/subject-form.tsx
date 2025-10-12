@@ -15,6 +15,7 @@ const subjectSchema = z.object({
   name: z.string().min(1, 'Subject name is required'),
   code: z.string().optional(),
   description: z.string().optional(),
+  weeklyHours: z.number().min(0).max(50).default(0),
 });
 
 type SubjectFormData = z.infer<typeof subjectSchema>;
@@ -42,6 +43,7 @@ export function SubjectForm({
       name: subject?.name || '',
       code: subject?.code || '',
       description: subject?.description || '',
+      weeklyHours: subject?.weeklyHours || 0,
     },
   });
 
@@ -129,6 +131,32 @@ export function SubjectForm({
                     />
                   </FormControl>
                   <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="weeklyHours"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium text-black">Weekly Hours</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="50"
+                      placeholder="e.g., 5 for Math (hours per week)"
+                      {...field}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      disabled={isSubmitting}
+                      className="border-gray-300 focus:border-black focus:ring-black"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Number of teaching hours required per week for auto-scheduling
+                  </p>
                 </FormItem>
               )}
             />

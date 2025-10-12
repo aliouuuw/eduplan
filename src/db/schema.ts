@@ -95,6 +95,7 @@ export const subjects = sqliteTable('subjects', {
   name: text('name').notNull(), // e.g., "Mathematics", "French"
   code: text('code'), // e.g., "MATH", "FR"
   description: text('description'),
+  weeklyHours: integer('weekly_hours').default(0), // Hours per week for auto-scheduling
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });

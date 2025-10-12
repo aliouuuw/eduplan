@@ -216,6 +216,31 @@ export async function POST(request: NextRequest) {
       if (teacherExists.length === 0) {
         return NextResponse.json({ error: 'Teacher not found' }, { status: 404 });
       }
+
+      // Check teacher availability for this time slot
+      const timeSlot = timeSlotExists[0];
+      const availability = await db
+        .select()
+        .from(teacherAvailability)
+        .where(
+          and(
+            eq(teacherAvailability.teacherId, validated.teacherId),
+            eq(teacherAvailability.dayOfWeek, timeSlot.dayOfWeek),
+            eq(teacherAvailability.schoolId, schoolId)
+          )
+        );
+
+      // Check if the time slot falls within any of the teacher's availability windows
+      const isAvailable = availability.some(slot =>
+        timeSlot.startTime >= slot.startTime && timeSlot.endTime <= slot.endTime
+      );
+
+      if (!isAvailable) {
+        return NextResponse.json(
+          { error: `Teacher is not available during this time slot (${timeSlot.startTime}-${timeSlot.endTime})` },
+          { status: 400 }
+        );
+      }
     }
 
     const id = generateId();
