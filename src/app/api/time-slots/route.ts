@@ -12,6 +12,7 @@ function getCurrentTimestamp(): Date {
 
 // Validation schema
 const timeSlotSchema = z.object({
+  templateId: z.string().optional().nullable(), // Template ID (optional for backward compatibility)
   dayOfWeek: z.number().min(1).max(7),
   startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format (HH:MM)'),
   endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format (HH:MM)'),
@@ -21,7 +22,7 @@ const timeSlotSchema = z.object({
 
 /**
  * GET /api/time-slots
- * Get all time slots for the school
+ * Get all time slots for the school, optionally filtered by templateId
  */
 export async function GET(request: NextRequest) {
   try {
@@ -42,10 +43,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied. Admins only.' }, { status: 403 });
     }
 
+    // Get templateId filter from query params
+    const { searchParams } = new URL(request.url);
+    const templateId = searchParams.get('templateId');
+
+    // Build where clause
+    const whereConditions = templateId
+      ? and(eq(timeSlots.schoolId, schoolId), eq(timeSlots.templateId, templateId))
+      : eq(timeSlots.schoolId, schoolId);
+
     const slots = await db
       .select()
       .from(timeSlots)
-      .where(eq(timeSlots.schoolId, schoolId))
+      .where(whereConditions)
       .orderBy(asc(timeSlots.dayOfWeek), asc(timeSlots.startTime));
 
     // Group by day for easier frontend rendering
@@ -105,16 +115,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for overlapping time slots on the same day
+    // Check for overlapping time slots on the same day and template
+    const whereConditions = validated.templateId
+      ? and(
+          eq(timeSlots.schoolId, schoolId),
+          eq(timeSlots.dayOfWeek, validated.dayOfWeek),
+          eq(timeSlots.templateId, validated.templateId)
+        )
+      : and(
+          eq(timeSlots.schoolId, schoolId),
+          eq(timeSlots.dayOfWeek, validated.dayOfWeek)
+        );
+
     const existingSlots = await db
       .select()
       .from(timeSlots)
-      .where(
-        and(
-          eq(timeSlots.schoolId, schoolId),
-          eq(timeSlots.dayOfWeek, validated.dayOfWeek)
-        )
-      );
+      .where(whereConditions);
 
     // Check for time overlap
     for (const existing of existingSlots) {
@@ -148,6 +164,7 @@ export async function POST(request: NextRequest) {
       .values({
         id,
         schoolId,
+        templateId: validated.templateId || null,
         dayOfWeek: validated.dayOfWeek,
         startTime: validated.startTime,
         endTime: validated.endTime,

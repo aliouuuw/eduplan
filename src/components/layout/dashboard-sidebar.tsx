@@ -109,6 +109,12 @@ const navigationItems: NavItem[] = [
     roles: ['admin'],
     children: [
       {
+        label: 'Templates',
+        href: '/dashboard/admin/scheduling/templates',
+        icon: <FolderTree className="h-4 w-4" />,
+        roles: ['admin'],
+      },
+      {
         label: 'Time Slots',
         href: '/dashboard/admin/scheduling/time-slots',
         icon: <Clock className="h-4 w-4" />,

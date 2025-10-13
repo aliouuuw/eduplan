@@ -8,27 +8,27 @@ import { Button } from '@/components/ui/button';
 export default function AdminSchedulingPage() {
   const quickActions = [
     {
+      title: 'Schedule Templates',
+      description: 'Create templates for different class levels',
+      icon: <Settings className="h-5 w-5" />,
+      href: '/dashboard/admin/scheduling/templates',
+    },
+    {
+      title: 'Manage Time Slots',
+      description: 'Define time periods within each template',
+      icon: <Clock className="h-5 w-5" />,
+      href: '/dashboard/admin/scheduling/time-slots',
+    },
+    {
       title: 'Manage Timetables',
       description: 'Create, view, and edit class schedules',
       icon: <Calendar className="h-5 w-5" />,
       href: '/dashboard/admin/scheduling/timetables',
     },
     {
-      title: 'Manage Time Slots',
-      description: 'Define daily schedule templates for your school',
-      icon: <Clock className="h-5 w-5" />,
-      href: '/dashboard/admin/scheduling/time-slots',
-    },
-    {
-      title: 'Subject Quotas',
-      description: 'Set weekly teaching hours for each subject',
-      icon: <BookOpen className="h-5 w-5" />,
-      href: '/dashboard/admin/subjects',
-    },
-    {
       title: 'Teacher Availability',
       description: 'Configure when teachers are available to teach',
-      icon: <Settings className="h-5 w-5" />,
+      icon: <BookOpen className="h-5 w-5" />,
       href: '/dashboard/admin/teachers/availability',
     },
   ];

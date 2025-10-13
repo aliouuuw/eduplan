@@ -81,6 +81,7 @@ export const classes = sqliteTable('classes', {
   id: text('id').primaryKey(),
   schoolId: text('school_id').notNull(),
   levelId: text('level_id').notNull(),
+  timeSlotTemplateId: text('time_slot_template_id'), // Links to time slot template
   name: text('name').notNull(), // e.g., "6ème A", "CM2 B"
   academicYear: text('academic_year').notNull(), // e.g., "2024-2025"
   capacity: integer('capacity').default(30),
@@ -156,10 +157,24 @@ export const parentStudents = sqliteTable('parent_students', {
   pk: primaryKey({ columns: [table.parentId, table.studentId] }),
 }));
 
+// Time slot templates (e.g., "Primary Schedule", "Secondary Schedule")
+export const timeSlotTemplates = sqliteTable('time_slot_templates', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  name: text('name').notNull(), // e.g., "Primary Schedule", "Secondary Full Day"
+  description: text('description'), // e.g., "For classes CP through CM2"
+  isDefault: integer('is_default', { mode: 'boolean' }).default(false),
+  isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  createdBy: text('created_by').notNull(), // User who created it
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
 // Time slots for timetables
 export const timeSlots = sqliteTable('time_slots', {
   id: text('id').primaryKey(),
   schoolId: text('school_id').notNull(),
+  templateId: text('template_id'), // Links to time slot template
   dayOfWeek: integer('day_of_week').notNull(), // 1-7 (Monday-Sunday)
   startTime: text('start_time').notNull(), // HH:MM format
   endTime: text('end_time').notNull(), // HH:MM format
@@ -200,6 +215,7 @@ export const schoolsRelations = relations(schools, ({ many }) => ({
   academicLevels: many(academicLevels),
   classes: many(classes),
   subjects: many(subjects),
+  timeSlotTemplates: many(timeSlotTemplates),
   timeSlots: many(timeSlots),
   timetables: many(timetables),
   invitations: many(invitations),
@@ -222,6 +238,10 @@ export const classesRelations = relations(classes, ({ one, many }) => ({
   level: one(academicLevels, {
     fields: [classes.levelId],
     references: [academicLevels.id],
+  }),
+  timeSlotTemplate: one(timeSlotTemplates, {
+    fields: [classes.timeSlotTemplateId],
+    references: [timeSlotTemplates.id],
   }),
   teacherClasses: many(teacherClasses),
   studentEnrollments: many(studentEnrollments),
@@ -297,10 +317,27 @@ export const parentStudentsRelations = relations(parentStudents, ({ one }) => ({
   }),
 }));
 
+export const timeSlotTemplatesRelations = relations(timeSlotTemplates, ({ one, many }) => ({
+  school: one(schools, {
+    fields: [timeSlotTemplates.schoolId],
+    references: [schools.id],
+  }),
+  creator: one(users, {
+    fields: [timeSlotTemplates.createdBy],
+    references: [users.id],
+  }),
+  timeSlots: many(timeSlots),
+  classes: many(classes),
+}));
+
 export const timeSlotsRelations = relations(timeSlots, ({ one, many }) => ({
   school: one(schools, {
     fields: [timeSlots.schoolId],
     references: [schools.id],
+  }),
+  template: one(timeSlotTemplates, {
+    fields: [timeSlots.templateId],
+    references: [timeSlotTemplates.id],
   }),
   timetables: many(timetables),
 }));

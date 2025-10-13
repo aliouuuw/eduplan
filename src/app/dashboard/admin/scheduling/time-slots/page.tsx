@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Clock, Calendar, Coffee, BookOpen, AlertTriangle } from 'lucide-react';
+import { Plus, Clock, Calendar, Coffee, BookOpen, AlertTriangle, Layers } from 'lucide-react';
 import { TimeSlotForm } from '@/components/forms/time-slot-form';
+import Link from 'next/link';
 
 interface TimeSlot {
   id: string;
@@ -17,7 +20,17 @@ interface TimeSlot {
   endTime: string;
   name: string;
   isBreak: boolean;
+  templateId: string | null;
   createdAt: Date;
+}
+
+interface TimeSlotTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  isDefault: boolean;
+  slotCount: number;
+  classCount: number;
 }
 
 const DAYS_OF_WEEK = [
@@ -27,14 +40,46 @@ const DAYS_OF_WEEK = [
 export default function AdminTimeSlotsPage() {
   const { data: session } = useSession();
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  
   const [loading, setLoading] = useState(true);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [templates, setTemplates] = useState<TimeSlotTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [showForm, setShowForm] = useState(false);
   const [editingTimeSlot, setEditingTimeSlot] = useState<TimeSlot | null>(null);
 
-  const fetchTimeSlots = async () => {
+  const fetchTemplates = async () => {
     try {
-      const response = await fetch('/api/time-slots');
+      const response = await fetch('/api/time-slot-templates');
+      if (response.ok) {
+        const data = await response.json();
+        setTemplates(data.templates);
+        
+        // Set default template or first template as selected
+        const defaultTemplate = data.templates.find((t: TimeSlotTemplate) => t.isDefault);
+        const initialTemplate = defaultTemplate || data.templates[0];
+        
+        // Check if templateId is in URL params
+        const urlTemplateId = searchParams?.get('templateId');
+        if (urlTemplateId) {
+          setSelectedTemplateId(urlTemplateId);
+        } else if (initialTemplate) {
+          setSelectedTemplateId(initialTemplate.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+    }
+  };
+
+  const fetchTimeSlots = async (templateId?: string) => {
+    try {
+      const url = templateId 
+        ? `/api/time-slots?templateId=${templateId}`
+        : '/api/time-slots';
+      
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
         setTimeSlots(data.slots);
@@ -54,15 +99,21 @@ export default function AdminTimeSlotsPage() {
   };
 
   useEffect(() => {
-    fetchTimeSlots();
+    fetchTemplates();
   }, []);
+
+  useEffect(() => {
+    if (selectedTemplateId) {
+      fetchTimeSlots(selectedTemplateId);
+    }
+  }, [selectedTemplateId]);
 
   const handleCreateTimeSlot = async (data: any) => {
     try {
       const response = await fetch('/api/time-slots', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, templateId: selectedTemplateId }),
       });
 
       if (response.ok) {
@@ -71,7 +122,7 @@ export default function AdminTimeSlotsPage() {
           description: 'Time slot created successfully',
         });
         setShowForm(false);
-        fetchTimeSlots();
+        fetchTimeSlots(selectedTemplateId);
       } else {
         const error = await response.json();
         throw new Error(error.error || 'Failed to create time slot');
@@ -103,7 +154,7 @@ export default function AdminTimeSlotsPage() {
         });
         setShowForm(false);
         setEditingTimeSlot(null);
-        fetchTimeSlots();
+        fetchTimeSlots(selectedTemplateId);
       } else {
         const error = await response.json();
         throw new Error(error.error || 'Failed to update time slot');
@@ -133,7 +184,7 @@ export default function AdminTimeSlotsPage() {
           title: 'Success',
           description: 'Time slot deleted successfully',
         });
-        fetchTimeSlots();
+        fetchTimeSlots(selectedTemplateId);
       } else {
         const error = await response.json();
         throw new Error(error.error || 'Failed to delete time slot');
@@ -257,13 +308,64 @@ export default function AdminTimeSlotsPage() {
     return acc;
   }, {} as Record<number, TimeSlot[]>);
 
+  const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
+
   return (
     <div className="space-y-10">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-semibold text-black">Time Slots</h1>
-        <p className="max-w-2xl text-sm text-gray-600">
-          Manage your school's daily schedule template with teaching periods and breaks
-        </p>
+      <header className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-semibold text-black">Time Slots</h1>
+            <p className="max-w-2xl text-sm text-gray-600">
+              Manage your school's daily schedule template with teaching periods and breaks
+            </p>
+          </div>
+          <Link href="/dashboard/admin/scheduling/templates">
+            <Button variant="outline">
+              <Layers className="h-4 w-4 mr-2" />
+              Manage Templates
+            </Button>
+          </Link>
+        </div>
+
+        {/* Template Selector */}
+        {templates.length > 0 && (
+          <Card className="rounded-2xl border border-gray-200 shadow-sm">
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-4">
+                <div className="flex-1">
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Schedule Template
+                  </label>
+                  <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a template..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {templates.map((template) => (
+                        <SelectItem key={template.id} value={template.id}>
+                          <div className="flex items-center justify-between w-full">
+                            <span>{template.name}</span>
+                            {template.isDefault && (
+                              <Badge variant="secondary" className="ml-2 bg-yellow-100 text-yellow-800">
+                                Default
+                              </Badge>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedTemplate && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      {selectedTemplate.description || `${selectedTemplate.slotCount} time slots • ${selectedTemplate.classCount} classes`}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </header>
 
       <section className="space-y-4">
