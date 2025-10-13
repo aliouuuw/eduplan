@@ -324,6 +324,7 @@ async function seedTimetableData() {
             classId: classIds[className],
             subjectId: subjectIds[subject.name],
             schoolId: schoolId,
+            weeklyHours: subject.weeklyHours, // Class-specific weekly hours
             createdAt: now,
           });
         } else {
@@ -348,6 +349,7 @@ async function seedTimetableData() {
             classId: classIds[className],
             subjectId: subjectIds[subject.name],
             schoolId: schoolId,
+            weeklyHours: subject.weeklyHours, // Class-specific weekly hours
             createdAt: now,
           });
         } else {
@@ -469,11 +471,14 @@ async function seedTimetableData() {
     console.log('✅ READY FOR TIMETABLE BUILDING!');
     console.log('═══════════════════════════════════════════════════════');
     console.log('Each class now has:');
-    console.log('  ✓ All required subjects assigned with weekly hour quotas');
+    console.log('  ✓ All required subjects assigned with class-specific weekly hours');
     console.log('  ✓ Qualified teachers for each subject');
     console.log('  ✓ Enrolled students');
     console.log('  ✓ Time slots available for scheduling');
     console.log('  ✓ Teacher availability set (Mon-Fri, 8:00-17:00)');
+    console.log('');
+    console.log('📊 NOTE: Weekly hours are now per-class-subject assignments');
+    console.log('   (e.g., Math can be 5h/week in CM2 A but 4h/week in CM2 B)');
     console.log('');
     console.log('🚀 NAVIGATION FLOWS - EXPLORE YOUR DATA:');
     console.log('═══════════════════════════════════════════════════════');

@@ -88,54 +88,38 @@ export default function AdminTeachersPage() {
   const [teacherLoad, setTeacherLoad] = useState(0); // New state for weekly load
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (session?.user) {
+      fetchData();
+    }
+  }, [session]);
 
   const fetchData = async () => {
     try {
-      const [teachersRes, subjectsRes, classesRes, assignmentsRes] = await Promise.all([
-        fetch(`/api/users?schoolId=${session?.user?.schoolId}&role=teacher`),
-        fetch('/api/subjects'),
-        fetch('/api/classes'),
-        fetch(`/api/teacher-assignments?schoolId=${session?.user?.schoolId}`), // Fetch all assignments
-      ]);
-
+      setLoading(true);
+      
+      // Fetch teachers with stats from new endpoint
+      const teachersRes = await fetch('/api/dashboard/admin/teachers');
+      
       if (teachersRes.ok) {
         const data = await teachersRes.json();
-        const fetchedTeachers = Array.isArray(data.users) ? data.users : [];
-        let allSubjects: Subject[] = [];
-        if (subjectsRes.ok) {
-          const subData = await subjectsRes.json();
-          allSubjects = Array.isArray(subData.subjects) ? subData.subjects : [];
-          setSubjects(allSubjects);
-        }
-        let allClasses: Class[] = [];
-        if (classesRes.ok) {
-          const classData = await classesRes.json();
-          allClasses = Array.isArray(classData.classes) ? classData.classes : [];
-          setClasses(allClasses);
-        }
-
-        let allAssignments: Assignment[] = [];
-        if (assignmentsRes.ok) {
-          const assignData = await assignmentsRes.json();
-          allAssignments = Array.isArray(assignData.assignments) ? assignData.assignments : [];
-        }
-
-        // Calculate assigned counts and weekly load for each teacher
-        const teachersWithCountsAndLoad = fetchedTeachers.map((teacher: Teacher) => {
-          const teacherSubjectAssignments = allAssignments.filter(a => a.teacherId === teacher.id && a.subjectId);
-          const teacherClassAssignments = allAssignments.filter(a => a.teacherId === teacher.id && a.classId);
-          const totalWeeklyLoad = calculateWeeklyTeachingLoad(teacherSubjectAssignments, allSubjects); // Calculate load here
-
-          return {
-            ...teacher,
-            assignedSubjectsCount: new Set(teacherSubjectAssignments.map(a => a.subjectId)).size,
-            assignedClassesCount: new Set(teacherClassAssignments.map(a => a.classId)).size,
-            totalWeeklyLoad: totalWeeklyLoad,
-          };
-        });
-        setTeachers(teachersWithCountsAndLoad);
+        const fetchedTeachers = Array.isArray(data.teachers) ? data.teachers : [];
+        setTeachers(fetchedTeachers);
+      }
+      
+      // Fetch subjects and classes for assignment dialogs
+      const [subjectsRes, classesRes] = await Promise.all([
+        fetch('/api/subjects'),
+        fetch('/api/classes'),
+      ]);
+      
+      if (subjectsRes.ok) {
+        const subData = await subjectsRes.json();
+        setSubjects(Array.isArray(subData.subjects) ? subData.subjects : []);
+      }
+      
+      if (classesRes.ok) {
+        const classData = await classesRes.json();
+        setClasses(Array.isArray(classData.classes) ? classData.classes : []);
       }
     } catch (error) {
       console.error('Error fetching data:', error);

@@ -1,0 +1,1 @@
+ALTER TABLE `teacher_classes` ADD `weekly_hours` integer DEFAULT 0;

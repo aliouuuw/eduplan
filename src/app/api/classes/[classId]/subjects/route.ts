@@ -65,7 +65,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       subjectName: subjects.name,
       subjectCode: subjects.code,
       subjectDescription: subjects.description,
-      subjectWeeklyHours: subjects.weeklyHours,
+      weeklyHours: teacherClasses.weeklyHours, // Class-specific weekly hours
       teacherId: users.id,
       teacherName: users.name,
       teacherEmail: users.email,

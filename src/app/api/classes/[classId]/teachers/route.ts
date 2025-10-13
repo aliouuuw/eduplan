@@ -64,6 +64,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       teacherEmail: users.email,
       subjectId: subjects.id,
       subjectName: subjects.name,
+      weeklyHours: teacherClasses.weeklyHours,
       academicYear: classes.academicYear,
     })
     .from(teacherClasses)
@@ -88,6 +89,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       teacher.subjects.push({
         id: assignment.subjectId,
         name: assignment.subjectName,
+        weeklyHours: assignment.weeklyHours,
         academicYear: assignment.academicYear,
         assignmentId: assignment.assignmentId,
       });

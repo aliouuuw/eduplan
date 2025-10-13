@@ -116,6 +116,7 @@ export const teacherClasses = sqliteTable('teacher_classes', {
   classId: text('class_id').notNull(),
   subjectId: text('subject_id').notNull(),
   schoolId: text('school_id').notNull(),
+  weeklyHours: integer('weekly_hours').default(0), // Hours per week for this specific class-subject assignment
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
 

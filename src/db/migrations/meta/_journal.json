@@ -50,6 +50,13 @@
       "when": 1760299629998,
       "tag": "0006_milky_pestilence",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1760358750979,
+      "tag": "0007_yellow_iron_patriot",
+      "breakpoints": true
     }
   ]
 }

@@ -276,6 +276,27 @@ Files fixed:
 - `src/app/api/classes/[classId]/teachers/route.ts`
 - `src/app/api/classes/[classId]/subjects/route.ts`
 
+### Schema Field Reference Fix ✅
+Fixed incorrect field references in API queries:
+- **Problem**: Querying `teacherClasses.academicYear` which doesn't exist in schema
+- **Solution**: Changed to `classes.academicYear` (the correct table)
+- **Impact**: Required adding `.innerJoin(classes, ...)` to queries that were missing it
+
+Files fixed:
+- `src/app/api/subjects/[subjectId]/details/route.ts` - Fixed teacher query
+- `src/app/api/users/[userId]/route.ts` - Fixed classes query
+- `src/app/api/classes/[classId]/teachers/route.ts` - Fixed assignments query + added classes join
+- `src/app/api/classes/[classId]/subjects/route.ts` - Fixed subjects query + added classes join
+
+### API Response Structure Fix ✅
+Fixed data structure mismatch between API and frontend:
+- **Problem**: API returned `{ levels: [...] }` but frontend expected `{ academicLevels: [...] }`
+- **Solution**: Updated API to return `academicLevels` key with proper aggregated counts
+- **File**: `src/app/api/academic-levels/route.ts`
+
+### Removed Duplicate Page ✅
+- Deleted: `src/app/dashboard/admin/academic-levels/` (replaced by `class-groups`)
+
 ## Files Modified
 
 ### Created (7 files)
@@ -287,7 +308,7 @@ Files fixed:
 6. `src/app/api/users/[userId]/route.ts`
 7. `project_docs/LINEAR_UX_REFACTORING_COMPLETE.md`
 
-### Updated (9 files)
+### Updated (13 files)
 1. `src/components/layout/dashboard-sidebar.tsx`
 2. `src/app/dashboard/admin/class-groups/page.tsx`
 3. `src/app/dashboard/admin/classes/page.tsx`
@@ -296,8 +317,14 @@ Files fixed:
 6. `src/app/dashboard/admin/teachers/page.tsx`
 7. `src/app/api/academic-levels/route.ts`
 8. `src/app/api/academic-levels/[id]/route.ts`
-9. `scripts/reset-database.ts`
-10. `scripts/seed-timetable-data.ts`
+9. `src/app/api/subjects/[subjectId]/classes/route.ts`
+10. `src/app/api/classes/[classId]/teachers/route.ts`
+11. `src/app/api/classes/[classId]/subjects/route.ts`
+12. `scripts/reset-database.ts`
+13. `scripts/seed-timetable-data.ts`
+
+### Deleted (1 file)
+1. `src/app/dashboard/admin/academic-levels/page.tsx` - Replaced by `class-groups`
 
 ## Impact
 
@@ -331,4 +358,10 @@ Files fixed:
 ## Conclusion
 
 The linear UX refactoring is complete and provides a significantly improved navigation experience. Users can now easily understand and navigate the relationships between class groups, classes, subjects, and teachers through intuitive drill-down flows and clear breadcrumb navigation.
+
+---
+
+## Related Documentation
+
+- **[Weekly Hours Refactoring](./WEEKLY_HOURS_REFACTORING.md)**: Details the transition to class-specific weekly hours for more accurate timetable scheduling and teacher workload calculation.
 

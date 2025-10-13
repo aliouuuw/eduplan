@@ -60,13 +60,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       name: classes.name,
       academicYear: classes.academicYear,
       capacity: classes.capacity,
+      weeklyHours: teacherClasses.weeklyHours,
       // Aggregate student count for each class
       studentCount: count(teacherClasses.id) // This will be replaced with proper enrollment count
     })
     .from(classes)
     .innerJoin(teacherClasses, eq(classes.id, teacherClasses.classId))
     .where(and(...classWhereConditions))
-    .groupBy(classes.id, classes.name, classes.academicYear, classes.capacity);
+    .groupBy(classes.id, classes.name, classes.academicYear, classes.capacity, teacherClasses.weeklyHours);
 
     // Get teachers who teach this subject with their class assignments
     const teacherWhereConditions = [eq(teacherClasses.subjectId, subjectId)];
@@ -80,6 +81,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       teacherEmail: users.email,
       classId: classes.id,
       className: classes.name,
+      weeklyHours: teacherClasses.weeklyHours,
       academicYear: classes.academicYear,
     })
     .from(teacherClasses)
@@ -100,6 +102,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       acc[item.teacherId].classes.push({
         id: item.classId,
         name: item.className,
+        weeklyHours: item.weeklyHours,
         academicYear: item.academicYear,
       });
       return acc;

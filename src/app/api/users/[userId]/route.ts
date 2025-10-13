@@ -82,6 +82,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       subjectId: subjects.id,
       subjectName: subjects.name,
       subjectCode: subjects.code,
+      weeklyHours: teacherClasses.weeklyHours,
     })
     .from(teacherClasses)
     .innerJoin(classes, eq(teacherClasses.classId, classes.id))
@@ -111,6 +112,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       }
       acc[item.subjectId].classes.push({
         id: item.classId,
+        weeklyHours: item.weeklyHours,
         name: item.className,
         academicYear: item.academicYear,
       });
