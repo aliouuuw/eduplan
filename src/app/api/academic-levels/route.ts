@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, count, sql } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { db, generateId, getCurrentTimestamp } from '@/lib/db';
-import { academicLevels } from '@/db/schema';
+import { academicLevels, classes, studentEnrollments } from '@/db/schema';
 import { canAccessSchool, isSuperAdmin, isSchoolAdmin } from '@/lib/auth';
 
 const createLevelSchema = z.object({
@@ -37,22 +37,69 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Build query with appropriate filters
-    let levels;
-    if (schoolId) {
-      levels = await db.select().from(academicLevels)
-        .where(eq(academicLevels.schoolId, schoolId))
-        .orderBy(academicLevels.name);
-    } else if (!isSuperAdmin(session.user.role) && session.user.schoolId) {
-      levels = await db.select().from(academicLevels)
-        .where(eq(academicLevels.schoolId, session.user.schoolId))
+    // Build query with appropriate filters and aggregate counts
+    let levelsData;
+    const whereClause = schoolId 
+      ? eq(academicLevels.schoolId, schoolId)
+      : (!isSuperAdmin(session.user.role) && session.user.schoolId)
+        ? eq(academicLevels.schoolId, session.user.schoolId)
+        : undefined;
+
+    // Get academic levels with counts
+    if (whereClause) {
+      levelsData = await db
+        .select({
+          id: academicLevels.id,
+          name: academicLevels.name,
+          description: academicLevels.description,
+          schoolId: academicLevels.schoolId,
+          createdAt: academicLevels.createdAt,
+          updatedAt: academicLevels.updatedAt,
+          classCount: count(classes.id),
+        })
+        .from(academicLevels)
+        .leftJoin(classes, eq(academicLevels.id, classes.levelId))
+        .where(whereClause)
+        .groupBy(academicLevels.id)
         .orderBy(academicLevels.name);
     } else {
-      levels = await db.select().from(academicLevels)
+      levelsData = await db
+        .select({
+          id: academicLevels.id,
+          name: academicLevels.name,
+          description: academicLevels.description,
+          schoolId: academicLevels.schoolId,
+          createdAt: academicLevels.createdAt,
+          updatedAt: academicLevels.updatedAt,
+          classCount: count(classes.id),
+        })
+        .from(academicLevels)
+        .leftJoin(classes, eq(academicLevels.id, classes.levelId))
+        .groupBy(academicLevels.id)
         .orderBy(academicLevels.name);
     }
 
-    return NextResponse.json({ levels });
+    // Now get student counts for each level
+    const levelsWithCounts = await Promise.all(
+      levelsData.map(async (level) => {
+        // Count students enrolled in classes under this level
+        const studentCountResult = await db
+          .select({ count: count(studentEnrollments.studentId) })
+          .from(classes)
+          .leftJoin(studentEnrollments, eq(classes.id, studentEnrollments.classId))
+          .where(eq(classes.levelId, level.id))
+          .groupBy(classes.levelId);
+
+        const studentCount = studentCountResult[0]?.count || 0;
+
+        return {
+          ...level,
+          studentCount,
+        };
+      })
+    );
+
+    return NextResponse.json({ academicLevels: levelsWithCounts });
   } catch (error) {
     console.error('Error fetching academic levels:', error);
     return NextResponse.json(

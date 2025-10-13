@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BookOpen, GraduationCap, UserCheck, Clock, AlertCircle } from 'lucide-react';
+import { Users, BookOpen, GraduationCap, UserCheck, Clock, AlertCircle, Calendar, FolderTree, BookText } from 'lucide-react';
 import { DashboardStats } from '@/lib/types';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -75,28 +75,28 @@ export default function AdminDashboard() {
 
   const quickActions = [
     {
-      title: 'Manage Users',
-      description: 'Approve pending registrations, assign roles',
+      title: 'Class Management',
+      description: 'Organize groups and classes',
+      icon: <FolderTree className="h-5 w-5" />,
+      href: '/dashboard/admin/class-groups',
+    },
+    {
+      title: 'Teacher Resources',
+      description: 'Manage staff and assignments',
       icon: <Users className="h-5 w-5" />,
-      href: '/dashboard/admin/users',
+      href: '/dashboard/admin/teachers',
     },
     {
-      title: 'Classes & Subjects',
-      description: 'Create and manage academic structure',
-      icon: <BookOpen className="h-5 w-5" />,
-      href: '/dashboard/admin/classes',
+      title: 'Scheduling Hub',
+      description: 'Create and manage timetables',
+      icon: <Calendar className="h-5 w-5" />,
+      href: '/dashboard/admin/scheduling',
     },
     {
-      title: 'Academic Levels',
-      description: 'Define grade levels and progression',
-      icon: <GraduationCap className="h-5 w-5" />,
-      href: '/dashboard/admin/academic-levels',
-    },
-    {
-      title: 'Timetable',
-      description: 'Create and manage class schedules',
-      icon: <Clock className="h-5 w-5" />,
-      href: '/dashboard/admin/timetable',
+      title: 'Subject Library',
+      description: 'Curriculum and subjects',
+      icon: <BookText className="h-5 w-5" />,
+      href: '/dashboard/admin/subjects',
     },
   ];
 
@@ -209,7 +209,7 @@ export default function AdminDashboard() {
                       <p className="text-xs text-gray-500">Two overlapping class assignments</p>
                     </div>
                     <Button variant="outline" size="sm" asChild className="border-gray-300">
-                      <Link href="/dashboard/admin/timetable">Fix</Link>
+                      <Link href="/dashboard/admin/scheduling/timetables">Fix</Link>
                     </Button>
                   </div>
                   <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
@@ -221,7 +221,7 @@ export default function AdminDashboard() {
                       <p className="text-xs text-gray-500">Prepare structure for 2025-2026</p>
                     </div>
                     <Button variant="outline" size="sm" asChild className="border-gray-300">
-                      <Link href="/dashboard/admin/academic-levels">Setup</Link>
+                      <Link href="/dashboard/admin/class-groups">Setup</Link>
                     </Button>
                   </div>
                 </div>

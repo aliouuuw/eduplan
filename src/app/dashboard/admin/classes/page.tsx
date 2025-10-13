@@ -7,9 +7,11 @@ import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, BookOpen, Users, Calendar } from 'lucide-react';
+import { Plus, BookOpen, Users, Calendar, GraduationCap, ArrowRight } from 'lucide-react';
 import { ClassForm } from '@/components/forms/class-form';
 import type { Class } from '@/lib/db';
+import { Breadcrumbs, createBreadcrumbs } from '@/components/layout/breadcrumbs';
+import Link from 'next/link';
 
 interface ClassWithLevel extends Class {
   levelName: string;
@@ -227,13 +229,30 @@ export default function AdminClassesPage() {
       Array.from(new Set(classes.map(cls => cls.academicYear)))[0] : 'N/A'
   };
 
+  const breadcrumbs = createBreadcrumbs.classes();
+
   return (
-    <div className="space-y-10">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-semibold text-black">Classes</h1>
-        <p className="max-w-2xl text-sm text-gray-600">
-          Create and manage academic classes in your school
-        </p>
+    <div className="space-y-8">
+      <Breadcrumbs items={breadcrumbs} />
+
+      <header className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-semibold text-black flex items-center gap-3">
+              <GraduationCap className="h-8 w-8 text-gray-600" />
+              Classes
+            </h1>
+            <p className="max-w-2xl text-sm text-gray-600">
+              Create and manage academic classes in your school
+            </p>
+          </div>
+          <Button asChild className="bg-black hover:bg-gray-800">
+            <Link href="/dashboard/admin/classes/new">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Class
+            </Link>
+          </Button>
+        </div>
       </header>
 
       <section className="space-y-4">
@@ -291,30 +310,69 @@ export default function AdminClassesPage() {
           </div>
       </section>
 
-      <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <CardHeader className="flex flex-col gap-2 border-b border-gray-200 pb-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <CardTitle className="text-lg font-semibold text-black">All Classes</CardTitle>
-                <CardDescription className="text-sm text-gray-600">
-                  Manage classrooms, align them with levels, and maintain accurate academic years and capacity.
-                </CardDescription>
-              </div>
-              <Button onClick={() => setShowForm(true)} className="bg-black hover:bg-gray-800 sm:w-auto">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Class
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="p-6">
-            <DataTable
-              columns={columns}
-              data={classes}
-              loading={loading}
-              searchPlaceholder="Search classes..."
-            />
+      {loading ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, index) => (
+            <Card key={index} className="rounded-xl border border-gray-200 shadow-sm">
+              <CardHeader>
+                <div className="h-6 w-32 animate-pulse rounded bg-gray-200" />
+                <div className="h-4 w-48 animate-pulse rounded bg-gray-200" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-16 w-full animate-pulse rounded bg-gray-200" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : classes.length === 0 ? (
+        <Card className="rounded-xl border border-gray-200 shadow-sm">
+          <CardContent className="p-8 text-center">
+            <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No classes yet</h3>
+            <p className="text-gray-600 mb-4">Get started by creating your first academic class.</p>
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add First Class
+            </Button>
           </CardContent>
-      </section>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {classes.map((classItem) => (
+            <Card key={classItem.id} className="rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold text-black">
+                  <Link
+                    href={`/dashboard/admin/classes/${classItem.id}`}
+                    className="hover:text-gray-600 transition-colors"
+                  >
+                    {classItem.name}
+                  </Link>
+                </CardTitle>
+                <CardDescription className="text-sm text-gray-600">
+                  {classItem.levelName} • {classItem.academicYear}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2 text-gray-600">
+                      <Users className="h-4 w-4" />
+                      Capacity: {classItem.capacity}
+                    </span>
+                  </div>
+                  <Button variant="outline" size="sm" asChild className="w-full">
+                    <Link href={`/dashboard/admin/classes/${classItem.id}`}>
+                      View Details
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <ClassForm
           open={showForm}

@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import Link from 'next/link';
 
 interface Class {
   id: string;
@@ -711,15 +712,16 @@ export default function AdminTimetablesPage() {
                   <p className="text-sm text-yellow-700 mt-1">
                     Please create time slots in the Time Slots management page before building timetables.
                   </p>
+                  <Link href="/dashboard/admin/scheduling/time-slots" passHref>
                   <Button
                     variant="outline"
                     size="sm"
                     className="mt-3 border-yellow-300 hover:bg-yellow-100"
-                    onClick={() => window.location.href = '/dashboard/admin/time-slots'}
                   >
                     <Clock className="h-4 w-4 mr-2" />
                     Manage Time Slots
                   </Button>
+                </Link>
                 </div>
               </div>
             </CardContent>

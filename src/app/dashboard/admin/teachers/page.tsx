@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Calendar, BookOpen, Plus, Trash2, Clock } from 'lucide-react';
+import { Users, Calendar, BookOpen, Plus, Trash2, Clock, ArrowRight, User, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,17 +16,28 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import Link from 'next/link'; // Added Link import
+import { calculateWeeklyTeachingLoad } from '@/lib/teacher-utils'; // Assuming this utility exists or will be created
+import { Breadcrumbs, createBreadcrumbs } from '@/components/layout/breadcrumbs';
 
 interface Teacher {
   id: string;
   name: string;
   email: string;
+  assignedSubjectsCount: number; // New field for stats
+  assignedClassesCount: number;  // New field for stats
+  totalWeeklyLoad: number; // New field for weekly load
 }
 
 interface Subject {
   id: string;
+  schoolId: string;
   name: string;
   code: string | null;
+  description: string | null;
+  weeklyHours: number | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface Class {
@@ -37,6 +48,7 @@ interface Class {
 
 interface Assignment {
   id: string;
+  teacherId?: string;
   subjectId?: string;
   subjectName?: string;
   subjectCode?: string | null;
@@ -73,6 +85,7 @@ export default function AdminTeachersPage() {
     subjectId: '',
     classId: '',
   });
+  const [teacherLoad, setTeacherLoad] = useState(0); // New state for weekly load
 
   useEffect(() => {
     fetchData();
@@ -80,23 +93,49 @@ export default function AdminTeachersPage() {
 
   const fetchData = async () => {
     try {
-      const [teachersRes, subjectsRes, classesRes] = await Promise.all([
+      const [teachersRes, subjectsRes, classesRes, assignmentsRes] = await Promise.all([
         fetch(`/api/users?schoolId=${session?.user?.schoolId}&role=teacher`),
         fetch('/api/subjects'),
         fetch('/api/classes'),
+        fetch(`/api/teacher-assignments?schoolId=${session?.user?.schoolId}`), // Fetch all assignments
       ]);
 
       if (teachersRes.ok) {
         const data = await teachersRes.json();
-        setTeachers(Array.isArray(data.users) ? data.users : []);
-      }
-      if (subjectsRes.ok) {
-        const data = await subjectsRes.json();
-        setSubjects(Array.isArray(data.subjects) ? data.subjects : []);
-      }
-      if (classesRes.ok) {
-        const data = await classesRes.json();
-        setClasses(Array.isArray(data.classes) ? data.classes : []);
+        const fetchedTeachers = Array.isArray(data.users) ? data.users : [];
+        let allSubjects: Subject[] = [];
+        if (subjectsRes.ok) {
+          const subData = await subjectsRes.json();
+          allSubjects = Array.isArray(subData.subjects) ? subData.subjects : [];
+          setSubjects(allSubjects);
+        }
+        let allClasses: Class[] = [];
+        if (classesRes.ok) {
+          const classData = await classesRes.json();
+          allClasses = Array.isArray(classData.classes) ? classData.classes : [];
+          setClasses(allClasses);
+        }
+
+        let allAssignments: Assignment[] = [];
+        if (assignmentsRes.ok) {
+          const assignData = await assignmentsRes.json();
+          allAssignments = Array.isArray(assignData.assignments) ? assignData.assignments : [];
+        }
+
+        // Calculate assigned counts and weekly load for each teacher
+        const teachersWithCountsAndLoad = fetchedTeachers.map((teacher: Teacher) => {
+          const teacherSubjectAssignments = allAssignments.filter(a => a.teacherId === teacher.id && a.subjectId);
+          const teacherClassAssignments = allAssignments.filter(a => a.teacherId === teacher.id && a.classId);
+          const totalWeeklyLoad = calculateWeeklyTeachingLoad(teacherSubjectAssignments, allSubjects); // Calculate load here
+
+          return {
+            ...teacher,
+            assignedSubjectsCount: new Set(teacherSubjectAssignments.map(a => a.subjectId)).size,
+            assignedClassesCount: new Set(teacherClassAssignments.map(a => a.classId)).size,
+            totalWeeklyLoad: totalWeeklyLoad,
+          };
+        });
+        setTeachers(teachersWithCountsAndLoad);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -115,10 +154,16 @@ export default function AdminTeachersPage() {
 
       if (assignmentsRes.ok) {
         const data = await assignmentsRes.json();
+        const teacherSubjects = Array.isArray(data.subjects) ? data.subjects : [];
+        const teacherClasses = Array.isArray(data.classes) ? data.classes : [];
         setTeacherAssignments({
-          subjects: Array.isArray(data.subjects) ? data.subjects : [],
-          classes: Array.isArray(data.classes) ? data.classes : [],
+          subjects: teacherSubjects,
+          classes: teacherClasses,
         });
+
+        // Calculate weekly teaching load based on assigned subjects' weeklyHours
+        const currentLoad = calculateWeeklyTeachingLoad(teacherSubjects, subjects); 
+        setTeacherLoad(currentLoad);
       }
       if (availabilityRes.ok) {
         const data = await availabilityRes.json();
@@ -198,315 +243,130 @@ export default function AdminTeachersPage() {
     }
   };
 
+  const breadcrumbs = createBreadcrumbs.teachers();
+
   return (
     <div className="space-y-8">
-      <header>
-        <h1 className="text-3xl font-semibold text-black">Teacher Management</h1>
-        <p className="mt-2 max-w-2xl text-sm text-gray-600">
-          Manage teacher assignments, view their availability, and assign them to classes and subjects.
-        </p>
+      <Breadcrumbs items={breadcrumbs} />
+
+      <header className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-semibold text-black flex items-center gap-3">
+              <User className="h-8 w-8 text-gray-600" />
+              Teachers
+            </h1>
+            <p className="max-w-2xl text-sm text-gray-600">
+              Manage teacher assignments, view their availability, and assign them to classes and subjects.
+            </p>
+          </div>
+          <Button asChild className="bg-black hover:bg-gray-800">
+            <Link href="/dashboard/admin/teachers/new">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Teacher
+            </Link>
+          </Button>
+        </div>
       </header>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Teachers List */}
-        <Card className="lg:col-span-1 rounded-2xl border border-gray-200 shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-black">
-              <Users className="h-5 w-5 text-gray-600" />
-              Teachers
-            </CardTitle>
-            <CardDescription className="text-sm text-gray-600">
-              Select a teacher to manage
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-2">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-14 animate-pulse rounded-lg bg-gray-100" />
-                ))}
-              </div>
-            ) : teachers.length === 0 ? (
-              <p className="text-center text-sm text-gray-500 py-8">No teachers found</p>
-            ) : (
-              <div className="space-y-2">
-                {teachers.map((teacher) => (
-                  <button
-                    key={teacher.id}
-                    onClick={() => fetchTeacherDetails(teacher)}
-                    className={`w-full text-left rounded-lg border p-3 transition hover:border-black hover:shadow-sm ${
-                      selectedTeacher?.id === teacher.id
-                        ? 'border-black bg-gray-50'
-                        : 'border-gray-200'
-                    }`}
+      {loading ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {[...Array(6)].map((_, index) => (
+            <Card key={index} className="rounded-xl border border-gray-200 shadow-sm">
+              <CardHeader>
+                <div className="h-6 w-32 animate-pulse rounded bg-gray-200" />
+                <div className="h-4 w-48 animate-pulse rounded bg-gray-200" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-16 w-full animate-pulse rounded bg-gray-200" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : teachers.length === 0 ? (
+        <Card className="rounded-xl border border-gray-200 shadow-sm">
+          <CardContent className="p-8 text-center">
+            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No teachers yet</h3>
+            <p className="text-gray-600 mb-4">Get started by adding your first teacher.</p>
+            <Button asChild>
+              <Link href="/dashboard/admin/teachers/new">
+                <Plus className="h-4 w-4 mr-2" />
+                Add First Teacher
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {teachers.map((teacher) => (
+            <Card key={teacher.id} className="rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold text-black">
+                  <Link
+                    href={`/dashboard/admin/teachers/${teacher.id}`}
+                    className="hover:text-gray-600 transition-colors"
                   >
-                    <p className="font-medium text-black">{teacher.name}</p>
-                    <p className="text-xs text-gray-500">{teacher.email}</p>
-                  </button>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Teacher Details */}
-        <Card className="lg:col-span-2 rounded-2xl border border-gray-200 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-black">
-              {selectedTeacher ? selectedTeacher.name : 'Select a Teacher'}
-            </CardTitle>
-            <CardDescription className="text-sm text-gray-600">
-              {selectedTeacher ? selectedTeacher.email : 'Select a teacher to view their details'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!selectedTeacher ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <Users className="mb-4 h-12 w-12 text-gray-400" />
-                <p className="text-sm text-gray-600">Select a teacher from the list to view their assignments and availability</p>
-              </div>
-            ) : (
-              <Tabs defaultValue="subjects" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="subjects">Subjects</TabsTrigger>
-                  <TabsTrigger value="classes">Classes</TabsTrigger>
-                  <TabsTrigger value="availability">Availability</TabsTrigger>
-                </TabsList>
-
-                {/* Subjects Tab */}
-                <TabsContent value="subjects" className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <p className="text-sm text-gray-600">
-                      Subjects this teacher can teach
-                    </p>
-                    <Button size="sm" onClick={() => handleOpenAssignDialog('subject')}>
-                      <Plus className="h-4 w-4 mr-1" />
-                      Assign Subject
-                    </Button>
+                    {teacher.name}
+                  </Link>
+                </CardTitle>
+                <CardDescription className="text-sm text-gray-600">
+                  {teacher.email}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2 text-gray-600">
+                      <BookOpen className="h-4 w-4" />
+                      {teacher.assignedSubjectsCount} subjects
+                    </span>
+                    <span className="flex items-center gap-2 text-gray-600">
+                      <GraduationCap className="h-4 w-4" />
+                      {teacher.assignedClassesCount} classes
+                    </span>
                   </div>
-
-                  {teacherAssignments.subjects.length === 0 ? (
-                    <p className="text-center text-sm text-gray-500 py-8">
-                      No subjects assigned yet
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {teacherAssignments.subjects.map((assignment) => (
-                        <div
-                          key={assignment.id}
-                          className="flex items-center justify-between rounded-lg border border-gray-200 p-3"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-black text-white text-sm font-semibold">
-                              {assignment.subjectCode || assignment.subjectName?.substring(0, 2).toUpperCase()}
-                            </div>
-                            <div>
-                              <p className="font-medium text-black">{assignment.subjectName}</p>
-                              {assignment.subjectCode && (
-                                <p className="text-xs text-gray-500">{assignment.subjectCode}</p>
-                              )}
-                            </div>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleRemoveAssignment(assignment.id, 'subject')}
-                            className="text-red-600 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
+                  {teacher.totalWeeklyLoad > 0 && (
+                    <div className="flex items-center gap-2 text-sm text-blue-600">
+                      <Clock className="h-4 w-4" />
+                      {teacher.totalWeeklyLoad} hours per week
                     </div>
                   )}
-                </TabsContent>
+                  <Button variant="outline" size="sm" asChild className="w-full">
+                    <Link href={`/dashboard/admin/teachers/${teacher.id}`}>
+                      View Profile
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
-                {/* Classes Tab */}
-                <TabsContent value="classes" className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <p className="text-sm text-gray-600">
-                      Classes assigned to this teacher
-                    </p>
-                    <Button
-                      size="sm"
-                      onClick={() => handleOpenAssignDialog('class')}
-                      disabled={teacherAssignments.subjects.length === 0}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Assign Class
-                    </Button>
-                  </div>
-
-                  {teacherAssignments.subjects.length === 0 ? (
-                    <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-                      <p className="text-sm text-yellow-800">
-                        Assign subjects to this teacher first before assigning classes.
-                      </p>
-                    </div>
-                  ) : teacherAssignments.classes.length === 0 ? (
-                    <p className="text-center text-sm text-gray-500 py-8">
-                      No classes assigned yet
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {teacherAssignments.classes.map((assignment) => (
-                        <div
-                          key={assignment.id}
-                          className="flex items-center justify-between rounded-lg border border-gray-200 p-3"
-                        >
-                          <div>
-                            <p className="font-medium text-black">
-                              {assignment.className} - {assignment.subjectName}
-                            </p>
-                            <p className="text-xs text-gray-500">{assignment.academicYear}</p>
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleRemoveAssignment(assignment.id, 'class')}
-                            className="text-red-600 hover:bg-red-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-
-                {/* Availability Tab */}
-                <TabsContent value="availability" className="space-y-4">
-                  <p className="text-sm text-gray-600">
-                    When this teacher is available to teach
-                  </p>
-
-                  {teacherAvailability.length === 0 ? (
-                    <p className="text-center text-sm text-gray-500 py-8">
-                      Teacher hasn't set their availability yet
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {teacherAvailability.map((slot) => (
-                        <div
-                          key={slot.id}
-                          className="flex items-center gap-3 rounded-lg border border-gray-200 p-3"
-                        >
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-black text-white">
-                            <Clock className="h-5 w-5" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-black">
-                              {DAYS_OF_WEEK[slot.dayOfWeek]}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {slot.startTime} - {slot.endTime}
-                            </p>
-                            {slot.notes && (
-                              <p className="text-xs text-gray-500 mt-1">{slot.notes}</p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-              </Tabs>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Assignment Dialog */}
+      {/* Dialogs for teacher management - keeping for future use */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>
-              Assign {assignmentType === 'subject' ? 'Subject' : 'Class'}
+              {assignmentType === 'subject' ? 'Assign Subject' : 'Assign Class'}
             </DialogTitle>
             <DialogDescription>
               {assignmentType === 'subject'
-                ? 'Select a subject this teacher can teach'
-                : 'Assign this teacher to a class for a specific subject'}
+                ? 'Assign a subject to this teacher'
+                : 'Assign this teacher to a class'
+              }
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="subject">Subject</Label>
-              <Select
-                value={assignmentData.subjectId}
-                onValueChange={(value) =>
-                  setAssignmentData({ ...assignmentData, subjectId: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a subject" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(() => {
-                    const subjectsList = assignmentType === 'subject'
-                      ? (Array.isArray(subjects) ? subjects : [])
-                      : (teacherAssignments.subjects || []).map((a) => ({
-                          id: a.subjectId!,
-                          name: a.subjectName!,
-                          code: a.subjectCode,
-                        }));
-                    
-                    return subjectsList.map((subject) => (
-                      <SelectItem key={subject.id} value={subject.id}>
-                        {subject.name} {subject.code && `(${subject.code})`}
-                      </SelectItem>
-                    ));
-                  })()}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {assignmentType === 'class' && (
-              <div className="space-y-2">
-                <Label htmlFor="class">Class</Label>
-                <Select
-                  value={assignmentData.classId}
-                  onValueChange={(value) =>
-                    setAssignmentData({ ...assignmentData, classId: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a class" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {classes.map((cls) => (
-                      <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name} ({cls.academicYear})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setAssignDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleAssign}
-                disabled={
-                  !assignmentData.subjectId ||
-                  (assignmentType === 'class' && !assignmentData.classId)
-                }
-              >
-                Assign
-              </Button>
-            </div>
+            <p className="text-sm text-gray-600">
+              Teacher assignment functionality will be available in teacher detail pages.
+            </p>
           </div>
         </DialogContent>
       </Dialog>
     </div>
   );
 }
-

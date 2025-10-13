@@ -3,16 +3,20 @@
  * 
  * This script creates:
  * - A sample school with realistic data
- * - Academic levels (Primary, Secondary)
- * - Multiple classes per level
+ * - Academic levels (Class Groups: Primary, Secondary)
+ * - Multiple classes per level with proper hierarchy
  * - Core subjects for each level
  * - Teachers with realistic availability
  * - Teacher-subject assignments
- * - Teacher-class assignments
- * - Student enrollments
- * - Time slots for scheduling
+ * - Teacher-class assignments with subject-specific mappings
+ * - Student enrollments in classes
+ * - Time slots for comprehensive scheduling
  * 
  * Run: bun run scripts/seed-timetable-data.ts
+ * 
+ * Prerequisites: 
+ * - Run scripts/reset-database.ts first if you want a clean slate
+ * - Superadmin accounts will be preserved
  */
 
 import bcrypt from 'bcryptjs';
@@ -73,28 +77,28 @@ const SECONDARY_CLASSES = [
 ];
 
 const PRIMARY_SUBJECTS = [
-  { name: "French", code: "FR", description: "French language and literature" },
-  { name: "Mathematics", code: "MATH", description: "Basic mathematics and problem solving" },
-  { name: "Science", code: "SCI", description: "Natural sciences and discovery" },
-  { name: "History-Geography", code: "HG", description: "History and geography" },
-  { name: "English", code: "ENG", description: "English as a foreign language" },
-  { name: "Physical Education", code: "PE", description: "Sports and physical activities" },
-  { name: "Arts", code: "ART", description: "Visual and performing arts" },
-  { name: "Music", code: "MUS", description: "Music education" }
+  { name: "French", code: "FR", description: "French language and literature", weeklyHours: 6 },
+  { name: "Mathematics", code: "MATH", description: "Basic mathematics and problem solving", weeklyHours: 5 },
+  { name: "Science", code: "SCI", description: "Natural sciences and discovery", weeklyHours: 3 },
+  { name: "History-Geography", code: "HG", description: "History and geography", weeklyHours: 3 },
+  { name: "English", code: "ENG", description: "English as a foreign language", weeklyHours: 3 },
+  { name: "Physical Education", code: "PE", description: "Sports and physical activities", weeklyHours: 3 },
+  { name: "Arts", code: "ART", description: "Visual and performing arts", weeklyHours: 2 },
+  { name: "Music", code: "MUS", description: "Music education", weeklyHours: 2 }
 ];
 
 const SECONDARY_SUBJECTS = [
-  { name: "French", code: "FR", description: "French language and literature" },
-  { name: "Mathematics", code: "MATH", description: "Advanced mathematics" },
-  { name: "Physics-Chemistry", code: "PC", description: "Physics and chemistry" },
-  { name: "Biology", code: "BIO", description: "Life sciences" },
-  { name: "History-Geography", code: "HG", description: "History and geography" },
-  { name: "English", code: "ENG", description: "English language" },
-  { name: "Spanish", code: "ESP", description: "Spanish language" },
-  { name: "Physical Education", code: "PE", description: "Sports and physical activities" },
-  { name: "Philosophy", code: "PHIL", description: "Philosophy and critical thinking" },
-  { name: "Economics", code: "ECO", description: "Economics and social sciences" },
-  { name: "Computer Science", code: "INFO", description: "Computer science and programming" }
+  { name: "French", code: "FR", description: "French language and literature", weeklyHours: 5 },
+  { name: "Mathematics", code: "MATH", description: "Advanced mathematics", weeklyHours: 5 },
+  { name: "Physics-Chemistry", code: "PC", description: "Physics and chemistry", weeklyHours: 4 },
+  { name: "Biology", code: "BIO", description: "Life sciences", weeklyHours: 3 },
+  { name: "History-Geography", code: "HG", description: "History and geography", weeklyHours: 4 },
+  { name: "English", code: "ENG", description: "English language", weeklyHours: 3 },
+  { name: "Spanish", code: "ESP", description: "Spanish language", weeklyHours: 3 },
+  { name: "Physical Education", code: "PE", description: "Sports and physical activities", weeklyHours: 3 },
+  { name: "Philosophy", code: "PHIL", description: "Philosophy and critical thinking", weeklyHours: 3 },
+  { name: "Economics", code: "ECO", description: "Economics and social sciences", weeklyHours: 3 },
+  { name: "Computer Science", code: "INFO", description: "Computer science and programming", weeklyHours: 2 }
 ];
 
 const TEACHERS = [
@@ -199,8 +203,8 @@ async function seedTimetableData() {
       updatedAt: now,
     });
 
-    // 3. Create Academic Levels
-    console.log('📚 Creating academic levels...');
+    // 3. Create Academic Levels (Class Groups)
+    console.log('📚 Creating class groups (academic levels)...');
     const levelIds: { [key: string]: string } = {};
     for (const level of ACADEMIC_LEVELS) {
       const levelId = generateId();
@@ -213,6 +217,7 @@ async function seedTimetableData() {
         createdAt: now,
         updatedAt: now,
       });
+      console.log(`  ✓ Created class group: ${level.name}`);
     }
 
     // 4. Create Classes
@@ -235,12 +240,17 @@ async function seedTimetableData() {
       });
     }
 
-    // 5. Create Subjects
-    console.log('📖 Creating subjects...');
+    // 5. Create Subjects (Global Library)
+    console.log('📖 Creating subjects library...');
     const subjectIds: { [key: string]: string } = {};
     const allSubjects = [...PRIMARY_SUBJECTS, ...SECONDARY_SUBJECTS];
     
-    for (const subject of allSubjects) {
+    // Use Set to avoid duplicates (some subjects appear in both levels)
+    const uniqueSubjects = Array.from(
+      new Map(allSubjects.map(s => [s.name, s])).values()
+    );
+    
+    for (const subject of uniqueSubjects) {
       const subjectId = generateId();
       subjectIds[subject.name] = subjectId;
       await db.insert(subjects).values({
@@ -249,9 +259,11 @@ async function seedTimetableData() {
         name: subject.name,
         code: subject.code,
         description: subject.description,
+        weeklyHours: subject.weeklyHours,
         createdAt: now,
         updatedAt: now,
       });
+      console.log(`  ✓ Created subject: ${subject.name} (${subject.weeklyHours}h/week)`);
     }
 
     // 6. Create Teachers
@@ -421,13 +433,14 @@ async function seedTimetableData() {
     console.log('📊 COMPREHENSIVE SUMMARY:');
     console.log('═══════════════════════════════════════════════════════');
     console.log(`🏫 School: ${SCHOOL_NAME}`);
-    console.log(`📚 Academic Levels: ${ACADEMIC_LEVELS.length}`);
-    console.log(`   • Primary (CP to CM2): ${PRIMARY_CLASSES.length} classes`);
-    console.log(`   • Secondary (6ème to Terminale): ${SECONDARY_CLASSES.length} classes`);
+    console.log(`📚 Class Groups (Academic Levels): ${ACADEMIC_LEVELS.length}`);
+    console.log(`   • ${ACADEMIC_LEVELS[0].name}: ${PRIMARY_CLASSES.length} classes`);
+    console.log(`   • ${ACADEMIC_LEVELS[1].name}: ${SECONDARY_CLASSES.length} classes`);
     console.log(`🏫 Total Classes: ${allClasses.length}`);
-    console.log(`📖 Subjects:`);
-    console.log(`   • Primary subjects: ${PRIMARY_SUBJECTS.length}`);
-    console.log(`   • Secondary subjects: ${SECONDARY_SUBJECTS.length}`);
+    console.log(`📖 Subjects Library (Global):`);
+    console.log(`   • Total unique subjects: ${Array.from(new Set([...PRIMARY_SUBJECTS.map(s => s.name), ...SECONDARY_SUBJECTS.map(s => s.name)])).length}`);
+    console.log(`   • Primary subjects: ${PRIMARY_SUBJECTS.length} (with weekly hours)`);
+    console.log(`   • Secondary subjects: ${SECONDARY_SUBJECTS.length} (with weekly hours)`);
     console.log(`👨‍🏫 Teachers: ${TEACHERS.length}`);
     console.log(`   • Primary teachers: ${TEACHERS.filter(t => t.level === "Primary").length}`);
     console.log(`   • Secondary teachers: ${TEACHERS.filter(t => t.level === "Secondary").length}`);
@@ -436,10 +449,11 @@ async function seedTimetableData() {
     console.log(`   • Teaching periods: ${ALL_TIME_SLOTS.filter(s => !s.isBreak).length}`);
     console.log(`   • Break periods: ${ALL_TIME_SLOTS.filter(s => s.isBreak).length}`);
     console.log('');
-    console.log('🔗 TEACHER-CLASS ASSIGNMENTS:');
+    console.log('🔗 RELATIONSHIP HIERARCHY:');
+    console.log(`   School → Class Groups → Classes → Subjects/Teachers`);
     console.log(`   • Primary: ${primaryClasses.length} classes × ${PRIMARY_SUBJECTS.length} subjects = ${primaryClasses.length * PRIMARY_SUBJECTS.length} assignments`);
     console.log(`   • Secondary: ${secondaryClasses.length} classes × ${SECONDARY_SUBJECTS.length} subjects = ${secondaryClasses.length * SECONDARY_SUBJECTS.length} assignments`);
-    console.log(`   • Total assignments: ${(primaryClasses.length * PRIMARY_SUBJECTS.length) + (secondaryClasses.length * SECONDARY_SUBJECTS.length)}`);
+    console.log(`   • Total teacher-class-subject assignments: ${(primaryClasses.length * PRIMARY_SUBJECTS.length) + (secondaryClasses.length * SECONDARY_SUBJECTS.length)}`);
     console.log('');
     console.log('🔑 LOGIN CREDENTIALS:');
     console.log('═══════════════════════════════════════════════════════');
@@ -455,17 +469,39 @@ async function seedTimetableData() {
     console.log('✅ READY FOR TIMETABLE BUILDING!');
     console.log('═══════════════════════════════════════════════════════');
     console.log('Each class now has:');
-    console.log('  ✓ All required subjects assigned');
+    console.log('  ✓ All required subjects assigned with weekly hour quotas');
     console.log('  ✓ Qualified teachers for each subject');
     console.log('  ✓ Enrolled students');
     console.log('  ✓ Time slots available for scheduling');
     console.log('  ✓ Teacher availability set (Mon-Fri, 8:00-17:00)');
     console.log('');
-    console.log('🚀 Next steps:');
-    console.log('  1. Login as admin');
-    console.log('  2. Go to Teacher Management to verify assignments');
-    console.log('  3. Start building timetables for each class');
-    console.log('  4. System will prevent conflicts automatically!');
+    console.log('🚀 NAVIGATION FLOWS - EXPLORE YOUR DATA:');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('1️⃣  LOGIN');
+    console.log('   • Use admin credentials above to access the dashboard');
+    console.log('');
+    console.log('2️⃣  ACADEMIC STRUCTURE (unified navigation)');
+    console.log('   📚 Class Groups → View Primary/Secondary → See classes in each group');
+    console.log('   🏫 Classes → View all classes → Click for subjects, teachers, students');
+    console.log('   📖 Subjects → Browse library → Click to see classes & teachers');
+    console.log('   👨‍🏫 Teachers → View all staff → Click to see subjects, classes, availability');
+    console.log('');
+    console.log('3️⃣  DRILL-DOWN EXAMPLES');
+    console.log('   • Class Groups → Primary → CM2 A → View subjects & teachers');
+    console.log('   • Subjects → Mathematics → See all classes & who teaches them');
+    console.log('   • Teachers → Marie Diop → View her schedule, availability & classes');
+    console.log('');
+    console.log('4️⃣  SCHEDULING HUB');
+    console.log('   • Navigate to Scheduling → Timetables');
+    console.log('   • Use auto-scheduler with weekly hour quotas');
+    console.log('   • System prevents conflicts & validates availability automatically');
+    console.log('');
+    console.log('💡 TIPS:');
+    console.log('   ✓ Follow breadcrumbs to understand data relationships');
+    console.log('   ✓ Click cards to navigate between connected entities');
+    console.log('   ✓ All subjects have weekly hours configured for scheduling');
+    console.log('   ✓ All teachers have full-week availability (Mon-Fri, 8am-5pm)');
+    console.log('═══════════════════════════════════════════════════════');
 
   } catch (error) {
     console.error('❌ Error seeding database:', error);

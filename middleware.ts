@@ -6,6 +6,24 @@ export async function middleware(request: NextRequest) {
   const session = await auth();
   const { pathname } = request.nextUrl;
 
+  // Define redirect map for old to new routes
+  const redirectMap: Record<string, string> = {
+    '/dashboard/admin/academic-levels': '/dashboard/admin/class-groups',
+    '/dashboard/admin/time-slots': '/dashboard/admin/scheduling/time-slots',
+    '/dashboard/admin/timetables': '/dashboard/admin/scheduling/timetables',
+  };
+
+  // Check for redirects before authentication for seamless transition
+  for (const oldPath in redirectMap) {
+    if (pathname.startsWith(oldPath)) {
+      const newPath = redirectMap[oldPath];
+      // Preserve query parameters if any
+      const newUrl = new URL(newPath, request.url);
+      newUrl.search = request.nextUrl.search;
+      return NextResponse.redirect(newUrl);
+    }
+  }
+
   // Public routes that don't require authentication
   const publicRoutes = ['/login', '/register', '/'];
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));

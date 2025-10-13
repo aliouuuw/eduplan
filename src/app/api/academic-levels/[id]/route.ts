@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, count } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { db, getCurrentTimestamp } from '@/lib/db';
-import { academicLevels, classes } from '@/db/schema';
+import { academicLevels, classes, studentEnrollments } from '@/db/schema';
 import { canAccessSchool, isSuperAdmin, isSchoolAdmin } from '@/lib/auth';
 
 const updateLevelSchema = z.object({
@@ -11,7 +11,7 @@ const updateLevelSchema = z.object({
   description: z.string().optional(),
 });
 
-// GET /api/academic-levels/[id] - Get specific academic level
+// GET /api/academic-levels/[id] - Get specific academic level with classes and stats
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -51,7 +51,38 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ level });
+    // Get classes for this academic level
+    const levelClasses = await db
+      .select({
+        id: classes.id,
+        name: classes.name,
+        academicYear: classes.academicYear,
+        capacity: classes.capacity,
+        createdAt: classes.createdAt,
+        // Aggregate student count for each class
+        studentCount: count(studentEnrollments.studentId)
+      })
+      .from(classes)
+      .leftJoin(studentEnrollments, eq(classes.id, studentEnrollments.classId))
+      .where(eq(classes.levelId, levelId))
+      .groupBy(classes.id, classes.name, classes.academicYear, classes.capacity, classes.createdAt)
+      .orderBy(classes.name);
+
+    // Calculate statistics
+    const totalClasses = levelClasses.length;
+    const totalCapacity = levelClasses.reduce((sum, cls) => sum + cls.capacity, 0);
+    const totalStudents = levelClasses.reduce((sum, cls) => sum + cls.studentCount, 0);
+
+    return NextResponse.json({
+      level,
+      classes: levelClasses,
+      statistics: {
+        totalClasses,
+        totalCapacity,
+        totalStudents,
+        averageClassSize: totalClasses > 0 ? Math.round(totalStudents / totalClasses) : 0
+      }
+    });
   } catch (error) {
     console.error('Error fetching academic level:', error);
     return NextResponse.json(

@@ -16,19 +16,32 @@ import {
   GraduationCap,
   Mail,
   Key,
-  Clock
+  Clock,
+  LayoutDashboard,
+  FolderTree,
+  BookText,
+  UserCog,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import type { User } from 'next-auth';
 
 interface NavItem {
   label: string;
-  href: string;
+  href?: string;
   icon: React.ReactNode;
   roles: string[];
+  children?: NavItem[];
 }
 
 const navigationItems: NavItem[] = [
   // Superadmin
+  {
+    label: 'Dashboard',
+    href: '/dashboard/superadmin',
+    icon: <LayoutDashboard className="h-4 w-4" />,
+    roles: ['superadmin'],
+  },
   {
     label: 'Schools',
     href: '/dashboard/superadmin/schools',
@@ -47,66 +60,95 @@ const navigationItems: NavItem[] = [
     icon: <Key className="h-4 w-4" />,
     roles: ['superadmin'],
   },
-  // Admin
+  
+  // Admin - Overview
   {
     label: 'Dashboard',
     href: '/dashboard/admin',
-    icon: <Settings className="h-4 w-4" />,
+    icon: <LayoutDashboard className="h-4 w-4" />,
     roles: ['admin'],
   },
+  
+  // Admin - Academic Structure (consolidated - all 4 items)
   {
-    label: 'Users',
-    href: '/dashboard/admin/users',
-    icon: <Users className="h-4 w-4" />,
-    roles: ['admin'],
-  },
-  {
-    label: 'Invitations',
-    href: '/dashboard/admin/invitations',
-    icon: <Mail className="h-4 w-4" />,
-    roles: ['admin'],
-  },
-  {
-    label: 'Academic Levels',
-    href: '/dashboard/admin/academic-levels',
+    label: 'Academic Structure',
     icon: <GraduationCap className="h-4 w-4" />,
     roles: ['admin'],
+    children: [
+      {
+        label: 'Class Groups',
+        href: '/dashboard/admin/class-groups',
+        icon: <FolderTree className="h-4 w-4" />,
+        roles: ['admin'],
+      },
+      {
+        label: 'Classes',
+        href: '/dashboard/admin/classes',
+        icon: <BookOpen className="h-4 w-4" />,
+        roles: ['admin'],
+      },
+      {
+        label: 'Subjects',
+        href: '/dashboard/admin/subjects',
+        icon: <BookText className="h-4 w-4" />,
+        roles: ['admin'],
+      },
+      {
+        label: 'Teachers',
+        href: '/dashboard/admin/teachers',
+        icon: <Users className="h-4 w-4" />,
+        roles: ['admin'],
+      },
+    ],
   },
+  
+  // Admin - Scheduling (dedicated section)
   {
-    label: 'Classes',
-    href: '/dashboard/admin/classes',
-    icon: <BookOpen className="h-4 w-4" />,
-    roles: ['admin'],
-  },
-  {
-    label: 'Subjects',
-    href: '/dashboard/admin/subjects',
-    icon: <BookOpen className="h-4 w-4" />,
-    roles: ['admin'],
-  },
-  {
-    label: 'Teachers',
-    href: '/dashboard/admin/teachers',
-    icon: <Users className="h-4 w-4" />,
-    roles: ['admin'],
-  },
-  {
-    label: 'Time Slots',
-    href: '/dashboard/admin/time-slots',
-    icon: <Clock className="h-4 w-4" />,
-    roles: ['admin'],
-  },
-  {
-    label: 'Timetables',
-    href: '/dashboard/admin/timetables',
+    label: 'Scheduling',
     icon: <Calendar className="h-4 w-4" />,
     roles: ['admin'],
+    children: [
+      {
+        label: 'Time Slots',
+        href: '/dashboard/admin/scheduling/time-slots',
+        icon: <Clock className="h-4 w-4" />,
+        roles: ['admin'],
+      },
+      {
+        label: 'Timetables',
+        href: '/dashboard/admin/scheduling/timetables',
+        icon: <Calendar className="h-4 w-4" />,
+        roles: ['admin'],
+      },
+    ],
   },
+  
+  // Admin - Settings
+  {
+    label: 'Settings',
+    icon: <Settings className="h-4 w-4" />,
+    roles: ['admin'],
+    children: [
+      {
+        label: 'Users & Access',
+        href: '/dashboard/admin/users',
+        icon: <UserCog className="h-4 w-4" />,
+        roles: ['admin'],
+      },
+      {
+        label: 'Invitations',
+        href: '/dashboard/admin/invitations',
+        icon: <Mail className="h-4 w-4" />,
+        roles: ['admin'],
+      },
+    ],
+  },
+  
   // Teacher
   {
     label: 'Dashboard',
     href: '/dashboard/teacher',
-    icon: <Settings className="h-4 w-4" />,
+    icon: <LayoutDashboard className="h-4 w-4" />,
     roles: ['teacher'],
   },
   {
@@ -127,7 +169,14 @@ const navigationItems: NavItem[] = [
     icon: <BookOpen className="h-4 w-4" />,
     roles: ['teacher'],
   },
+  
   // Parent
+  {
+    label: 'Dashboard',
+    href: '/dashboard/parent',
+    icon: <LayoutDashboard className="h-4 w-4" />,
+    roles: ['parent'],
+  },
   {
     label: 'Children',
     href: '/dashboard/parent/children',
@@ -140,7 +189,14 @@ const navigationItems: NavItem[] = [
     icon: <Calendar className="h-4 w-4" />,
     roles: ['parent'],
   },
+  
   // Student
+  {
+    label: 'Dashboard',
+    href: '/dashboard/student',
+    icon: <LayoutDashboard className="h-4 w-4" />,
+    roles: ['student'],
+  },
   {
     label: 'My Timetable',
     href: '/dashboard/student/timetable',
@@ -155,6 +211,7 @@ interface DashboardSidebarProps {
 
 export function DashboardSidebar({ user }: DashboardSidebarProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const pathname = usePathname();
 
   const userRole = user.role;
@@ -164,6 +221,109 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
 
   const handleSignOut = () => {
     signOut({ callbackUrl: '/login' });
+  };
+
+  const toggleSection = (label: string) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [label]: !prev[label]
+    }));
+  };
+
+  const isItemActive = (item: NavItem): boolean => {
+    if (!item.href) return false;
+    const isDashboardHome = item.href === '/dashboard/admin' || 
+                            item.href === '/dashboard/teacher' || 
+                            item.href === '/dashboard/superadmin' ||
+                            item.href === '/dashboard/parent' ||
+                            item.href === '/dashboard/student';
+    return isDashboardHome
+      ? pathname === item.href
+      : pathname === item.href || pathname?.startsWith(item.href + '/');
+  };
+
+  const isSectionActive = (item: NavItem): boolean => {
+    if (item.children) {
+      return item.children.some(child => isItemActive(child));
+    }
+    return false;
+  };
+
+  const renderNavItem = (item: NavItem, isChild = false) => {
+    const hasChildren = item.children && item.children.length > 0;
+    const isActive = isItemActive(item);
+    const isSectionOpen = openSections[item.label] ?? isSectionActive(item);
+
+    if (hasChildren) {
+      return (
+        <div key={item.label} className="space-y-1">
+          <button
+            onClick={() => toggleSection(item.label)}
+            className={`
+              group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
+              ${isSectionActive(item)
+                ? 'bg-gray-100 text-black' 
+                : 'text-gray-700 hover:bg-gray-100 hover:text-black'
+              }
+            `}
+          >
+            <span
+              className={`
+                flex h-9 w-9 items-center justify-center rounded-md border
+                ${isSectionActive(item)
+                  ? 'border-black/10 bg-gray-200 text-gray-800' 
+                  : 'border-transparent bg-gray-100 text-gray-600 group-hover:border-black/10 group-hover:bg-black group-hover:text-white'
+                }
+              `}
+            >
+              {item.icon}
+            </span>
+            <span className="flex-1 truncate text-left">{item.label}</span>
+            {isSectionOpen ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </button>
+          
+          {isSectionOpen && (
+            <div className="ml-3 space-y-1 border-l-2 border-gray-200 pl-3">
+              {item.children.map(child => renderNavItem(child, true))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Regular link item
+    return (
+      <Link
+        key={item.href}
+        href={item.href!}
+        className={`
+          group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
+          ${isChild ? 'pl-2' : ''}
+          ${isActive 
+            ? 'bg-black text-white' 
+            : 'text-gray-700 hover:bg-gray-100 hover:text-black'
+          }
+        `}
+        onClick={() => setSidebarOpen(false)}
+      >
+        <span
+          className={`
+            flex h-9 w-9 items-center justify-center rounded-md border
+            ${isActive 
+              ? 'border-white/20 bg-black text-white' 
+              : 'border-transparent bg-gray-100 text-gray-600 group-hover:border-black/10 group-hover:bg-black group-hover:text-white'
+            }
+          `}
+        >
+          {item.icon}
+        </span>
+        <span className="truncate">{item.label}</span>
+      </Link>
+    );
   };
 
   return (
@@ -200,40 +360,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          {allowedNavItems.map((item) => {
-            // Dashboard should only be active on exact match, other items can be active on sub-routes
-            const isDashboardHome = item.href === '/dashboard/admin' || item.href === '/dashboard/teacher' || item.href === '/dashboard/superadmin';
-            const isActive = isDashboardHome
-              ? pathname === item.href
-              : pathname === item.href || pathname?.startsWith(item.href + '/');
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`
-                  group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
-                  ${isActive 
-                    ? 'bg-black text-white' 
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-black'
-                  }
-                `}
-                onClick={() => setSidebarOpen(false)}
-              >
-                <span
-                  className={`
-                    flex h-9 w-9 items-center justify-center rounded-md border
-                    ${isActive 
-                      ? 'border-white/20 bg-black text-white' 
-                      : 'border-transparent bg-gray-100 text-gray-600 group-hover:border-black/10 group-hover:bg-black group-hover:text-white'
-                    }
-                  `}
-                >
-                  {item.icon}
-                </span>
-                <span className="truncate">{item.label}</span>
-              </Link>
-            );
-          })}
+          {allowedNavItems.map(item => renderNavItem(item))}
         </nav>
 
         {/* User section */}

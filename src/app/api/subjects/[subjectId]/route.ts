@@ -12,10 +12,10 @@ const updateSubjectSchema = z.object({
   description: z.string().optional(),
 });
 
-// GET /api/subjects/[id] - Get specific subject
+// GET /api/subjects/[subjectId] - Get specific subject
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ subjectId: string }> }
 ) {
   try {
     const session = await auth();
@@ -27,7 +27,7 @@ export async function GET(
       );
     }
 
-    const { id: subjectId } = await params;
+    const { subjectId } = await params;
 
     const subjectData = await db
       .select()
@@ -62,10 +62,10 @@ export async function GET(
   }
 }
 
-// PUT /api/subjects/[id] - Update subject
+// PUT /api/subjects/[subjectId] - Update subject
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ subjectId: string }> }
 ) {
   try {
     const session = await auth();
@@ -85,7 +85,7 @@ export async function PUT(
       );
     }
 
-    const { id: subjectId } = await params;
+    const { subjectId } = await params;
     const body = await request.json();
     const updateData = updateSubjectSchema.parse(body);
 
@@ -182,10 +182,10 @@ export async function PUT(
   }
 }
 
-// DELETE /api/subjects/[id] - Delete subject
+// DELETE /api/subjects/[subjectId] - Delete subject
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ subjectId: string }> }
 ) {
   try {
     const session = await auth();
@@ -205,7 +205,7 @@ export async function DELETE(
       );
     }
 
-    const { id: subjectId } = await params;
+    const { subjectId } = await params;
 
     // Check if subject exists
     const existingSubject = await db
@@ -247,5 +247,3 @@ export async function DELETE(
     );
   }
 }
-
-

@@ -13,10 +13,10 @@ const updateClassSchema = z.object({
   capacity: z.number().int().min(1).max(100).optional(),
 });
 
-// GET /api/classes/[id] - Get specific class
+// GET /api/classes/[classId] - Get specific class
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ classId: string }> }
 ) {
   try {
     const session = await auth();
@@ -28,7 +28,7 @@ export async function GET(
       );
     }
 
-    const { id: classId } = await params;
+    const { classId } = await params;
 
     const classData = await db
       .select()
@@ -63,10 +63,10 @@ export async function GET(
   }
 }
 
-// PUT /api/classes/[id] - Update class
+// PUT /api/classes/[classId] - Update class
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ classId: string }> }
 ) {
   try {
     const session = await auth();
@@ -86,7 +86,7 @@ export async function PUT(
       );
     }
 
-    const { id: classId } = await params;
+    const { classId } = await params;
     const body = await request.json();
     const updateData = updateClassSchema.parse(body);
 
@@ -165,10 +165,10 @@ export async function PUT(
   }
 }
 
-// DELETE /api/classes/[id] - Delete class
+// DELETE /api/classes/[classId] - Delete class
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ classId: string }> }
 ) {
   try {
     const session = await auth();
@@ -188,7 +188,7 @@ export async function DELETE(
       );
     }
 
-    const { id: classId } = await params;
+    const { classId } = await params;
 
     // Check if class exists
     const existingClass = await db
@@ -230,4 +230,3 @@ export async function DELETE(
     );
   }
 }
-

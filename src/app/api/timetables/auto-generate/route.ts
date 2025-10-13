@@ -201,7 +201,7 @@ function validateConstraints(constraints: SchedulerConstraints): {
 } {
   const missing = {
     subjects: constraints.subjects.length === 0,
-    subjectsWithQuotas: constraints.subjects.filter(s => s.weeklyHours > 0).length === 0,
+    subjectsWithQuotas: constraints.subjects.filter(s => (s.weeklyHours || 0) > 0).length === 0,
     teachers: constraints.teachers.length === 0,
     teacherAssignments: constraints.teacherAssignments.length === 0,
     teacherAvailability: constraints.teacherAvailability.length === 0,
@@ -226,12 +226,12 @@ function validateConstraints(constraints: SchedulerConstraints): {
 
   // Check for subjects with quotas
   if (missing.subjectsWithQuotas) {
-    const subjectsWithoutQuotas = constraints.subjects.filter(s => s.weeklyHours === 0 || !s.weeklyHours);
+    const subjectsWithoutQuotas = constraints.subjects.filter(s => (s.weeklyHours || 0) === 0);
     return {
       valid: false,
-      reason: `No subjects have weekly hour quotas set (${constraints.subjects.length} subject${constraints.subjects.length === 1 ? '' : 's'} found without quotas)`,
+      reason: `No subjects have weekly hour quotas set (${subjectsWithoutQuotas.length} of ${constraints.subjects.length} subject${constraints.subjects.length === 1 ? '' : 's'} need quotas)`,
       suggestions: [
-        'Go to Admin > Subjects',
+        'Go to Admin > Subjects Library',
         'Edit each subject and set the "Weekly Hours" field',
         'Example: Math = 5 hours/week, French = 4 hours/week',
         `Subjects needing quotas: ${subjectsWithoutQuotas.map(s => s.name).join(', ')}`,
@@ -322,8 +322,24 @@ async function gatherConstraints(classId: string, schoolId?: string): Promise<Sc
 
     if (classInfo.length === 0) return null;
 
-    // 2. Get subjects for this class (via teacher assignments)
-    const subjectIds = new Set<string>();
+    // 2. Get all subjects available for this school (not just assigned ones)
+    const allSubjectsRaw = await db
+      .select({
+        id: subjects.id,
+        name: subjects.name,
+        weeklyHours: subjects.weeklyHours,
+      })
+      .from(subjects)
+      .where(schoolId ? eq(subjects.schoolId, schoolId) : undefined);
+
+    // Convert null weeklyHours to 0 for the scheduler
+    const allSubjects = allSubjectsRaw.map(subject => ({
+      id: subject.id,
+      name: subject.name,
+      weeklyHours: subject.weeklyHours || 0,
+    }));
+
+    // 3. Get existing teacher assignments for this class
     const teacherAssignments: any[] = [];
 
     const assignments = await db
@@ -333,7 +349,6 @@ async function gatherConstraints(classId: string, schoolId?: string): Promise<Sc
         teacherEmail: users.email,
         subjectId: subjects.id,
         subjectName: subjects.name,
-        subjectWeeklyHours: subjects.weeklyHours,
       })
       .from(teacherClasses)
       .innerJoin(users, eq(teacherClasses.teacherId, users.id))
@@ -345,23 +360,12 @@ async function gatherConstraints(classId: string, schoolId?: string): Promise<Sc
       );
 
     assignments.forEach(assignment => {
-      subjectIds.add(assignment.subjectId);
       teacherAssignments.push({
         teacherId: assignment.teacherId,
         teacherName: assignment.teacherName,
         subjectId: assignment.subjectId,
         subjectName: assignment.subjectName,
       });
-    });
-
-    // 3. Get unique subjects with weekly hours
-    const uniqueSubjects = Array.from(subjectIds).map(subjectId => {
-      const assignment = assignments.find(a => a.subjectId === subjectId);
-      return {
-        id: subjectId,
-        name: assignment?.subjectName || 'Unknown',
-        weeklyHours: assignment?.subjectWeeklyHours || 0,
-      };
     });
 
     // 4. Get unique teachers
@@ -414,7 +418,7 @@ async function gatherConstraints(classId: string, schoolId?: string): Promise<Sc
 
     return {
       classId,
-      subjects: uniqueSubjects,
+      subjects: allSubjects,
       teachers,
       teacherAssignments,
       teacherAvailability: availabilityData,

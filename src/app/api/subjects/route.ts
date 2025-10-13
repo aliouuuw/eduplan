@@ -5,6 +5,8 @@ import { auth } from '@/lib/auth';
 import { db, generateId, getCurrentTimestamp } from '@/lib/db';
 import { subjects } from '@/db/schema';
 import { canAccessSchool, isSuperAdmin, isSchoolAdmin } from '@/lib/auth';
+import { teacherClasses } from '@/db/schema';
+import { sql } from 'drizzle-orm';
 
 const createSubjectSchema = z.object({
   schoolId: z.string(),
@@ -40,19 +42,33 @@ export async function GET(request: NextRequest) {
 
     // Build query with appropriate filters
     let allSubjects;
-    const baseQuery = db.select().from(subjects);
+    // Select subjects and count their usage in teacherClasses
+    const subjectsWithClassCount = await db.select({
+      id: subjects.id,
+      schoolId: subjects.schoolId,
+      name: subjects.name,
+      code: subjects.code,
+      description: subjects.description,
+      weeklyHours: subjects.weeklyHours,
+      createdAt: subjects.createdAt,
+      updatedAt: subjects.updatedAt,
+      classCount: sql<number>`count(${teacherClasses.id})`,
+    })
+    .from(subjects)
+    .leftJoin(teacherClasses, eq(subjects.id, teacherClasses.subjectId))
+    .groupBy(subjects.id)
+    .having(sql`1=1`); // Placeholder, actual filtering will come below
 
     if (schoolId) {
-      allSubjects = await baseQuery
-        .where(eq(subjects.schoolId, schoolId))
-        .orderBy(subjects.name);
+      allSubjects = subjectsWithClassCount.filter(s => s.schoolId === schoolId);
     } else if (!isSuperAdmin(session.user.role) && session.user.schoolId) {
-      allSubjects = await baseQuery
-        .where(eq(subjects.schoolId, session.user.schoolId))
-        .orderBy(subjects.name);
+      allSubjects = subjectsWithClassCount.filter(s => s.schoolId === session.user.schoolId);
     } else {
-      allSubjects = await baseQuery.orderBy(subjects.name);
+      allSubjects = subjectsWithClassCount;
     }
+
+    // Sort by name
+    allSubjects.sort((a, b) => a.name.localeCompare(b.name));
 
     return NextResponse.json({ subjects: allSubjects });
   } catch (error) {
