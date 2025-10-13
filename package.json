@@ -12,7 +12,8 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "seed:superadmin": "bun run scripts/seed-superadmin.ts",
-    "seed:timetable": "bun run scripts/seed-timetable-data.ts"
+    "seed:timetable": "bun run scripts/seed-timetable-data.ts",
+    "migrate:templates": "bun run scripts/migrate-time-slot-templates.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

@@ -16,17 +16,18 @@ const updateTemplateSchema = z.object({
 // GET /api/time-slot-templates/[id] - Get single template
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
+    const { id } = await params;
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = session.user;
-    
+
     // Only admins and superadmins can access templates
     if (user.role !== 'admin' && user.role !== 'superadmin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -41,7 +42,7 @@ export async function GET(
       .from(timeSlotTemplates)
       .where(
         and(
-          eq(timeSlotTemplates.id, params.id),
+          eq(timeSlotTemplates.id, id),
           eq(timeSlotTemplates.schoolId, user.schoolId)
         )
       )
@@ -55,12 +56,12 @@ export async function GET(
     const slotCount = await db
       .select()
       .from(timeSlots)
-      .where(eq(timeSlots.templateId, params.id));
+      .where(eq(timeSlots.templateId, id));
 
     const classCount = await db
       .select()
       .from(classes)
-      .where(eq(classes.timeSlotTemplateId, params.id));
+      .where(eq(classes.timeSlotTemplateId, id));
 
     return NextResponse.json({
       template: {
@@ -81,17 +82,18 @@ export async function GET(
 // PUT /api/time-slot-templates/[id] - Update template
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
+    const { id } = await params;
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = session.user;
-    
+
     // Only admins and superadmins can update templates
     if (user.role !== 'admin' && user.role !== 'superadmin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -107,7 +109,7 @@ export async function PUT(
       .from(timeSlotTemplates)
       .where(
         and(
-          eq(timeSlotTemplates.id, params.id),
+          eq(timeSlotTemplates.id, id),
           eq(timeSlotTemplates.schoolId, user.schoolId)
         )
       )
@@ -162,7 +164,7 @@ export async function PUT(
         ...validated,
         updatedAt: now,
       })
-      .where(eq(timeSlotTemplates.id, params.id))
+      .where(eq(timeSlotTemplates.id, id))
       .returning();
 
     return NextResponse.json({ template: updatedTemplate[0] });
@@ -185,17 +187,18 @@ export async function PUT(
 // DELETE /api/time-slot-templates/[id] - Delete template
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
+    const { id } = await params;
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = session.user;
-    
+
     // Only admins and superadmins can delete templates
     if (user.role !== 'admin' && user.role !== 'superadmin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -211,7 +214,7 @@ export async function DELETE(
       .from(timeSlotTemplates)
       .where(
         and(
-          eq(timeSlotTemplates.id, params.id),
+          eq(timeSlotTemplates.id, id),
           eq(timeSlotTemplates.schoolId, user.schoolId)
         )
       )
@@ -225,7 +228,7 @@ export async function DELETE(
     const classesUsingTemplate = await db
       .select()
       .from(classes)
-      .where(eq(classes.timeSlotTemplateId, params.id));
+      .where(eq(classes.timeSlotTemplateId, id));
 
     if (classesUsingTemplate.length > 0) {
       return NextResponse.json(
@@ -241,7 +244,7 @@ export async function DELETE(
     const timeSlotsUsingTemplate = await db
       .select()
       .from(timeSlots)
-      .where(eq(timeSlots.templateId, params.id));
+      .where(eq(timeSlots.templateId, id));
 
     if (timeSlotsUsingTemplate.length > 0) {
       return NextResponse.json(
@@ -272,7 +275,7 @@ export async function DELETE(
     // Delete the template
     await db
       .delete(timeSlotTemplates)
-      .where(eq(timeSlotTemplates.id, params.id));
+      .where(eq(timeSlotTemplates.id, id));
 
     return NextResponse.json({ success: true, message: 'Template deleted successfully' });
   } catch (error) {

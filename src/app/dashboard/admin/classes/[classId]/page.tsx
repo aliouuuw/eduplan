@@ -16,6 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import ClassTimetableTab from '@/components/class-timetable-tab';
 
 interface ClassDetail {
   id: string;
@@ -41,7 +42,7 @@ interface SubjectAssignment {
   academicYear: string;
 }
 
-interface TeacherAssignment {
+interface ClassTeacherAssignment {
   id: string;
   name: string;
   email: string;
@@ -63,7 +64,7 @@ export default function AdminClassDetailPage() {
   const [classDetail, setClassDetail] = useState<ClassDetail | null>(null);
   const [currentTab, setCurrentTab] = useState('overview');
   const [subjects, setSubjects] = useState<SubjectAssignment[]>([]);
-  const [teachers, setTeachers] = useState<TeacherAssignment[]>([]);
+  const [teachers, setTeachers] = useState<ClassTeacherAssignment[]>([]);
   const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [loadingTeachers, setLoadingTeachers] = useState(false);
   const [editingWeeklyHours, setEditingWeeklyHours] = useState<string | null>(null); // Assignment ID being edited
@@ -712,21 +713,12 @@ export default function AdminClassDetailPage() {
           </Card>
         </TabsContent>
         <TabsContent value="timetable" className="pt-6">
-          <Card className="rounded-2xl border border-gray-200 shadow-sm">
-            <CardHeader>
-              <CardTitle>Timetable for {classDetail.name}</CardTitle>
-              <CardDescription>View, edit, or auto-generate the weekly schedule.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="mb-4">Jump to the full scheduling interface for this class:</p>
-              <Link href={`/dashboard/admin/scheduling/timetables?classId=${classId}`} passHref>
-                <Button className="bg-black hover:bg-gray-800">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Go to Timetable Builder
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <ClassTimetableTab
+            classDetail={classDetail}
+            classId={classId}
+            subjects={subjects}
+            teachers={teachers}
+          />
         </TabsContent>
       </Tabs>
     </div>

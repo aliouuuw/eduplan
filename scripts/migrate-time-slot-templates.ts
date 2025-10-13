@@ -8,7 +8,7 @@
  */
 
 import { db } from '../src/lib/db';
-import { timeSlotTemplates, timeSlots, schools } from '../src/db/schema';
+import { timeSlotTemplates, timeSlots, schools, classes } from '../src/db/schema';
 import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
@@ -29,60 +29,100 @@ async function migrateTimeSlotTemplates() {
         .from(timeSlotTemplates)
         .where(eq(timeSlotTemplates.schoolId, school.id));
 
+      let templateId: string;
+
       if (existingTemplates.length > 0) {
-        console.log(`  ✓ Already has ${existingTemplates.length} template(s), skipping...`);
-        continue;
+        console.log(`  ✓ Already has ${existingTemplates.length} template(s)`);
+        
+        // Use the first template (or the default one if available)
+        const defaultTemplate = existingTemplates.find(t => t.isDefault) || existingTemplates[0];
+        templateId = defaultTemplate.id;
+        console.log(`  → Using template: "${defaultTemplate.name}"`);
+
+        // Still need to update classes and time slots if they're not associated
+      } else {
+        // Get existing time slots for this school
+        const existingTimeSlots = await db
+          .select()
+          .from(timeSlots)
+          .where(eq(timeSlots.schoolId, school.id));
+
+        console.log(`  📅 Found ${existingTimeSlots.length} existing time slot(s)`);
+
+        // Create default template
+        templateId = nanoid();
+        const now = new Date();
+
+        // Get the first admin for this school (as creator)
+        // If no admin, we'll use the first user from any role
+        const schoolUsers = await db.query.users.findMany({
+          where: (users, { eq }) => eq(users.schoolId, school.id),
+        });
+
+        const adminUser = schoolUsers.find(u => u.role === 'admin') || schoolUsers[0];
+
+        if (!adminUser) {
+          console.log(`  ⚠️  No users found for school, skipping...`);
+          continue;
+        }
+
+        await db.insert(timeSlotTemplates).values({
+          id: templateId,
+          schoolId: school.id,
+          name: 'Default Schedule',
+          description: 'Automatically created from existing time slots',
+          isDefault: true,
+          isActive: true,
+          createdBy: adminUser.id,
+          createdAt: now,
+          updatedAt: now,
+        });
+
+        console.log(`  ✓ Created default template: "Default Schedule"`);
       }
 
-      // Get existing time slots for this school
-      const existingTimeSlots = await db
+      // Update all existing time slots to reference this template (if not already set)
+      const timeSlotsWithoutTemplate = await db
         .select()
         .from(timeSlots)
         .where(eq(timeSlots.schoolId, school.id));
 
-      console.log(`  📅 Found ${existingTimeSlots.length} existing time slot(s)`);
-
-      // Create default template
-      const templateId = nanoid();
-      const now = new Date();
-
-      // Get the first admin for this school (as creator)
-      // If no admin, we'll use the first user from any role
-      const schoolUsers = await db.query.users.findMany({
-        where: (users, { eq }) => eq(users.schoolId, school.id),
-      });
-
-      const adminUser = schoolUsers.find(u => u.role === 'admin') || schoolUsers[0];
-
-      if (!adminUser) {
-        console.log(`  ⚠️  No users found for school, skipping...`);
-        continue;
-      }
-
-      await db.insert(timeSlotTemplates).values({
-        id: templateId,
-        schoolId: school.id,
-        name: 'Default Schedule',
-        description: 'Automatically created from existing time slots',
-        isDefault: true,
-        isActive: true,
-        createdBy: adminUser.id,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      console.log(`  ✓ Created default template: "Default Schedule"`);
-
-      // Update all existing time slots to reference this template
-      if (existingTimeSlots.length > 0) {
-        for (const slot of existingTimeSlots) {
+      let updatedSlotsCount = 0;
+      for (const slot of timeSlotsWithoutTemplate) {
+        if (!slot.templateId) {
           await db
             .update(timeSlots)
             .set({ templateId })
             .where(eq(timeSlots.id, slot.id));
+          updatedSlotsCount++;
         }
+      }
 
-        console.log(`  ✓ Associated ${existingTimeSlots.length} time slot(s) with template`);
+      if (updatedSlotsCount > 0) {
+        console.log(`  ✓ Associated ${updatedSlotsCount} time slot(s) with template`);
+      }
+
+      // Update all existing classes to reference this template (if not already set)
+      const existingClasses = await db
+        .select()
+        .from(classes)
+        .where(eq(classes.schoolId, school.id));
+
+      let updatedClassesCount = 0;
+      for (const classItem of existingClasses) {
+        if (!classItem.timeSlotTemplateId) {
+          await db
+            .update(classes)
+            .set({ timeSlotTemplateId: templateId })
+            .where(eq(classes.id, classItem.id));
+          updatedClassesCount++;
+        }
+      }
+
+      if (updatedClassesCount > 0) {
+        console.log(`  ✓ Associated ${updatedClassesCount} class(es) with template`);
+      } else {
+        console.log(`  → All classes already have templates assigned`);
       }
     }
 

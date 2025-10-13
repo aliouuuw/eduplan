@@ -36,7 +36,7 @@ const DAYS_OF_WEEK = [
 ];
 
 // Generate time slots from 8:00 AM to 6:00 PM in 30-minute intervals
-const TIME_SLOTS = [];
+const TIME_SLOTS: string[] = [];
 for (let hour = 8; hour <= 18; hour++) {
   for (let minute = 0; minute < 60; minute += 30) {
     if (hour === 18 && minute > 0) break; // Stop at 18:00

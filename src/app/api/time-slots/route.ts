@@ -43,14 +43,38 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied. Admins only.' }, { status: 403 });
     }
 
-    // Get templateId filter from query params
+    // Get templateId or classId filter from query params
     const { searchParams } = new URL(request.url);
     const templateId = searchParams.get('templateId');
+    const classId = searchParams.get('classId');
 
-    // Build where clause
-    const whereConditions = templateId
-      ? and(eq(timeSlots.schoolId, schoolId), eq(timeSlots.templateId, templateId))
-      : eq(timeSlots.schoolId, schoolId);
+    let whereConditions = eq(timeSlots.schoolId, schoolId);
+
+    if (templateId) {
+      // Filter by specific template
+      whereConditions = and(whereConditions, eq(timeSlots.templateId, templateId))!;
+    } else if (classId) {
+      // Filter by class's template
+      const { classes } = await import('@/db/schema');
+      const classData = await db
+        .select({ timeSlotTemplateId: classes.timeSlotTemplateId })
+        .from(classes)
+        .where(and(eq(classes.id, classId), eq(classes.schoolId, schoolId)))
+        .limit(1);
+
+      if (classData.length > 0 && classData[0].timeSlotTemplateId) {
+        whereConditions = and(whereConditions, eq(timeSlots.templateId, classData[0].timeSlotTemplateId))!;
+      } else {
+        // Class has no template assigned, return empty
+        return NextResponse.json({
+          slots: [],
+          slotsByDay: {},
+          totalSlots: 0,
+          teachingSlots: 0,
+          breakSlots: 0,
+        });
+      }
+    }
 
     const slots = await db
       .select()

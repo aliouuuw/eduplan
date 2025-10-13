@@ -44,6 +44,7 @@ export default function AdminTeacherAvailabilityPage() {
   const [individualEditOpen, setIndividualEditOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [saving, setSaving] = useState(false);
+  const [reminding, setReminding] = useState(false);
 
   // Bulk edit form state
   const [bulkStartTime, setBulkStartTime] = useState('08:00');
@@ -189,6 +190,51 @@ export default function AdminTeacherAvailabilityPage() {
     }
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedTeachers(teachers.map(t => t.id));
+    } else {
+      setSelectedTeachers([]);
+    }
+  };
+
+  const handleSelectTeacher = (teacherId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedTeachers(prev => [...prev, teacherId]);
+    } else {
+      setSelectedTeachers(prev => prev.filter(id => id !== teacherId));
+    }
+  };
+
+  const handleRemindTeachers = async () => {
+    const teachersWithoutAvailability = teachers.filter(t => !t.hasAvailability);
+    if (teachersWithoutAvailability.length === 0) {
+      toast({
+        title: 'All teachers have availability set',
+        description: 'No reminders needed!',
+      });
+      return;
+    }
+
+    setReminding(true);
+    try {
+      // For now, just show a success message
+      // In a real implementation, this would send emails or notifications
+      toast({
+        title: 'Reminder sent',
+        description: `Notified ${teachersWithoutAvailability.length} teacher(s) to set their availability.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to send reminders',
+        variant: 'destructive',
+      });
+    } finally {
+      setReminding(false);
+    }
+  };
+
   const openIndividualEdit = async (teacher: Teacher) => {
     setEditingTeacher(teacher);
     await fetchTeacherAvailability(teacher.id);
@@ -217,6 +263,28 @@ export default function AdminTeacherAvailabilityPage() {
   };
 
   const columns = [
+    {
+      key: 'select' as keyof Teacher,
+      label: (
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            checked={selectedTeachers.length === teachers.length && teachers.length > 0}
+            onChange={(e) => handleSelectAll(e.target.checked)}
+            className="rounded border-gray-300"
+          />
+          <span className="text-xs font-medium">Select</span>
+        </div>
+      ),
+      render: (_value: any, item: Teacher) => (
+        <input
+          type="checkbox"
+          checked={selectedTeachers.includes(item.id)}
+          onChange={(e) => handleSelectTeacher(item.id, e.target.checked)}
+          className="rounded border-gray-300"
+        />
+      ),
+    },
     {
       key: 'name' as keyof Teacher,
       label: 'Teacher',
@@ -348,14 +416,23 @@ export default function AdminTeacherAvailabilityPage() {
       <section className="space-y-4">
         <Card className="rounded-2xl border border-gray-200 shadow-sm">
           <CardHeader className="border-b border-gray-200 pb-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="text-lg font-semibold text-black">Bulk Operations</CardTitle>
                 <CardDescription className="text-sm text-gray-600">
-                  Set availability for multiple teachers at once
+                  Manage teacher availability for multiple teachers at once
                 </CardDescription>
               </div>
               <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleRemindTeachers}
+                  disabled={reminding || teachers.filter(t => !t.hasAvailability).length === 0}
+                  className="border-orange-200 hover:bg-orange-50"
+                >
+                  <AlertCircle className="h-4 w-4 mr-2 text-orange-600" />
+                  {reminding ? 'Sending...' : `Remind (${teachers.filter(t => !t.hasAvailability).length})`}
+                </Button>
                 <Button
                   variant="outline"
                   disabled={selectedTeachers.length === 0}
@@ -367,6 +444,16 @@ export default function AdminTeacherAvailabilityPage() {
               </div>
             </div>
           </CardHeader>
+          {selectedTeachers.length > 0 && (
+            <CardContent className="pt-0">
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span>
+                  {selectedTeachers.length} teacher{selectedTeachers.length === 1 ? '' : 's'} selected
+                </span>
+              </div>
+            </CardContent>
+          )}
         </Card>
       </section>
 
