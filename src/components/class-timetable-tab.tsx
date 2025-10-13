@@ -18,11 +18,13 @@ import {
   Sparkles,
   Settings,
   Download,
-  RefreshCw
+  RefreshCw,
+  ExternalLink
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
 interface ClassDetail {
   id: string;
@@ -102,6 +104,7 @@ export default function ClassTimetableTab({
   const [loading, setLoading] = useState(true);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [timetableEntries, setTimetableEntries] = useState<TimetableEntry[]>([]);
+  const [assignments, setAssignments] = useState<{teacherId: string, teacherName: string, subjectId: string, subjectName: string}[]>([]);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -120,6 +123,13 @@ export default function ClassTimetableTab({
       if (timeSlotsResponse.ok) {
         const timeSlotsData = await timeSlotsResponse.json();
         setTimeSlots(timeSlotsData.slots || []);
+      }
+
+      // Fetch teacher assignments (same as main timetables page)
+      const assignmentsResponse = await fetch(`/api/teacher-assignments?classId=${classId}`);
+      if (assignmentsResponse.ok) {
+        const assignmentsData = await assignmentsResponse.json();
+        setAssignments(assignmentsData.assignments || []);
       }
 
       // Fetch existing timetable
@@ -195,7 +205,7 @@ export default function ClassTimetableTab({
   };
 
   const handleAssignmentSelect = (timeSlotId: string, assignmentIndex: number) => {
-    const assignment = subjects[assignmentIndex];
+    const assignment = assignments[assignmentIndex];
 
     setTimetableEntries(prev => prev.map(entry =>
       entry.timeSlotId === timeSlotId
@@ -212,7 +222,7 @@ export default function ClassTimetableTab({
 
   const getAssignmentDetails = (entry: TimetableEntry) => {
     if (!entry.subjectId || !entry.teacherId) return null;
-    return subjects.find(s => s.subjectId === entry.subjectId && s.teacherId === entry.teacherId);
+    return assignments.find(a => a.subjectId === entry.subjectId && a.teacherId === entry.teacherId);
   };
 
   const handleAutoGenerate = async (preserveExisting: boolean = false, strategy: string = 'balanced') => {
@@ -432,6 +442,15 @@ export default function ClassTimetableTab({
           <p className="text-sm text-gray-600">
             Manage the timetable for {classDetail.name} ({classDetail.academicYear})
           </p>
+          <p className="text-xs text-gray-500 mt-1">
+            <Link 
+              href={`/dashboard/admin/scheduling/timetables?classId=${classId}`}
+              className="text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1"
+            >
+              Open in full timetable builder
+              <ExternalLink className="h-3 w-3" />
+            </Link>
+          </p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -612,7 +631,7 @@ export default function ClassTimetableTab({
                                       <SelectValue placeholder="Choose..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      {subjects.map((assign, idx) => (
+                                      {assignments.map((assign, idx) => (
                                         <SelectItem key={idx} value={idx.toString()}>
                                           {assign.subjectName} - {assign.teacherName}
                                         </SelectItem>

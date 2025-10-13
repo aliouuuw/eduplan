@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -78,6 +79,7 @@ const DAYS_OF_WEEK = [
 export default function AdminTimetablesPage() {
   const { data: session } = useSession();
   const { toast } = useToast();
+  const searchParams = useSearchParams();
   
   const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState<Class[]>([]);
@@ -95,6 +97,9 @@ export default function AdminTimetablesPage() {
   const [multiTeacherDialogOpen, setMultiTeacherDialogOpen] = useState(false);
   const [autoGenResults, setAutoGenResults] = useState<any>(null);
   const [multiTeacherSelections, setMultiTeacherSelections] = useState<Record<string, string>>({});
+  const [hasDraftEntries, setHasDraftEntries] = useState(false);
+  const [activating, setActivating] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
 
   // Fetch classes
   const fetchClasses = async () => {
@@ -167,10 +172,13 @@ export default function AdminTimetablesPage() {
           academicYear: entry.academicYear,
         }));
         setTimetableEntries(mappedEntries);
+        // Check if there are any draft entries
+        setHasDraftEntries(mappedEntries.some((entry: TimetableEntry) => entry.status === 'draft'));
       }
     } catch (error) {
       console.error('Error fetching timetable:', error);
       // Don't show error toast - timetable might not exist yet
+      setHasDraftEntries(false);
     }
   };
 
@@ -181,6 +189,18 @@ export default function AdminTimetablesPage() {
       setLoading(false);
     }
   }, [session?.user?.schoolId]);
+
+  // Handle URL parameter for pre-selecting a class
+  useEffect(() => {
+    const classIdParam = searchParams.get('classId');
+    if (classIdParam && classes.length > 0 && !selectedClass) {
+      // Verify the class exists in the list
+      const classExists = classes.find(c => c.id === classIdParam);
+      if (classExists) {
+        setSelectedClass(classIdParam);
+      }
+    }
+  }, [searchParams, classes]);
 
   useEffect(() => {
     if (selectedClass) {
@@ -451,6 +471,115 @@ export default function AdminTimetablesPage() {
     }
   };
 
+  const handleActivateTimetable = async () => {
+    if (!selectedClass) {
+      toast({
+        title: 'Error',
+        description: 'Please select a class first',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const currentAcademicYear = classes.find(c => c.id === selectedClass)?.academicYear || '2025-2026';
+
+    setActivating(true);
+    try {
+      const response = await fetch('/api/timetables/activate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          classId: selectedClass,
+          academicYear: currentAcademicYear,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        toast({
+          title: 'Activation failed',
+          description: error.error || 'Failed to activate timetable',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const data = await response.json();
+
+      toast({
+        title: 'Success',
+        description: `Timetable activated! ${data.summary.entriesActivated} entries activated.`,
+      });
+
+      // Reload timetable to show active status
+      await fetchTimetable(selectedClass);
+      setHasDraftEntries(false);
+
+    } catch (error: any) {
+      console.error('Error activating timetable:', error);
+      toast({
+        title: 'Activation failed',
+        description: error.message || 'Failed to activate timetable',
+        variant: 'destructive',
+      });
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  const handleDiscardDrafts = async () => {
+    if (!selectedClass) {
+      toast({
+        title: 'Error',
+        description: 'Please select a class first',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setDiscarding(true);
+    try {
+      const response = await fetch('/api/timetables/discard', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          classId: selectedClass,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        toast({
+          title: 'Discard failed',
+          description: error.error || 'Failed to discard drafts',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const data = await response.json();
+
+      toast({
+        title: 'Success',
+        description: `Draft timetable discarded. ${data.summary.entriesDiscarded} entries removed.`,
+      });
+
+      // Reload timetable to show empty slots
+      await fetchTimetable(selectedClass);
+      setHasDraftEntries(false);
+
+    } catch (error: any) {
+      console.error('Error discarding drafts:', error);
+      toast({
+        title: 'Discard failed',
+        description: error.message || 'Failed to discard drafts',
+        variant: 'destructive',
+      });
+    } finally {
+      setDiscarding(false);
+    }
+  };
+
   const stats = {
     totalSlots: timeSlots.filter(s => !s.isBreak).length,
     scheduledSlots: timetableEntries.filter(e => e.subjectId && e.teacherId).length,
@@ -479,6 +608,29 @@ export default function AdminTimetablesPage() {
                 <Sparkles className="h-4 w-4 mr-2 text-purple-600" />
                 {autoGenerating ? 'Generating...' : 'Auto-Generate'}
               </Button>
+
+              {hasDraftEntries && (
+                <>
+                  <Button
+                    onClick={handleActivateTimetable}
+                    disabled={activating}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    {activating ? 'Activating...' : 'Activate Timetable'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleDiscardDrafts}
+                    disabled={discarding}
+                    className="border-red-200 hover:bg-red-50"
+                  >
+                    <XCircle className="h-4 w-4 mr-2 text-red-600" />
+                    {discarding ? 'Discarding...' : 'Discard Draft'}
+                  </Button>
+                </>
+              )}
+
               {hasChanges && (
                 <Button
                   onClick={handleSaveTimetable}
@@ -635,7 +787,9 @@ export default function AdminTimetablesPage() {
                                   ? 'bg-orange-50 border-orange-200 cursor-not-allowed'
                                   : entry
                                   ? assignment
-                                    ? 'bg-blue-50 border-blue-300 cursor-pointer hover:border-blue-400'
+                                    ? entry.status === 'draft'
+                                      ? 'bg-amber-50 border-amber-300 cursor-pointer hover:border-amber-400 border-dashed'
+                                      : 'bg-blue-50 border-blue-300 cursor-pointer hover:border-blue-400'
                                     : 'bg-gray-50 border-gray-300 cursor-pointer hover:border-gray-400'
                                   : 'bg-white border-gray-200 cursor-pointer hover:border-gray-300 hover:bg-gray-50'
                               }`}
@@ -651,12 +805,21 @@ export default function AdminTimetablesPage() {
                                 <div className="p-2 space-y-1">
                                   {assignment ? (
                                     <>
-                                      <p className="text-xs font-semibold text-blue-900 truncate">
-                                        {assignment.subjectName}
-                                      </p>
-                                      <p className="text-xs text-blue-700 truncate">
-                                        {assignment.teacherName}
-                                      </p>
+                                      <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                          <p className="text-xs font-semibold text-blue-900 truncate">
+                                            {assignment.subjectName}
+                                          </p>
+                                          <p className="text-xs text-blue-700 truncate">
+                                            {assignment.teacherName}
+                                          </p>
+                                        </div>
+                                        {entry.status === 'draft' && (
+                                          <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-800 border-amber-200 ml-1">
+                                            Draft
+                                          </Badge>
+                                        )}
+                                      </div>
                                     </>
                                   ) : (
                                     <div className="space-y-1">

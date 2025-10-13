@@ -98,11 +98,24 @@ export async function POST(request: NextRequest) {
       ...constraints,
       existingTimetable,
       preserveExisting: validated.preserveExisting,
+      strategy: validated.strategy,
     };
 
     console.log(`📊 Running scheduler with ${constraints.subjects.length} subjects, ${constraints.teacherAssignments.length} assignments`);
 
     const result = generateScheduleForClass(schedulerInput);
+
+    // Step 3.5: Clean up existing drafts for this class
+    console.log(`🧹 Cleaning up existing drafts for class ${validated.classId}`);
+    await db
+      .delete(timetables)
+      .where(
+        and(
+          eq(timetables.classId, validated.classId),
+          eq(timetables.schoolId, schoolId || ''),
+          eq(timetables.status, 'draft')
+        )
+      );
 
     // Step 4: Save draft timetable entries to database
     const savedEntries = [];
@@ -322,26 +335,7 @@ async function gatherConstraints(classId: string, schoolId?: string): Promise<Sc
 
     if (classInfo.length === 0) return null;
 
-    // 2. Get all subjects available for this school (not just assigned ones)
-    const allSubjectsRaw = await db
-      .select({
-        id: subjects.id,
-        name: subjects.name,
-        weeklyHours: subjects.weeklyHours,
-      })
-      .from(subjects)
-      .where(schoolId ? eq(subjects.schoolId, schoolId) : undefined);
-
-    // Convert null weeklyHours to 0 for the scheduler
-    const allSubjects = allSubjectsRaw.map(subject => ({
-      id: subject.id,
-      name: subject.name,
-      weeklyHours: subject.weeklyHours || 0,
-    }));
-
-    // 3. Get existing teacher assignments for this class
-    const teacherAssignments: any[] = [];
-
+    // 2. Get teacher assignments for this class (these define which subjects to schedule)
     const assignments = await db
       .select({
         teacherId: users.id,
@@ -349,6 +343,7 @@ async function gatherConstraints(classId: string, schoolId?: string): Promise<Sc
         teacherEmail: users.email,
         subjectId: subjects.id,
         subjectName: subjects.name,
+        weeklyHours: subjects.weeklyHours,
       })
       .from(teacherClasses)
       .innerJoin(users, eq(teacherClasses.teacherId, users.id))
@@ -359,7 +354,21 @@ async function gatherConstraints(classId: string, schoolId?: string): Promise<Sc
           : eq(teacherClasses.classId, classId)
       );
 
+    // 3. Extract unique subjects from assignments (only subjects with teachers assigned to this class)
+    const subjectsMap = new Map<string, { id: string; name: string; weeklyHours: number }>();
+    const teacherAssignments: any[] = [];
+
     assignments.forEach(assignment => {
+      // Collect subjects
+      if (!subjectsMap.has(assignment.subjectId)) {
+        subjectsMap.set(assignment.subjectId, {
+          id: assignment.subjectId,
+          name: assignment.subjectName,
+          weeklyHours: assignment.weeklyHours || 0,
+        });
+      }
+
+      // Collect teacher assignments
       teacherAssignments.push({
         teacherId: assignment.teacherId,
         teacherName: assignment.teacherName,
@@ -367,6 +376,8 @@ async function gatherConstraints(classId: string, schoolId?: string): Promise<Sc
         subjectName: assignment.subjectName,
       });
     });
+
+    const classSubjects = Array.from(subjectsMap.values());
 
     // 4. Get unique teachers
     const teacherIds = new Set(assignments.map(a => a.teacherId));
@@ -418,7 +429,7 @@ async function gatherConstraints(classId: string, schoolId?: string): Promise<Sc
 
     return {
       classId,
-      subjects: allSubjects,
+      subjects: classSubjects,
       teachers,
       teacherAssignments,
       teacherAvailability: availabilityData,
