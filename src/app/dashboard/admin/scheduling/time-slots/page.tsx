@@ -199,6 +199,7 @@ export default function AdminTimeSlotsPage() {
     }
   };
 
+
   const columns = [
     {
       key: 'dayOfWeek' as keyof TimeSlot,
@@ -244,10 +245,10 @@ export default function AdminTimeSlotsPage() {
       key: 'isBreak' as keyof TimeSlot,
       label: 'Type',
       render: (_value: any, item: TimeSlot) => (
-        <Badge 
+        <Badge
           variant={item.isBreak ? "secondary" : "default"}
-          className={item.isBreak 
-            ? "bg-orange-100 text-orange-700 border-orange-200" 
+          className={item.isBreak
+            ? "bg-orange-100 text-orange-700 border-orange-200"
             : "bg-blue-100 text-blue-700 border-blue-200"
           }
         >
