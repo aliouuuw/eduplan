@@ -42,9 +42,6 @@ export type NewInvitation = typeof schema.invitations.$inferInsert;
 export type UserRole = 'superadmin' | 'admin' | 'teacher' | 'parent' | 'student';
 
 // Utility function to generate IDs
-export function generateId(): string {
-  return crypto.randomUUID();
-}
 
 // Utility function to get current timestamp
 export function getCurrentTimestamp(): Date {

@@ -20,7 +20,8 @@
  */
 
 import bcrypt from 'bcryptjs';
-import { db, generateId, getCurrentTimestamp } from '../src/lib/db';
+import { db, getCurrentTimestamp } from '../src/lib/db';
+import { generateId } from '../src/lib/utils';
 import {
   users,
   schools,

@@ -168,7 +168,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
       if (Object.keys(updateData).length > 0) {
         assignment = await db.update(teacherClasses)
-          .set({ ...updateData, updatedAt: new Date() })
+          .set(updateData)
           .where(eq(teacherClasses.id, existingAssignment[0].id))
           .returning();
       }
@@ -179,10 +179,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         schoolId: schoolId || '',
         classId,
         subjectId: validated.subjectId,
-        teacherId: validated.teacherId || null, // Allow null if no teacher specified yet
-        academicYear: classExists[0].academicYear, // Inherit from class
+        teacherId: validated.teacherId || '', // Default to empty string if no teacher specified yet
         createdAt: new Date(),
-        updatedAt: new Date(),
       };
       assignment = await db.insert(teacherClasses).values(newAssignment).returning();
     }
@@ -328,7 +326,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const updatedAssignment = await db.update(teacherClasses)
-      .set({ ...updateData, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(teacherClasses.id, assignmentExists[0].id))
       .returning();
 

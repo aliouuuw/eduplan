@@ -4,11 +4,7 @@ import { db } from '@/lib/db';
 import { studentEnrollments, users, classes } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { z } from 'zod';
-
-// Generate unique ID
-function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-}
+import { generateId } from '@/lib/utils';
 
 // Get current timestamp
 function getCurrentTimestamp(): Date {

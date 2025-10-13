@@ -4,11 +4,7 @@ import { db } from '@/lib/db';
 import { teacherClasses, teacherSubjects, users, classes, subjects, teacherAvailability, timeSlots, timetables } from '@/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { z } from 'zod';
-
-// Generate unique ID
-function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-}
+import { generateId } from '@/lib/utils';
 
 // Get current timestamp
 function getCurrentTimestamp(): Date {
@@ -27,6 +23,7 @@ const assignClassSchema = z.object({
   classId: z.string().min(1),
   subjectId: z.string().min(1),
   schoolId: z.string().min(1),
+  weeklyHours: z.number().int().min(0).max(40).default(0), // 0-40 hours per week
 });
 
 /**
@@ -69,6 +66,7 @@ export async function GET(request: NextRequest) {
           subjectId: subjects.id,
           subjectName: subjects.name,
           subjectCode: subjects.code,
+          weeklyHours: teacherClasses.weeklyHours,
           academicYear: classes.academicYear,
           createdAt: teacherClasses.createdAt,
         })
@@ -124,6 +122,7 @@ export async function GET(request: NextRequest) {
         subjectId: subjects.id,
         subjectName: subjects.name,
         subjectCode: subjects.code,
+        weeklyHours: teacherClasses.weeklyHours,
         academicYear: classes.academicYear,
         createdAt: teacherClasses.createdAt,
       })
@@ -356,6 +355,7 @@ export async function POST(request: NextRequest) {
           classId: validated.classId,
           subjectId: validated.subjectId,
           schoolId: validated.schoolId,
+          weeklyHours: validated.weeklyHours,
           createdAt: now,
         })
         .returning();

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
-import { db, generateId, getCurrentTimestamp } from '@/lib/db';
+import { db, getCurrentTimestamp } from '@/lib/db';
+import { generateId } from '@/lib/utils';
 import { schools, invitations } from '@/db/schema';
 import { isSuperAdmin } from '@/lib/auth';
 import {

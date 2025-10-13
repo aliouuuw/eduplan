@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
-import { db, generateId, getCurrentTimestamp } from '@/lib/db';
+import { db, getCurrentTimestamp } from '@/lib/db';
+import { generateId } from '@/lib/utils';
 import { users } from '@/db/schema';
 
 const registerSchema = z.object({

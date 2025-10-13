@@ -4,11 +4,7 @@ import { db } from '@/lib/db';
 import { timetables, classes, subjects, users, timeSlots } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
-
-// Utility functions
-function generateId(): string {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
-}
+import { generateId } from '@/lib/utils';
 
 function getCurrentTimestamp(): Date {
   return new Date();

@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { eq, and } from 'drizzle-orm';
-import { db, generateId, getCurrentTimestamp } from '@/lib/db';
+import { db, getCurrentTimestamp } from '@/lib/db';
+import { generateId } from '@/lib/utils';
 import { invitations, users } from '@/db/schema';
 import { isInvitationValid } from '@/lib/invitations';
 
