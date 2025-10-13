@@ -111,7 +111,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // Calculate statistics
     const totalClasses = classesData.length;
     const totalTeachers = Object.keys(teachersWithClasses).length;
-    const totalCapacity = classesData.reduce((sum, cls) => sum + cls.capacity, 0);
+    const totalCapacity = classesData.reduce((sum, cls) => sum + (cls.capacity ?? 0), 0);
 
     return NextResponse.json({
       subject,

@@ -70,7 +70,7 @@ export async function GET(
 
     // Calculate statistics
     const totalClasses = levelClasses.length;
-    const totalCapacity = levelClasses.reduce((sum, cls) => sum + cls.capacity, 0);
+    const totalCapacity = levelClasses.reduce((sum, cls) => sum + (cls.capacity ?? 0), 0);
     const totalStudents = levelClasses.reduce((sum, cls) => sum + cls.studentCount, 0);
 
     return NextResponse.json({

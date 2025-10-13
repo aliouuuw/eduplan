@@ -286,7 +286,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
             )}
           </button>
           
-          {isSectionOpen && (
+          {isSectionOpen && item.children && (
             <div className="ml-3 space-y-1 border-l-2 border-gray-200 pl-3">
               {item.children.map(child => renderNavItem(child, true))}
             </div>

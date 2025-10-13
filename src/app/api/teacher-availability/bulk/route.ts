@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, isSchoolAdmin, isSuperAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { teacherAvailability } from '@/db/schema';
+import { teacherAvailability, users } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { generateId } from '@/lib/utils';
@@ -51,11 +51,11 @@ export async function POST(request: NextRequest) {
     for (const teacherId of validated.teacherIds) {
       const teacher = await db
         .select()
-        .from('users')
+        .from(users)
         .where(
           schoolId
-            ? and(eq('users.id', teacherId), eq('users.schoolId', schoolId), eq('users.role', 'teacher'))
-            : eq('users.id', teacherId)
+            ? and(eq(users.id, teacherId), eq(users.schoolId, schoolId), eq(users.role, 'teacher'))
+            : eq(users.id, teacherId)
         )
         .limit(1);
 

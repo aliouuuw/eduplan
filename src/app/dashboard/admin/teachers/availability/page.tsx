@@ -388,9 +388,6 @@ export default function AdminTeacherAvailabilityPage() {
             data={teachers}
             loading={loading}
             searchPlaceholder="Search teachers..."
-            selectable={true}
-            selectedItems={selectedTeachers}
-            onSelectionChange={setSelectedTeachers}
           />
         </CardContent>
       </section>

@@ -284,14 +284,8 @@ export default function AdminTimetablesPage() {
           
           toast({
             title: error.reason || 'Cannot generate timetable',
-            description: (
-              <div className="mt-2 space-y-2">
-                <p className="font-medium">To proceed, please:</p>
-                <pre className="text-xs whitespace-pre-wrap">{suggestionsList}</pre>
-              </div>
-            ),
+            description: `To proceed, please:\n${suggestionsList}`,
             variant: 'destructive',
-            duration: 10000, // Show longer for important messages
           });
         } else {
           toast({

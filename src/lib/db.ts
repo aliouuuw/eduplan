@@ -1,6 +1,7 @@
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
 import * as schema from '../db/schema';
+import { generateId } from './utils';
 
 // Create the Turso client
 const client = createClient({
@@ -23,6 +24,7 @@ export type Subject = typeof schema.subjects.$inferSelect;
 export type NewSubject = typeof schema.subjects.$inferInsert;
 export type ClassGroup = typeof schema.academicLevels.$inferSelect; // Renamed type
 export type NewClassGroup = typeof schema.academicLevels.$inferInsert; // Renamed type
+export type AcademicLevel = typeof schema.academicLevels.$inferSelect; // Alias for backward compatibility
 export type TimeSlot = typeof schema.timeSlots.$inferSelect;
 export type NewTimeSlot = typeof schema.timeSlots.$inferInsert;
 export type Timetable = typeof schema.timetables.$inferSelect;
@@ -37,6 +39,9 @@ export type TeacherClass = typeof schema.teacherClasses.$inferSelect;
 export type NewTeacherClass = typeof schema.teacherClasses.$inferInsert;
 export type Invitation = typeof schema.invitations.$inferSelect;
 export type NewInvitation = typeof schema.invitations.$inferInsert;
+
+// Export utilities
+export { generateId };
 
 // Role type for better type safety
 export type UserRole = 'superadmin' | 'admin' | 'teacher' | 'parent' | 'student';

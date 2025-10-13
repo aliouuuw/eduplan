@@ -15,7 +15,7 @@ const subjectSchema = z.object({
   name: z.string().min(1, 'Subject name is required'),
   code: z.string().optional(),
   description: z.string().optional(),
-  weeklyHours: z.number().min(0).max(50).default(0),
+  weeklyHours: z.number().min(0).max(50),
 });
 
 type SubjectFormData = z.infer<typeof subjectSchema>;

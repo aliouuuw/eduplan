@@ -194,9 +194,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           classId,
           subjectId,
           teacherId,
-          academicYear,
           createdAt: new Date(),
-          updatedAt: new Date(),
         });
       }
     }

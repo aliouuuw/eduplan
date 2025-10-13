@@ -181,7 +181,16 @@ export function generateScheduleForClass(constraints: SchedulerConstraints): Sch
         teacherSchedule.set(entry.teacherId, new Set());
       }
       teacherSchedule.get(entry.teacherId)!.add(entry.timeSlotId);
-      result.timetable.push(entry);
+      // Convert to TimetableEntry format with draft status
+      const timetableEntry: TimetableEntry = {
+        classId: entry.classId,
+        subjectId: entry.subjectId,
+        teacherId: entry.teacherId,
+        timeSlotId: entry.timeSlotId,
+        academicYear: entry.academicYear,
+        status: 'draft' as const,
+      };
+      result.timetable.push(timetableEntry);
       result.statistics.slotsPlaced++;
     });
   }

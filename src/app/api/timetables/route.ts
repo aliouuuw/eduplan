@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { timetables, classes, subjects, users, timeSlots } from '@/db/schema';
+import { timetables, classes, subjects, users, timeSlots, teacherAvailability } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { generateId } from '@/lib/utils';

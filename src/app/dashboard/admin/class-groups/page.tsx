@@ -15,9 +15,10 @@ import { Breadcrumbs, createBreadcrumbs } from '@/components/layout/breadcrumbs'
 interface ClassGroup {
   id: string;
   name: string;
-  description?: string;
-  classCount: number;
-  studentCount: number;
+  description: string | null;
+  schoolId: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export default function AdminClassGroupsPage() {
@@ -79,6 +80,50 @@ export default function AdminClassGroupsPage() {
     }
   };
 
+  const handleCreateGroup = async (data: { name: string; description?: string }) => {
+    try {
+      const response = await fetch('/api/academic-levels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create class group');
+      }
+
+      fetchClassGroups();
+      setDialogOpen(false);
+      setEditingGroup(null);
+    } catch (error) {
+      console.error('Error creating class group:', error);
+      throw error;
+    }
+  };
+
+  const handleUpdateGroup = async (data: { name: string; description?: string }) => {
+    if (!editingGroup) return;
+
+    try {
+      const response = await fetch(`/api/academic-levels/${editingGroup.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update class group');
+      }
+
+      fetchClassGroups();
+      setDialogOpen(false);
+      setEditingGroup(null);
+    } catch (error) {
+      console.error('Error updating class group:', error);
+      throw error;
+    }
+  };
+
   const handleFormSuccess = () => {
     fetchClassGroups();
     setDialogOpen(false);
@@ -99,20 +144,6 @@ export default function AdminClassGroupsPage() {
             <p className="text-sm text-gray-500">{item.description}</p>
           </div>
         </div>
-      ),
-    },
-    {
-      key: 'classCount' as keyof ClassGroup,
-      label: 'Classes',
-      render: (_value: any, item: ClassGroup) => (
-        <span className="text-sm text-gray-700">{item.classCount || 0}</span>
-      ),
-    },
-    {
-      key: 'studentCount' as keyof ClassGroup,
-      label: 'Students',
-      render: (_value: any, item: ClassGroup) => (
-        <span className="text-sm text-gray-700">{item.studentCount || 0}</span>
       ),
     },
     {
@@ -154,26 +185,13 @@ export default function AdminClassGroupsPage() {
               Organize your classes into custom groups (e.g., by academic level, track, or campus)
             </p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => setEditingGroup(null)} className="bg-black hover:bg-gray-800">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Group
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>{editingGroup ? 'Edit Class Group' : 'Create Class Group'}</DialogTitle>
-                <DialogDescription>
-                  {editingGroup ? 'Edit the class group details.' : 'Add a new class group to your school.'}
-                </DialogDescription>
-              </DialogHeader>
-              <AcademicLevelForm
-                academicLevel={editingGroup ? { ...editingGroup, type: 'academic' } : undefined} // type is temporary until schema refactor
-                onSuccess={handleFormSuccess}
-              />
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => {
+            setEditingGroup(null);
+            setDialogOpen(true);
+          }} className="bg-black hover:bg-gray-800">
+            <Plus className="h-4 w-4 mr-2" />
+            Create Group
+          </Button>
         </div>
       </header>
 
@@ -223,29 +241,25 @@ export default function AdminClassGroupsPage() {
                 )}
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2 text-gray-600">
-                      <BookOpen className="h-4 w-4" />
-                      {group.classCount} classes
-                    </span>
-                    <span className="flex items-center gap-2 text-gray-600">
-                      <Users className="h-4 w-4" />
-                      {group.studentCount} students
-                    </span>
-                  </div>
-                  <Button variant="outline" size="sm" asChild className="w-full">
-                    <Link href={`/dashboard/admin/class-groups/${group.id}`}>
-                      View Classes
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Link>
-                  </Button>
-                </div>
+                <Button variant="outline" size="sm" asChild className="w-full">
+                  <Link href={`/dashboard/admin/class-groups/${group.id}`}>
+                    View Classes
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Link>
+                </Button>
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      <AcademicLevelForm
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        level={editingGroup}
+        onSubmit={editingGroup ? handleUpdateGroup : handleCreateGroup}
+        loading={false}
+      />
     </div>
   );
 }
