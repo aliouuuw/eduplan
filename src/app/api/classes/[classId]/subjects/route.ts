@@ -16,9 +16,16 @@ import { validateTeacherAssignment, ensureTeacherQualification } from '@/lib/ass
 type ClassSubjectAssignment = InferSelectModel<typeof teacherClasses>;
 type NewClassSubjectAssignment = InferInsertModel<typeof teacherClasses>;
 
-// Schema for assigning/updating a subject to a class
+// Schema for assigning a subject to a class (POST)
 const classSubjectAssignmentSchema = z.object({
   subjectId: z.string().min(1, 'Subject ID is required'),
+  teacherId: z.string().optional(), // Teacher is optional when assigning subject to class
+  weeklyHours: z.number().min(0, 'Weekly hours cannot be negative').optional(),
+  autoQualify: z.boolean().optional().default(true), // Auto-create teacher qualification if missing
+});
+
+// Schema for updating a subject assignment (PUT) - subjectId comes from URL
+const updateSubjectAssignmentSchema = z.object({
   teacherId: z.string().optional(), // Teacher is optional when assigning subject to class
   weeklyHours: z.number().min(0, 'Weekly hours cannot be negative').optional(),
   autoQualify: z.boolean().optional().default(true), // Auto-create teacher qualification if missing
@@ -329,7 +336,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const body = await request.json();
-    const validated = classSubjectAssignmentSchema.parse(body);
+    const validated = updateSubjectAssignmentSchema.parse(body);
 
     // Verify the class belongs to the school
     const classExists = await db.select().from(classes).where(
@@ -356,29 +363,44 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Subject not assigned to this class' }, { status: 404 });
     }
 
-    // Validate assignment if teacher is specified and has weekly hours
+    // Validate assignment if teacher is specified
     const warnings = [];
-    if (validated.teacherId && assignmentExists[0].weeklyHours) {
-      const validationWarnings = await validateTeacherAssignment(
-        validated.teacherId,
-        subjectId,
-        classId,
-        assignmentExists[0].weeklyHours,
-        schoolId || ''
-      );
-      warnings.push(...validationWarnings);
-
-      // Check for errors (blocking issues)
-      const errors = validationWarnings.filter(w => w.type === 'error');
-      if (errors.length > 0) {
-        return NextResponse.json(
-          { 
-            error: 'Validation failed', 
-            warnings: validationWarnings,
-            canProceed: false 
-          },
-          { status: 400 }
+    if (validated.teacherId) {
+      // Use existing weekly hours or 0 if not set
+      const weeklyHours = assignmentExists[0].weeklyHours || 0;
+      
+      // Add info about 0 hours assignments
+      if (weeklyHours === 0) {
+        warnings.push({
+          type: 'info',
+          message: 'No weekly hours assigned',
+          details: 'This subject assignment has 0 weekly hours. Consider setting weekly hours for proper scheduling.',
+        });
+      }
+      
+      // Only validate workload if there are actual hours to assign
+      if (weeklyHours > 0) {
+        const validationWarnings = await validateTeacherAssignment(
+          validated.teacherId,
+          subjectId,
+          classId,
+          weeklyHours,
+          schoolId || ''
         );
+        warnings.push(...validationWarnings);
+
+        // Check for errors (blocking issues)
+        const errors = validationWarnings.filter(w => w.type === 'error');
+        if (errors.length > 0) {
+          return NextResponse.json(
+            { 
+              error: 'Validation failed', 
+              warnings: validationWarnings,
+              canProceed: false 
+            },
+            { status: 400 }
+          );
+        }
       }
 
       // Auto-qualify teacher if requested and not qualified
@@ -423,7 +445,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation error', details: error.flatten().fieldErrors }, { status: 400 });
+      console.error('Zod validation error:', error.flatten());
+      return NextResponse.json({ 
+        error: 'Validation error', 
+        details: error.flatten().fieldErrors,
+        message: 'Invalid request data format'
+      }, { status: 400 });
     }
     console.error('Error updating subject assignment for class:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
