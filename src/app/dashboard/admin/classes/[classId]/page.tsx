@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { BookOpen, Users, Settings, FolderTree, Calendar, LayoutDashboard, ArrowRight, Clock, Edit2, Check, X, Plus, MoreHorizontal, Trash2, Eye } from 'lucide-react';
+import { BookOpen, Users, Settings, FolderTree, Calendar, LayoutDashboard, ArrowRight, Clock, Edit2, Check, X, Plus, MoreHorizontal, Trash2, Eye, AlertTriangle, Info, Copy, User } from 'lucide-react';
 import Link from 'next/link';
 import { Breadcrumbs, createBreadcrumbs } from '@/components/layout/breadcrumbs';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import ClassTimetableTab from '@/components/class-timetable-tab';
+import { TeacherQualificationBadge } from '@/components/teacher-qualification-badge';
+import { CloneSubjectsDialog } from '@/components/dialogs/clone-subjects-dialog';
 
 interface ClassDetail {
   id: string;
@@ -71,12 +74,32 @@ export default function AdminClassDetailPage() {
   const [tempWeeklyHours, setTempWeeklyHours] = useState<number>(0);
   const [addSubjectDialogOpen, setAddSubjectDialogOpen] = useState(false);
   const [availableSubjects, setAvailableSubjects] = useState<{id: string, name: string, code: string | null}[]>([]);
-  const [availableTeachers, setAvailableTeachers] = useState<{id: string, name: string, email: string}[]>([]);
+  const [availableTeachers, setAvailableTeachers] = useState<{
+    id: string, 
+    name: string, 
+    email: string,
+    isQualified?: boolean,
+    workload?: number
+  }[]>([]);
   const [newAssignment, setNewAssignment] = useState({
     subjectId: '',
     teacherId: '',
-    weeklyHours: 0
+    weeklyHours: 0,
+    autoQualify: true
   });
+  const [assignmentWarnings, setAssignmentWarnings] = useState<any[]>([]);
+  const [cloneDialogOpen, setCloneDialogOpen] = useState(false);
+  const [availableClasses, setAvailableClasses] = useState<any[]>([]);
+  const [changeTeacherDialog, setChangeTeacherDialog] = useState<{
+    open: boolean;
+    assignmentId: string;
+    subjectId: string;
+    subjectName: string;
+    currentTeacherId: string;
+    currentTeacherName: string;
+  }>({ open: false, assignmentId: '', subjectId: '', subjectName: '', currentTeacherId: '', currentTeacherName: '' });
+  const [newTeacherId, setNewTeacherId] = useState('NONE');
+  const isHydrated = useRef(false);
 
   const fetchClassDetail = async () => {
     if (!classId || !session?.user?.schoolId) return;
@@ -193,15 +216,69 @@ export default function AdminClassDetailPage() {
     }
   };
 
-  const fetchAvailableTeachers = async () => {
+  const fetchAvailableTeachers = async (subjectId?: string) => {
     try {
-      const response = await fetch(`/api/users?schoolId=${session?.user?.schoolId}&role=teacher`);
-      if (response.ok) {
-        const data = await response.json();
-        setAvailableTeachers(data.users || []);
+      // Fetch all teachers
+      const teachersResponse = await fetch(`/api/users?schoolId=${session?.user?.schoolId}&role=teacher`);
+      if (!teachersResponse.ok) return;
+      
+      const teachersData = await teachersResponse.json();
+      const allTeachers = teachersData.users || [];
+
+      // If a subject is selected, fetch qualified teachers
+      let qualifiedTeacherIds = new Set<string>();
+      if (subjectId) {
+        const qualifiedResponse = await fetch(`/api/subjects/${subjectId}/qualified-teachers`);
+        if (qualifiedResponse.ok) {
+          const qualifiedData = await qualifiedResponse.json();
+          qualifiedTeacherIds = new Set(qualifiedData.qualifiedTeachers.map((t: any) => t.id));
+        }
       }
+
+      // Fetch workload for each teacher
+      const teachersWithDetails = await Promise.all(
+        allTeachers.map(async (teacher: any) => {
+          let workload = 0;
+          try {
+            const workloadResponse = await fetch(`/api/teachers/${teacher.id}/workload`);
+            if (workloadResponse.ok) {
+              const workloadData = await workloadResponse.json();
+              workload = workloadData.totalWeeklyHours || 0;
+            }
+          } catch (e) {
+            // Ignore workload errors
+          }
+
+          return {
+            ...teacher,
+            isQualified: subjectId ? qualifiedTeacherIds.has(teacher.id) : undefined,
+            workload
+          };
+        })
+      );
+
+      // Sort: qualified first, then by workload
+      teachersWithDetails.sort((a, b) => {
+        if (a.isQualified && !b.isQualified) return -1;
+        if (!a.isQualified && b.isQualified) return 1;
+        return (a.workload || 0) - (b.workload || 0);
+      });
+
+      setAvailableTeachers(teachersWithDetails);
     } catch (error) {
       console.error('Error fetching available teachers:', error);
+    }
+  };
+
+  const fetchAvailableClasses = async () => {
+    try {
+      const response = await fetch(`/api/classes?schoolId=${session?.user?.schoolId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableClasses(data.classes || []);
+      }
+    } catch (error) {
+      console.error('Error fetching available classes:', error);
     }
   };
 
@@ -209,7 +286,90 @@ export default function AdminClassDetailPage() {
     setAddSubjectDialogOpen(true);
     fetchAvailableSubjects();
     fetchAvailableTeachers();
-    setNewAssignment({ subjectId: '', teacherId: '', weeklyHours: 0 });
+    setNewAssignment({ subjectId: '', teacherId: '', weeklyHours: 0, autoQualify: true });
+    setAssignmentWarnings([]);
+  };
+
+  const handleOpenCloneDialog = () => {
+    setCloneDialogOpen(true);
+    fetchAvailableClasses();
+  };
+
+  const handleChangeTeacher = (assignmentId: string, subjectId: string, subjectName: string, currentTeacherId: string, currentTeacherName: string) => {
+    setChangeTeacherDialog({
+      open: true,
+      assignmentId,
+      subjectId,
+      subjectName,
+      currentTeacherId,
+      currentTeacherName
+    });
+    setNewTeacherId(currentTeacherId || 'NONE'); // Use 'NONE' sentinel instead of empty string
+    // Fetch teachers qualified for this subject
+    fetchAvailableTeachers(subjectId);
+  };
+
+  const handleUpdateTeacher = async () => {
+    // Allow change if there's a new selection (including 'NONE' for unassign)
+    if (!newTeacherId || newTeacherId === changeTeacherDialog.currentTeacherId) return; // No change
+
+    try {
+      // Convert 'NONE' sentinel value to empty string for API
+      const teacherIdToSend = newTeacherId === 'NONE' ? '' : newTeacherId;
+      
+      const response = await fetch(`/api/classes/${classId}/subjects?subjectId=${changeTeacherDialog.subjectId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          teacherId: teacherIdToSend,
+          autoQualify: true
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Show warnings if any
+        if (data.warnings && data.warnings.length > 0) {
+          data.warnings.forEach((warning: any) => {
+            if (warning.type === 'info') {
+              toast({ title: 'Info', description: warning.message });
+            } else if (warning.type === 'warning') {
+              toast({ title: 'Warning', description: warning.message, variant: 'default' });
+            }
+          });
+        }
+        toast({ title: 'Success', description: 'Teacher updated successfully' });
+        setChangeTeacherDialog({ open: false, assignmentId: '', subjectId: '', subjectName: '', currentTeacherId: '', currentTeacherName: '' });
+        setNewTeacherId('');
+        fetchSubjects();
+        fetchClassDetail();
+      } else {
+        // Check if there are validation warnings
+        if (data.warnings) {
+          setAssignmentWarnings(data.warnings);
+          // Don't close dialog, show warnings
+        } else {
+          throw new Error(data.error || 'Failed to update teacher');
+        }
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Fetch teachers when subject changes
+  const handleSubjectChange = (subjectId: string) => {
+    setNewAssignment(prev => ({ ...prev, subjectId, teacherId: '' }));
+    if (subjectId) {
+      fetchAvailableTeachers(subjectId);
+    } else {
+      fetchAvailableTeachers();
+    }
   };
 
   const handleAddSubject = async () => {
@@ -225,14 +385,32 @@ export default function AdminClassDetailPage() {
         body: JSON.stringify(newAssignment),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
+        // Show warnings if any
+        if (data.warnings && data.warnings.length > 0) {
+          data.warnings.forEach((warning: any) => {
+            if (warning.type === 'info') {
+              toast({ title: 'Info', description: warning.message });
+            } else if (warning.type === 'warning') {
+              toast({ title: 'Warning', description: warning.message, variant: 'default' });
+            }
+          });
+        }
         toast({ title: 'Success', description: 'Subject assigned successfully' });
         setAddSubjectDialogOpen(false);
+        setAssignmentWarnings([]);
         fetchSubjects();
         fetchClassDetail();
       } else {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to assign subject');
+        // Check if there are validation warnings
+        if (data.warnings) {
+          setAssignmentWarnings(data.warnings);
+          // Don't close dialog, show warnings
+        } else {
+          throw new Error(data.error || 'Failed to assign subject');
+        }
       }
     } catch (error: any) {
       toast({
@@ -281,6 +459,12 @@ export default function AdminClassDetailPage() {
       fetchTeachers();
     }
   }, [currentTab, classId]);
+
+  // Mark as hydrated and reset dialog state on mount to prevent hydration mismatches
+  useEffect(() => {
+    isHydrated.current = true;
+    setChangeTeacherDialog({ open: false, assignmentId: '', subjectId: '', subjectName: '', currentTeacherId: '', currentTeacherName: '' });
+  }, []);
 
   if (loading) {
     return (
@@ -394,13 +578,22 @@ export default function AdminClassDetailPage() {
                 <CardTitle>Assigned Subjects</CardTitle>
                 <CardDescription>Manage subjects taught in {classDetail.name} and their weekly quotas.</CardDescription>
               </div>
-              <Dialog open={addSubjectDialogOpen} onOpenChange={setAddSubjectDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={handleOpenAddSubjectDialog} className="bg-black hover:bg-gray-800">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Subject
-                  </Button>
-                </DialogTrigger>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleOpenCloneDialog} 
+                  variant="outline"
+                  className="border-gray-300"
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Clone from Class
+                </Button>
+                <Dialog open={addSubjectDialogOpen} onOpenChange={setAddSubjectDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={handleOpenAddSubjectDialog} className="bg-black hover:bg-gray-800">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Subject
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
                   <DialogHeader>
                     <DialogTitle>Add Subject to {classDetail.name}</DialogTitle>
@@ -409,11 +602,25 @@ export default function AdminClassDetailPage() {
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
+                    {assignmentWarnings.length > 0 && (
+                      <div className="space-y-2">
+                        {assignmentWarnings.map((warning, idx) => (
+                          <Alert key={idx} variant={warning.type === 'error' ? 'destructive' : 'default'}>
+                            {warning.type === 'error' ? <AlertTriangle className="h-4 w-4" /> : <Info className="h-4 w-4" />}
+                            <AlertDescription>
+                              <strong>{warning.message}</strong>
+                              {warning.details && <p className="text-sm mt-1">{warning.details}</p>}
+                            </AlertDescription>
+                          </Alert>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="grid gap-2">
                       <Label htmlFor="subject">Subject</Label>
                       <Select
                         value={newAssignment.subjectId}
-                        onValueChange={(value) => setNewAssignment(prev => ({ ...prev, subjectId: value }))}
+                        onValueChange={handleSubjectChange}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select a subject" />
@@ -440,11 +647,33 @@ export default function AdminClassDetailPage() {
                           <SelectItem value="">No teacher assigned</SelectItem>
                           {availableTeachers.map((teacher) => (
                             <SelectItem key={teacher.id} value={teacher.id}>
-                              {teacher.name} ({teacher.email})
+                              <div className="flex items-center justify-between w-full gap-2">
+                                <span>{teacher.name}</span>
+                                <div className="flex items-center gap-2">
+                                  {teacher.isQualified !== undefined && (
+                                    <TeacherQualificationBadge 
+                                      isQualified={teacher.isQualified} 
+                                      variant="compact"
+                                    />
+                                  )}
+                                  {teacher.workload !== undefined && (
+                                    <Badge variant="outline" className="text-xs">
+                                      {teacher.workload}h
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      {newAssignment.subjectId && newAssignment.teacherId && (
+                        <p className="text-xs text-gray-500">
+                          {availableTeachers.find(t => t.id === newAssignment.teacherId)?.isQualified 
+                            ? '✓ This teacher is qualified for this subject' 
+                            : '⚠ This teacher will be automatically qualified for this subject'}
+                        </p>
+                      )}
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="weeklyHours">Weekly Hours</Label>
@@ -469,6 +698,7 @@ export default function AdminClassDetailPage() {
                   </div>
                 </DialogContent>
               </Dialog>
+              </div>
             </CardHeader>
             <CardContent>
               {loadingSubjects ? (
@@ -568,6 +798,12 @@ export default function AdminClassDetailPage() {
                                   <DropdownMenuItem onClick={() => window.open(`/dashboard/admin/subjects/${subject.subjectId}`, '_blank')}>
                                     <Eye className="mr-2 h-4 w-4" />
                                     View Details
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleChangeTeacher(subject.id, subject.subjectId, subject.subjectName, subject.teacherId || '', subject.teacherName || '')}
+                                  >
+                                    <User className="mr-2 h-4 w-4" />
+                                    Change Teacher
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => handleRemoveSubject(subject.subjectId, subject.subjectName)}
@@ -721,6 +957,137 @@ export default function AdminClassDetailPage() {
           />
         </TabsContent>
       </Tabs>
+
+      {/* Clone Subjects Dialog */}
+      <CloneSubjectsDialog
+        open={cloneDialogOpen}
+        onOpenChange={setCloneDialogOpen}
+        targetClassId={classId}
+        targetClassName={classDetail.name}
+        availableClasses={availableClasses}
+        onSuccess={() => {
+          fetchSubjects();
+          fetchClassDetail();
+        }}
+      />
+
+      {/* Change Teacher Dialog */}
+      <Dialog
+        key={`change-teacher-${changeTeacherDialog.subjectId}`}
+        open={changeTeacherDialog.open && changeTeacherDialog.subjectId !== ''}
+        onOpenChange={(open) => {
+        if (!open) {
+          setChangeTeacherDialog({ open: false, assignmentId: '', subjectId: '', subjectName: '', currentTeacherId: '', currentTeacherName: '' });
+          setNewTeacherId('NONE');
+          setAssignmentWarnings([]);
+        }
+      }}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              Change Teacher for {changeTeacherDialog.subjectName || 'Subject'}
+            </DialogTitle>
+            <DialogDescription>
+              Reassign the teacher for this subject in {classDetail?.name || 'this class'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {isHydrated.current ? (
+            <div className="space-y-4 py-4">
+              {assignmentWarnings.length > 0 && (
+                <div className="space-y-2">
+                  {assignmentWarnings.map((warning, idx) => (
+                    <Alert key={idx} variant={warning.type === 'error' ? 'destructive' : 'default'}>
+                      {warning.type === 'error' ? <AlertTriangle className="h-4 w-4" /> : <Info className="h-4 w-4" />}
+                      <AlertDescription>
+                        <strong>{warning.message}</strong>
+                        {warning.details && <p className="text-sm mt-1">{warning.details}</p>}
+                      </AlertDescription>
+                    </Alert>
+                  ))}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label>Current Teacher</Label>
+                <div className="p-3 border border-gray-200 rounded-lg bg-gray-50">
+                  {changeTeacherDialog.currentTeacherName ? (
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-gray-600" />
+                      <span>{changeTeacherDialog.currentTeacherName}</span>
+                    </div>
+                  ) : (
+                    <span className="text-gray-500 italic">No teacher assigned</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>New Teacher</Label>
+                <Select
+                  value={newTeacherId}
+                  onValueChange={setNewTeacherId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a new teacher" />
+                  </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NONE">No teacher assigned</SelectItem>
+                  {availableTeachers.length === 0 ? (
+                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                      Loading teachers...
+                    </div>
+                  ) : (
+                    availableTeachers.map((teacher) => (
+                      <SelectItem key={teacher.id} value={teacher.id}>
+                        <div className="flex items-center justify-between w-full gap-2">
+                          <span>{teacher.name}</span>
+                          <div className="flex items-center gap-2">
+                            {teacher.isQualified !== undefined && (
+                              <TeacherQualificationBadge
+                                isQualified={teacher.isQualified}
+                                variant="compact"
+                              />
+                            )}
+                            {teacher.workload !== undefined && (
+                              <Badge variant="outline" className="text-xs">
+                                {teacher.workload}h
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+                </Select>
+                {newTeacherId && newTeacherId !== 'NONE' && availableTeachers.find(t => t.id === newTeacherId)?.isQualified === false && (
+                  <p className="text-xs text-yellow-600">
+                    ⚠ This teacher will be automatically qualified for this subject
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              <div className="text-center text-gray-500">Loading...</div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => {
+              setChangeTeacherDialog({ open: false, assignmentId: '', subjectId: '', subjectName: '', currentTeacherId: '', currentTeacherName: '' });
+              setNewTeacherId('NONE');
+              setAssignmentWarnings([]);
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateTeacher} disabled={newTeacherId === changeTeacherDialog.currentTeacherId || (newTeacherId === 'NONE' && !changeTeacherDialog.currentTeacherId)}>
+              Update Teacher
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

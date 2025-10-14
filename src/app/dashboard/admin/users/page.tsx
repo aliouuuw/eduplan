@@ -451,7 +451,7 @@ export default function AdminUsersPage() {
         schools={schools}
         onSubmit={handleCreateUser}
         hideSchoolField={true}
-        defaultSchoolId={session?.user?.schoolId}
+        defaultSchoolId={session?.user?.schoolId || undefined}
       />
     </div>
   );

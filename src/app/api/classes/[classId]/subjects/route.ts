@@ -11,6 +11,7 @@ import {
 import { eq, and, InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import { z } from 'zod';
 import { generateId } from '@/lib/utils';
+import { validateTeacherAssignment, ensureTeacherQualification } from '@/lib/assignment-validation';
 
 type ClassSubjectAssignment = InferSelectModel<typeof teacherClasses>;
 type NewClassSubjectAssignment = InferInsertModel<typeof teacherClasses>;
@@ -20,6 +21,7 @@ const classSubjectAssignmentSchema = z.object({
   subjectId: z.string().min(1, 'Subject ID is required'),
   teacherId: z.string().optional(), // Teacher is optional when assigning subject to class
   weeklyHours: z.number().min(0, 'Weekly hours cannot be negative').optional(),
+  autoQualify: z.boolean().optional().default(true), // Auto-create teacher qualification if missing
 });
 
 /**
@@ -148,21 +150,56 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       )
     ).limit(1);
 
+    // Validate assignment if teacher is specified
+    const warnings = [];
+    if (validated.teacherId && validated.weeklyHours) {
+      const validationWarnings = await validateTeacherAssignment(
+        validated.teacherId,
+        validated.subjectId,
+        classId,
+        validated.weeklyHours,
+        schoolId || ''
+      );
+      warnings.push(...validationWarnings);
+
+      // Check for errors (blocking issues)
+      const errors = validationWarnings.filter(w => w.type === 'error');
+      if (errors.length > 0 && !existingAssignment.length) {
+        return NextResponse.json(
+          { 
+            error: 'Validation failed', 
+            warnings: validationWarnings,
+            canProceed: false 
+          },
+          { status: 400 }
+        );
+      }
+
+      // Auto-qualify teacher if requested and not qualified
+      if (validated.autoQualify && validated.teacherId) {
+        const { created } = await ensureTeacherQualification(
+          validated.teacherId,
+          validated.subjectId,
+          schoolId || ''
+        );
+        if (created) {
+          warnings.push({
+            type: 'info',
+            message: 'Teacher qualification created',
+            details: 'This teacher has been automatically qualified to teach this subject.',
+          });
+        }
+      }
+    }
+
     let assignment;
     if (existingAssignment.length > 0) {
       // Update existing assignment (e.g., weekly hours, teacher)
       const updateData: Partial<NewClassSubjectAssignment> = {};
       if (validated.weeklyHours !== undefined) {
-        // Note: weeklyHours is on the subject table, not teacherClasses.
-        // We'll need a mechanism to link subject's weeklyHours to class context
-        // For now, let's assume this POST is primarily for assignment, 
-        // and updating weeklyHours for subjects happens via the subject form directly.
-        // If we want per-class weeklyHours, it needs to be added to teacherClasses schema.
-        // For now, this is a placeholder / conceptual update. The actual weeklyHours
-        // will come from the subject definition for auto-scheduling.
+        updateData.weeklyHours = validated.weeklyHours;
       }
       if (validated.teacherId !== undefined) {
-        // This will assign a teacher to a subject for this class
         updateData.teacherId = validated.teacherId;
       }
 
@@ -180,6 +217,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         classId,
         subjectId: validated.subjectId,
         teacherId: validated.teacherId || '', // Default to empty string if no teacher specified yet
+        weeklyHours: validated.weeklyHours || 0,
         createdAt: new Date(),
       };
       assignment = await db.insert(teacherClasses).values(newAssignment).returning();
@@ -189,7 +227,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'Failed to assign or update subject for class' }, { status: 500 });
     }
 
-    return NextResponse.json({ message: 'Subject assigned/updated successfully', assignment: assignment[0] }, { status: 200 });
+    return NextResponse.json({ 
+      message: 'Subject assigned/updated successfully', 
+      assignment: assignment[0],
+      warnings 
+    }, { status: 200 });
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -314,12 +356,55 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Subject not assigned to this class' }, { status: 404 });
     }
 
+    // Validate assignment if teacher is specified and has weekly hours
+    const warnings = [];
+    if (validated.teacherId && assignmentExists[0].weeklyHours) {
+      const validationWarnings = await validateTeacherAssignment(
+        validated.teacherId,
+        subjectId,
+        classId,
+        assignmentExists[0].weeklyHours,
+        schoolId || ''
+      );
+      warnings.push(...validationWarnings);
+
+      // Check for errors (blocking issues)
+      const errors = validationWarnings.filter(w => w.type === 'error');
+      if (errors.length > 0) {
+        return NextResponse.json(
+          { 
+            error: 'Validation failed', 
+            warnings: validationWarnings,
+            canProceed: false 
+          },
+          { status: 400 }
+        );
+      }
+
+      // Auto-qualify teacher if requested and not qualified
+      if (validated.autoQualify && validated.teacherId) {
+        const { created } = await ensureTeacherQualification(
+          validated.teacherId,
+          subjectId,
+          schoolId || ''
+        );
+        if (created) {
+          warnings.push({
+            type: 'info',
+            message: 'Teacher qualification created',
+            details: 'This teacher has been automatically qualified to teach this subject.',
+          });
+        }
+      }
+    }
+
     const updateData: Partial<NewClassSubjectAssignment> = {};
     if (validated.teacherId !== undefined) {
       updateData.teacherId = validated.teacherId;
     }
-    // If weeklyHours is meant to be updated per-class, it needs to be in teacherClasses schema
-    // For now, it's ignored here as it belongs to the global subject definition.
+    if (validated.weeklyHours !== undefined) {
+      updateData.weeklyHours = validated.weeklyHours;
+    }
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ message: 'No updatable fields provided' }, { status: 400 });
@@ -330,7 +415,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       .where(eq(teacherClasses.id, assignmentExists[0].id))
       .returning();
 
-    return NextResponse.json({ message: 'Subject assignment updated successfully', assignment: updatedAssignment[0] }, { status: 200 });
+    return NextResponse.json({ 
+      message: 'Subject assignment updated successfully', 
+      assignment: updatedAssignment[0],
+      warnings 
+    }, { status: 200 });
 
   } catch (error) {
     if (error instanceof z.ZodError) {

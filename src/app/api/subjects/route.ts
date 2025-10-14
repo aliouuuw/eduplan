@@ -4,7 +4,7 @@ import { eq, and } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { db, getCurrentTimestamp } from '@/lib/db';
 import { generateId } from '@/lib/utils';
-import { subjects } from '@/db/schema';
+import { subjects, teacherSubjects } from '@/db/schema';
 import { canAccessSchool, isSuperAdmin, isSchoolAdmin } from '@/lib/auth';
 import { teacherClasses } from '@/db/schema';
 import { sql } from 'drizzle-orm';
@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
 
     // Build query with appropriate filters
     let allSubjects;
-    // Select subjects and count their usage in teacherClasses
-    const subjectsWithClassCount = await db.select({
+    // Get all subjects with their class count and qualified teacher count
+    const allSubjectsQuery = await db.select({
       id: subjects.id,
       schoolId: subjects.schoolId,
       name: subjects.name,
@@ -53,19 +53,42 @@ export async function GET(request: NextRequest) {
       weeklyHours: subjects.weeklyHours,
       createdAt: subjects.createdAt,
       updatedAt: subjects.updatedAt,
+    }).from(subjects);
+
+    // Get class counts
+    const classCounts = await db.select({
+      subjectId: teacherClasses.subjectId,
       classCount: sql<number>`count(${teacherClasses.id})`,
     })
-    .from(subjects)
-    .leftJoin(teacherClasses, eq(subjects.id, teacherClasses.subjectId))
-    .groupBy(subjects.id)
-    .having(sql`1=1`); // Placeholder, actual filtering will come below
+    .from(teacherClasses)
+    .groupBy(teacherClasses.subjectId);
+
+    // Get qualified teacher counts
+    const teacherCounts = await db.select({
+      subjectId: teacherSubjects.subjectId,
+      teacherCount: sql<number>`count(${teacherSubjects.id})`,
+    })
+    .from(teacherSubjects)
+    .groupBy(teacherSubjects.subjectId);
+
+    // Combine the data
+    const subjectsWithCounts = allSubjectsQuery.map(subject => {
+      const classCount = classCounts.find(c => c.subjectId === subject.id)?.classCount || 0;
+      const teacherCount = teacherCounts.find(t => t.subjectId === subject.id)?.teacherCount || 0;
+
+      return {
+        ...subject,
+        classCount,
+        teacherCount,
+      };
+    });
 
     if (schoolId) {
-      allSubjects = subjectsWithClassCount.filter(s => s.schoolId === schoolId);
+      allSubjects = subjectsWithCounts.filter(s => s.schoolId === schoolId);
     } else if (!isSuperAdmin(session.user.role) && session.user.schoolId) {
-      allSubjects = subjectsWithClassCount.filter(s => s.schoolId === session.user.schoolId);
+      allSubjects = subjectsWithCounts.filter(s => s.schoolId === session.user.schoolId);
     } else {
-      allSubjects = subjectsWithClassCount;
+      allSubjects = subjectsWithCounts;
     }
 
     // Sort by name

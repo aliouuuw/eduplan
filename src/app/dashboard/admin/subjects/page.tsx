@@ -7,7 +7,7 @@ import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, BookOpen, Hash, FileText, ArrowRight, Clock } from 'lucide-react';
+import { Plus, BookOpen, Hash, FileText, ArrowRight, Clock, Users } from 'lucide-react';
 import { SubjectForm } from '@/components/forms/subject-form';
 import type { Subject } from '@/lib/db';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -18,6 +18,7 @@ import { Breadcrumbs, createBreadcrumbs } from '@/components/layout/breadcrumbs'
 
 interface SubjectWithUsage extends Subject {
   classCount: number;
+  teacherCount: number;
 }
 
 export default function AdminSubjectsPage() {
@@ -221,8 +222,24 @@ export default function AdminSubjectsPage() {
       ),
     },
     {
+      key: 'teacherCount' as keyof SubjectWithUsage,
+      label: 'Qualified Teachers',
+      render: (_value: any, item: SubjectWithUsage) => (
+        <div className="flex items-center space-x-2">
+          <Users className="h-4 w-4 text-gray-500" />
+          <Badge variant="secondary" className={`${
+            item.teacherCount === 0
+              ? 'bg-yellow-100 text-yellow-800 border-yellow-300'
+              : 'bg-green-100 text-green-800 border-green-300'
+          }`}>
+            {item.teacherCount} Teacher{item.teacherCount !== 1 ? 's' : ''}
+          </Badge>
+        </div>
+      ),
+    },
+    {
       key: 'classCount' as keyof SubjectWithUsage,
-      label: 'Used In',
+      label: 'Used In Classes',
       render: (_value: any, item: SubjectWithUsage) => (
         <div className="flex items-center space-x-2">
           <BookOpen className="h-4 w-4 text-gray-500" />
@@ -276,6 +293,7 @@ export default function AdminSubjectsPage() {
     withCodes: subjects.filter(s => s.code).length,
     withDescriptions: subjects.filter(s => s.description).length,
     usedInClasses: subjects.filter(s => s.classCount > 0).length,
+    withQualifiedTeachers: subjects.filter(s => s.teacherCount > 0).length,
   };
 
   const breadcrumbs = createBreadcrumbs.subjects();
@@ -307,7 +325,7 @@ export default function AdminSubjectsPage() {
 
       <section className="space-y-4">
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
             <Card className="rounded-2xl border border-gray-200 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-xs font-semibold uppercase tracking-wider text-gray-500">Total Subjects</CardTitle>
@@ -346,6 +364,19 @@ export default function AdminSubjectsPage() {
               </CardContent>
             </Card>
             
+            <Card className="rounded-2xl border border-gray-200 shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-gray-500">Qualified Teachers</CardTitle>
+                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-600">
+                  <Users className="h-4 w-4" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-semibold text-black">{stats.withQualifiedTeachers}</p>
+                <p className="text-xs text-gray-500">Subjects with qualified teachers</p>
+              </CardContent>
+            </Card>
+
             <Card className="rounded-2xl border border-gray-200 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-xs font-semibold uppercase tracking-wider text-gray-500">Used in Classes</CardTitle>
@@ -413,10 +444,16 @@ export default function AdminSubjectsPage() {
                     </div>
                   )}
                   <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2 text-gray-600">
-                      <BookOpen className="h-4 w-4" />
-                      {subject.classCount} classes
-                    </span>
+                    <div className="flex gap-4">
+                      <span className="flex items-center gap-2 text-gray-600">
+                        <Users className="h-4 w-4" />
+                        {subject.teacherCount} teacher{subject.teacherCount !== 1 ? 's' : ''}
+                      </span>
+                      <span className="flex items-center gap-2 text-gray-600">
+                        <BookOpen className="h-4 w-4" />
+                        {subject.classCount} class{subject.classCount !== 1 ? 'es' : ''}
+                      </span>
+                    </div>
                     {subject.description && (
                       <Badge variant="secondary" className="text-xs">
                         Documented
