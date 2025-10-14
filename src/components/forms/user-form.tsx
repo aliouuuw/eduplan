@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const userSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Invalid email address'),
   role: z.enum(['superadmin', 'admin', 'teacher', 'parent', 'student']),
   schoolId: z.string().optional(),
   isActive: z.boolean(),
@@ -42,17 +43,20 @@ interface UserFormProps {
   schools: School[];
   onSubmit: (data: UserFormData) => Promise<void>;
   loading?: boolean;
+  hideSchoolField?: boolean;
+  defaultSchoolId?: string;
 }
 
-export function UserForm({ open, onOpenChange, user, schools, onSubmit, loading = false }: UserFormProps) {
+export function UserForm({ open, onOpenChange, user, schools, onSubmit, loading = false, hideSchoolField = false, defaultSchoolId }: UserFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<UserFormData>({
     resolver: zodResolver(userSchema),
     defaultValues: {
       name: '',
+      email: '',
       role: 'student',
-      schoolId: '',
+      schoolId: defaultSchoolId || '',
       isActive: true,
     },
   });
@@ -62,6 +66,7 @@ export function UserForm({ open, onOpenChange, user, schools, onSubmit, loading 
     if (user) {
       form.reset({
         name: user.name || '',
+        email: user.email || '',
         role: user.role as any,
         schoolId: user.schoolId || '',
         isActive: user.isActive,
@@ -70,12 +75,13 @@ export function UserForm({ open, onOpenChange, user, schools, onSubmit, loading 
       // Reset to empty when creating new user
       form.reset({
         name: '',
+        email: '',
         role: 'student',
-        schoolId: '',
+        schoolId: defaultSchoolId || '',
         isActive: true,
       });
     }
-  }, [user, form]);
+  }, [user, form, defaultSchoolId]);
 
   const handleSubmit = async (data: UserFormData) => {
     setIsSubmitting(true);
@@ -121,6 +127,20 @@ export function UserForm({ open, onOpenChange, user, schools, onSubmit, loading 
 
             <FormField
               control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email Address *</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="Enter email address" {...field} disabled={isSubmitting} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="role"
               render={({ field }) => (
                 <FormItem>
@@ -144,31 +164,33 @@ export function UserForm({ open, onOpenChange, user, schools, onSubmit, loading 
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="schoolId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>School</FormLabel>
-                  <Select onValueChange={(value) => field.onChange(value === 'none' ? '' : value)} defaultValue={field.value || 'none'} disabled={isSubmitting}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a school (optional)" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="none">No school assigned</SelectItem>
-                      {schools.map((school) => (
-                        <SelectItem key={school.id} value={school.id}>
-                          {school.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!hideSchoolField && (
+              <FormField
+                control={form.control}
+                name="schoolId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>School</FormLabel>
+                    <Select onValueChange={(value) => field.onChange(value === 'none' ? '' : value)} defaultValue={field.value || 'none'} disabled={isSubmitting}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a school (optional)" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">No school assigned</SelectItem>
+                        {schools.map((school) => (
+                          <SelectItem key={school.id} value={school.id}>
+                            {school.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}

@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { eq, and, or, ne, isNull } from 'drizzle-orm';
+import bcrypt from 'bcryptjs';
 import { auth } from '@/lib/auth';
 import { db, getCurrentTimestamp } from '@/lib/db';
 import { users } from '@/db/schema';
 import { canAccessSchool, isSuperAdmin, isSchoolAdmin } from '@/lib/auth';
+import { generateId } from '@/lib/utils';
+
+const createUserSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters').optional(),
+  role: z.enum(['admin', 'teacher', 'parent', 'student']),
+  schoolId: z.string().optional(),
+  isActive: z.boolean().default(true),
+});
 
 const updateUserSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').optional(),
@@ -89,6 +100,120 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ users: allUsers });
   } catch (error) {
     console.error('Error fetching users:', error);
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+// POST /api/users - Create a new user
+export async function POST(request: NextRequest) {
+  try {
+    const session = await auth();
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // Only superadmin and school admin can create users
+    if (!isSuperAdmin(session.user.role) && !isSchoolAdmin(session.user.role)) {
+      return NextResponse.json(
+        { message: 'Forbidden - Admin access required' },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const userData = createUserSchema.parse(body);
+
+    // Check if user already exists
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, userData.email))
+      .limit(1);
+
+    if (existingUser.length > 0) {
+      return NextResponse.json(
+        { message: 'User with this email already exists' },
+        { status: 400 }
+      );
+    }
+
+    // Determine schoolId
+    let targetSchoolId: string | null = null;
+
+    if (isSuperAdmin(session.user.role)) {
+      // Superadmin can specify schoolId or use their own
+      targetSchoolId = userData.schoolId || session.user.schoolId || null;
+    } else {
+      // School admin must assign to their school
+      targetSchoolId = session.user.schoolId;
+
+      if (userData.schoolId && userData.schoolId !== targetSchoolId) {
+        return NextResponse.json(
+          { message: 'Forbidden - Can only create users for your school' },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Generate password if not provided
+    let hashedPassword: string;
+    if (userData.password) {
+      hashedPassword = await bcrypt.hash(userData.password, 12);
+    } else {
+      // Generate a temporary password
+      const tempPassword = Math.random().toString(36).slice(-8);
+      hashedPassword = await bcrypt.hash(tempPassword, 12);
+    }
+
+    // Create user
+    const userId = generateId();
+    const now = getCurrentTimestamp();
+
+    const newUser = await db.insert(users).values({
+      id: userId,
+      email: userData.email,
+      password: hashedPassword,
+      name: userData.name,
+      role: userData.role,
+      schoolId: targetSchoolId,
+      isActive: userData.isActive,
+      createdAt: now,
+      updatedAt: now,
+    }).returning();
+
+    return NextResponse.json(
+      {
+        message: 'User created successfully',
+        user: {
+          id: newUser[0].id,
+          email: newUser[0].email,
+          name: newUser[0].name,
+          role: newUser[0].role,
+          schoolId: newUser[0].schoolId,
+          isActive: newUser[0].isActive,
+          createdAt: newUser[0].createdAt,
+        },
+        tempPassword: userData.password ? undefined : 'A temporary password has been generated. Please inform the user to reset their password.'
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error('Error creating user:', error);
+
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { message: 'Invalid input data', errors: error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

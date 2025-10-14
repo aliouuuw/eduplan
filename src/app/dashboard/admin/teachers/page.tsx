@@ -241,11 +241,11 @@ export default function AdminTeachersPage() {
               Teachers
             </h1>
             <p className="max-w-2xl text-sm text-gray-600">
-              Manage teacher assignments, view their availability, and assign them to classes and subjects.
+              Manage teacher assignments, view their availability, and assign them to classes and subjects. Create new teacher accounts directly or invite teachers to join.
             </p>
           </div>
           <Button asChild className="bg-black hover:bg-gray-800">
-            <Link href="/dashboard/admin/teachers/new">
+            <Link href="/dashboard/admin/users">
               <Plus className="h-4 w-4 mr-2" />
               Add Teacher
             </Link>
@@ -274,7 +274,7 @@ export default function AdminTeachersPage() {
             <h3 className="text-lg font-medium text-gray-900 mb-2">No teachers yet</h3>
             <p className="text-gray-600 mb-4">Get started by adding your first teacher.</p>
             <Button asChild>
-              <Link href="/dashboard/admin/teachers/new">
+              <Link href="/dashboard/admin/users">
                 <Plus className="h-4 w-4 mr-2" />
                 Add First Teacher
               </Link>

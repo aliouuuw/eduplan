@@ -8,8 +8,9 @@ import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Users, UserCheck, GraduationCap, UserPlus, AlertCircle } from 'lucide-react';
+import { Users, UserCheck, GraduationCap, UserPlus, AlertCircle, Plus } from 'lucide-react';
 import type { User } from 'next-auth';
+import { UserForm } from '@/components/forms/user-form';
 
 interface UserWithSchool {
   id: string;
@@ -28,11 +29,20 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [activeUsers, setActiveUsers] = useState<UserWithSchool[]>([]);
   const [pendingUsers, setPendingUsers] = useState<UserWithSchool[]>([]);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [schools, setSchools] = useState<{ id: string; name: string }[]>([]);
 
   const fetchUsers = async () => {
-    if (!session?.user?.schoolId) return;
-
     try {
+      // Fetch schools for the user form
+      const schoolsResponse = await fetch('/api/schools');
+      if (schoolsResponse.ok) {
+        const schoolsData = await schoolsResponse.json();
+        setSchools(schoolsData.schools || []);
+      }
+
+      if (!session?.user?.schoolId) return;
+
       const [activeResponse, pendingResponse] = await Promise.all([
         fetch(`/api/users?schoolId=${session.user.schoolId}`),
         fetch(`/api/users?pending=true`)
@@ -48,10 +58,10 @@ export default function AdminUsersPage() {
         setPendingUsers(pendingData.users);
       }
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error fetching data:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load users',
+        description: 'Failed to load data',
         variant: 'destructive',
       });
     } finally {
@@ -118,6 +128,36 @@ export default function AdminUsersPage() {
       toast({
         title: 'Error',
         description: 'Failed to reject user',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleCreateUser = async (data: any) => {
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast({
+          title: 'Success',
+          description: `User ${result.user.name} created successfully${result.tempPassword ? '. A temporary password has been generated.' : ''}`,
+        });
+        setShowCreateForm(false);
+        fetchUsers(); // Refresh the data
+      } else {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create user',
         variant: 'destructive',
       });
     }
@@ -270,10 +310,18 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-10">
       <header className="space-y-2">
-        <h1 className="text-3xl font-semibold text-black">Users</h1>
-        <p className="max-w-2xl text-sm text-gray-600">
-          Manage school users, approve registrations, and assign roles
-        </p>
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-semibold text-black">Users</h1>
+            <p className="max-w-2xl text-sm text-gray-600">
+              Manage school users, approve registrations, and assign roles
+            </p>
+          </div>
+          <Button className="bg-black hover:bg-gray-800" onClick={() => setShowCreateForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create User
+          </Button>
+        </div>
       </header>
 
       <section className="space-y-4">
@@ -396,6 +444,15 @@ export default function AdminUsersPage() {
             </CardContent>
           </Tabs>
       </section>
+
+      <UserForm
+        open={showCreateForm}
+        onOpenChange={setShowCreateForm}
+        schools={schools}
+        onSubmit={handleCreateUser}
+        hideSchoolField={true}
+        defaultSchoolId={session?.user?.schoolId}
+      />
     </div>
   );
 }
