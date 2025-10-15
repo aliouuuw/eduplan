@@ -79,7 +79,10 @@ export default function AdminClassDetailPage() {
     name: string, 
     email: string,
     isQualified?: boolean,
-    workload?: number
+    workload?: number,
+    availability?: number,
+    capacity?: number,
+    utilizationPercentage?: number
   }[]>([]);
   const [newAssignment, setNewAssignment] = useState({
     subjectId: '',
@@ -235,33 +238,44 @@ export default function AdminClassDetailPage() {
         }
       }
 
-      // Fetch workload for each teacher
+      // Fetch comprehensive stats for each teacher (workload + availability)
       const teachersWithDetails = await Promise.all(
         allTeachers.map(async (teacher: any) => {
           let workload = 0;
+          let availability = 0;
+          let capacity = 0;
+          let utilizationPercentage = 0;
+          
           try {
-            const workloadResponse = await fetch(`/api/teachers/${teacher.id}/workload`);
-            if (workloadResponse.ok) {
-              const workloadData = await workloadResponse.json();
-              workload = workloadData.totalWeeklyHours || 0;
+            const statsResponse = await fetch(`/api/teachers/${teacher.id}/stats`);
+            if (statsResponse.ok) {
+              const stats = await statsResponse.json();
+              workload = stats.workload.totalWeeklyHours || 0;
+              availability = stats.availability.totalWeeklyHours || 0;
+              capacity = stats.capacity.availableHours || 0;
+              utilizationPercentage = stats.capacity.utilizationPercentage || 0;
             }
           } catch (e) {
-            // Ignore workload errors
+            // Ignore stats errors, fall back to basic info
           }
 
           return {
             ...teacher,
             isQualified: subjectId ? qualifiedTeacherIds.has(teacher.id) : undefined,
-            workload
+            workload,
+            availability,
+            capacity,
+            utilizationPercentage
           };
         })
       );
 
-      // Sort: qualified first, then by workload
+      // Sort: qualified first, then by available capacity (descending)
       teachersWithDetails.sort((a, b) => {
         if (a.isQualified && !b.isQualified) return -1;
         if (!a.isQualified && b.isQualified) return 1;
-        return (a.workload || 0) - (b.workload || 0);
+        // Prefer teachers with more available capacity
+        return (b.capacity || 0) - (a.capacity || 0);
       });
 
       setAvailableTeachers(teachersWithDetails);
@@ -656,7 +670,23 @@ export default function AdminClassDetailPage() {
                                       variant="compact"
                                     />
                                   )}
-                                  {teacher.workload !== undefined && (
+                                  {teacher.availability !== undefined && teacher.availability > 0 ? (
+                                    <>
+                                      <Badge
+                                        variant="outline"
+                                        className={`text-xs ${
+                                          (teacher.utilizationPercentage || 0) >= 90 ? 'bg-red-50 text-red-700 border-red-300' :
+                                          (teacher.utilizationPercentage || 0) >= 75 ? 'bg-yellow-50 text-yellow-700 border-yellow-300' :
+                                          'bg-green-50 text-green-700 border-green-300'
+                                        }`}
+                                      >
+                                        {Math.round((teacher.capacity || 0) * 10) / 10}h free
+                                      </Badge>
+                                      <Badge variant="outline" className="text-xs">
+                                        {teacher.utilizationPercentage}%
+                                      </Badge>
+                                    </>
+                                  ) : (
                                     <Badge variant="outline" className="text-xs">
                                       {teacher.workload}h
                                     </Badge>
@@ -1049,7 +1079,23 @@ export default function AdminClassDetailPage() {
                                 variant="compact"
                               />
                             )}
-                            {teacher.workload !== undefined && (
+                            {teacher.availability !== undefined && teacher.availability > 0 ? (
+                              <>
+                                <Badge
+                                  variant="outline"
+                                  className={`text-xs ${
+                                    (teacher.utilizationPercentage || 0) >= 90 ? 'bg-red-50 text-red-700 border-red-300' :
+                                    (teacher.utilizationPercentage || 0) >= 75 ? 'bg-yellow-50 text-yellow-700 border-yellow-300' :
+                                    'bg-green-50 text-green-700 border-green-300'
+                                  }`}
+                                >
+                                  {Math.round((teacher.capacity || 0) * 10) / 10}h free
+                                </Badge>
+                                <Badge variant="outline" className="text-xs">
+                                  {teacher.utilizationPercentage}%
+                                </Badge>
+                              </>
+                            ) : (
                               <Badge variant="outline" className="text-xs">
                                 {teacher.workload}h
                               </Badge>

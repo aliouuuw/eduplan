@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import Link from 'next/link'; // Added Link import
-import { calculateWeeklyTeachingLoad } from '@/lib/teacher-utils'; // Assuming this utility exists or will be created
+import { calculateWeeklyTeachingLoad } from '@/lib/teacher-calculations';
 import { Breadcrumbs, createBreadcrumbs } from '@/components/layout/breadcrumbs';
 
 interface Teacher {
