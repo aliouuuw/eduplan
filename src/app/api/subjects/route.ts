@@ -55,10 +55,10 @@ export async function GET(request: NextRequest) {
       updatedAt: subjects.updatedAt,
     }).from(subjects);
 
-    // Get class counts
+    // Get class counts (distinct classes per subject)
     const classCounts = await db.select({
       subjectId: teacherClasses.subjectId,
-      classCount: sql<number>`count(${teacherClasses.id})`,
+      classCount: sql<number>`count(distinct ${teacherClasses.classId})`,
     })
     .from(teacherClasses)
     .groupBy(teacherClasses.subjectId);
@@ -71,15 +71,29 @@ export async function GET(request: NextRequest) {
     .from(teacherSubjects)
     .groupBy(teacherSubjects.subjectId);
 
+    // Get total actual hours and assigned classes count per subject
+    const actualHours = await db.select({
+      subjectId: teacherClasses.subjectId,
+      totalActualHours: sql<number>`sum(${teacherClasses.weeklyHours})`,
+      assignedClasses: sql<number>`count(distinct case when ${teacherClasses.teacherId} is not null and ${teacherClasses.teacherId} != '' then ${teacherClasses.classId} end)`,
+    })
+    .from(teacherClasses)
+    .groupBy(teacherClasses.subjectId);
+
     // Combine the data
     const subjectsWithCounts = allSubjectsQuery.map(subject => {
       const classCount = classCounts.find(c => c.subjectId === subject.id)?.classCount || 0;
       const teacherCount = teacherCounts.find(t => t.subjectId === subject.id)?.teacherCount || 0;
+      const hours = actualHours.find(h => h.subjectId === subject.id);
+      const totalActualHours = hours?.totalActualHours || 0;
+      const assignedClasses = hours?.assignedClasses || 0;
 
       return {
         ...subject,
         classCount,
         teacherCount,
+        totalActualHours,
+        assignedClasses,
       };
     });
 

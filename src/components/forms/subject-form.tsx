@@ -140,7 +140,7 @@ export function SubjectForm({
               name="weeklyHours"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-black">Weekly Hours</FormLabel>
+                  <FormLabel className="text-sm font-medium text-black">Default Weekly Hours (Template)</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -155,7 +155,8 @@ export function SubjectForm({
                   </FormControl>
                   <FormMessage className="text-xs" />
                   <p className="text-xs text-gray-500 mt-1">
-                    Number of teaching hours required per week for auto-scheduling
+                    Recommended hours per week used as starting point when assigning to classes.
+                    Actual hours can be customized per class.
                   </p>
                 </FormItem>
               )}
