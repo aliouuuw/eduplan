@@ -37,9 +37,9 @@ EduPlan is one platform for the teaching and learning work of a school. Teachers
 ## Capabilities and Constraints
 
 - Roles: superadmin, admin, teacher, parent, student.
-- MVP: class space (lessons, materials, assignments by topic), submission and grading with a gradebook, attendance for each timetable slot, weekly parent email digest, a home for each role.
+- MVP: class space (lessons, materials, assignments by topic), submission and grading with a gradebook, attendance for each timetable slot, weekly parent email digest, a home for each role, programme progress (chapitres and notions), student follow-up (signals, flags, remarks), appréciations for the conseil, a teacher-parent thread per student.
 - Kept from the first version: school structure, accounts, invitations, teacher availability, auto-scheduler.
-- Out of the MVP: class news feed (stream), bulletins, unit planning, portfolios, behaviour, messages, AI, operations modules.
+- Out of the MVP: class news feed (stream), printed bulletins, unit planning beyond chapitres and notions, portfolios, behaviour incidents and sanctions, remplacements, other messages, AI, operations modules.
 - Stack: Next.js App Router, React, Tailwind CSS v4, shadcn-style components on Radix, Drizzle ORM on libSQL/SQLite, NextAuth. Package manager: Bun.
 - The UI language is French. The current code copy is English and must move to French.
 - Plan and order of work: `project_docs/MVP_REWORK_PLAN.md`.

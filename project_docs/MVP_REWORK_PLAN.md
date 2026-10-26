@@ -1,6 +1,6 @@
 # EduPlan MVP rework plan
 
-Status: draft, 2026-10-25. Replaces the timetable-first direction in the older `project_docs/` files.
+Status: draft, 2026-10-25. Updated 2026-10-26 with the teacher-needs interview (programme, élèves, conseil, families). Replaces the timetable-first direction in the older `project_docs/` files.
 
 ## 1. Position
 
@@ -36,16 +36,22 @@ The Google Classroom "Stream" (class news feed) is out of the MVP.
 3. **Attendance per timetable slot.** The teacher opens the register from today's slot. The teacher marks present, absent, or late. Parents can submit a justification.
 4. **Parent digest.** A weekly email for each child: missing work, upcoming due dates, new grades, absences.
 5. **Role-based home.** Each of the 5 roles gets a home that answers the question "what do I do now?" (section 5).
+6. **Suivi de programme.** The school loads the programme for each subject and level as chapitres split into notions. The teacher reorders it and sets a planned week for each chapter, per class. A cahier de textes entry suggests the notion it covers. The teacher confirms "notion faite" and "chapitre terminé". Progress = notions covered vs weeks passed in the trimestre.
+7. **Suivi d'élèves.** Per student, in the teacher's subject: grades trend, absences and retards, missing work, remarks. EduPlan flags "élève à suivre" from school rules (for example average below 10, 3 unjustified absences, 2 missing works). The teacher can add a flag with a reason, or dismiss one.
+8. **Remarques.** Short teacher notes on a student (bavardage, oubli de matériel, encouragement). Each remark is private by default (teacher, professeur principal, admin). The teacher can switch one to "visible famille" (parents and student).
+9. **Préparation du conseil.** The teacher writes one appréciation per student per trimestre, with the student's average, absences, missing work and remarks visible while writing.
+10. **Messages famille.** One thread per student between the teacher and the parents (email and in-app). Absence justifications show in the same place.
 
 The MVP also keeps the current school structure, accounts, invitations, availability, and auto-scheduler.
 
 ### Out of the MVP (in order)
 
-1. Bulletins built from the gradebook
-2. Unit planning linked to programme objectives
+1. Bulletins (the printed document) built from the gradebook and the appréciations
+2. Unit planning beyond chapitres and notions (objectives, resources per unit)
 3. Portfolios
-4. Behaviour and alerts
-5. Messages, then AI drafts, then the Gibbon operations modules
+4. Behaviour incidents and sanctions (vie scolaire). Remarks are in the MVP
+5. Remplacements
+6. Messages beyond the teacher-parent thread, then AI drafts, then the Gibbon operations modules
 
 ## 4. Keep, change, start over
 
@@ -81,6 +87,16 @@ The MVP also keeps the current school structure, accounts, invitations, availabi
 | `rubrics`, `rubric_criteria`, `rubric_scores` | Reusable rubrics |
 | `attendance_records` | One for each student and time-slot occurrence. Status, minutes late, justification |
 | `notifications` | Source of the parent digest and in-app alerts |
+| `programmes`, `chapters`, `notions` | Programme per subject and level, set by the school. Chapters are ordered; notions belong to a chapter |
+| `class_chapter_plans` | Per class: chapter order, planned week, status (à venir, en cours, terminé) |
+| `notion_coverage` | Notion done for a class, with the cahier de textes post that covered it (optional) |
+| `remarks` | Student, author, subject, text, visibility (privé, visible famille) |
+| `student_flags` | Student, subject, source (règle, enseignant), reason, dismissed by and when |
+| `flag_rules` | School thresholds: average, unjustified absences, missing works |
+| `appreciations` | Student, subject, term, author, text |
+| `message_threads`, `messages` | One thread per student and teacher with the student's parents |
+
+Also: `posts` gets an optional `notion_id`. `classes` gets `head_teacher_id` (professeur principal).
 
 ## 5. Information architecture
 
@@ -88,19 +104,27 @@ One shell for all roles: a sidebar on the left, a top bar with the school, a ter
 
 | Role | Sidebar | Home answers |
 |---|---|---|
-| Teacher | Accueil, Mes classes, Carnet de notes, Présences, Emploi du temps | Which registers are open today? Which work is waiting for grading? |
+| Teacher | Accueil, Mes classes, Carnet de notes, Présences, Emploi du temps, Messages | Which registers are open today? Which work is waiting for grading? Which class is behind on the programme? Which students need attention? |
 | Student | Accueil, Mes matières, Notes, Emploi du temps | What is due, and when? |
-| Parent | Accueil (child switcher), Travail, Notes, Absences, Emploi du temps | Is my child on track this week? |
+| Parent | Accueil (child switcher), Travail, Notes, Absences, Messages, Emploi du temps | Is my child on track this week? |
 | Admin | Accueil, École (structure), Personnes, Emploi du temps, Suivi (attendance and grades overview), Paramètres | What is missing or late in the school? |
 | Superadmin | Écoles, Utilisateurs, Demandes | Which requests are waiting? |
 
 **Class space** (teacher view of one class and subject) has these tabs:
 
 1. Travail (topics and posts)
-2. Élèves
-3. Notes
-4. Présences
-5. Emploi du temps
+2. Programme (chapitres, notions, planned week vs done)
+3. Élèves (signals per student, flags, remarks, appréciation for the trimestre)
+4. Notes
+5. Présences
+6. Emploi du temps
+
+**Teacher home (Studio, picked 2026-10-26)** keeps the round-8 modules and adds two summaries:
+
+1. **Programme**: one bar per class, notions covered vs weeks passed. Opens the class Programme tab.
+2. **Élèves à suivre**: flagged students, with the reason. Opens the student in the class Élèves tab.
+
+The professeur principal sees all subjects for their class (signals, flags, visible remarks, appréciations). Admin / vie scolaire sees school-wide flags in Suivi. Parents and students see grades, absences, missing work and the remarks marked "visible famille".
 
 ## 6. Key user flows (MVP)
 
@@ -110,6 +134,9 @@ One shell for all roles: a sidebar on the left, a top bar with the school, a ter
 4. **Teacher grades.** Assignment → submission list → grade, comment, next student (one click) → Rendre les copies.
 5. **Teacher takes attendance.** Accueil → today's slot → register opens with all students marked present → mark the exceptions → Valider.
 6. **Parent follows a child.** Weekly email digest → link to the parent home → justify an absence in two steps.
+7. **Teacher fills the cahier de textes.** Today's course → entry (done in class, devoir) → EduPlan suggests the next notion → confirm → programme progress updates.
+8. **Teacher follows a student.** Home "Élèves à suivre" → student → signals and remarks → add a remark, dismiss the flag, or write to the parents.
+9. **Teacher prepares the conseil.** Class Élèves tab → "Appréciations" → one student at a time with average, absences, missing work, remarks → next student (one click).
 
 ## 7. Design direction: soft, approachable minimalism
 
@@ -136,7 +163,7 @@ Guardrails:
 
 | Step | Work | Estimate |
 |---|---|---|
-| 1 | Design pass: tokens, app shell, class space, teacher home (mock in `.impeccable/`) | 1 to 2 days |
+| 1 | Design pass: tokens, app shell, class space, teacher home (mock in `.impeccable/`). Teacher home: **Studio** picked 2026-10-26. Tokens: `DESIGN_HANDOVER_TEACHER_HOME.md` section 4. Mocks: `.impeccable/mocks/teacher-home/studio-{desktop,phone}.html`. Brief: `.impeccable/surfaces/src-app-dashboard-teacher-page-tsx.md`. Still to mock: Programme and Élèves à suivre modules, class Programme and Élèves tabs | 1 to 2 days |
 | 2 | New shell and IA in code, routes for each role | 1 day |
 | 3 | Schema: years, terms, topics, posts, attachments, submissions, grades | 1 day |
 | 4 | Class space and post creation | 2 days |
@@ -145,8 +172,12 @@ Guardrails:
 | 7 | Role-based homes with live data | 1 to 2 days |
 | 8 | Parent weekly digest (email) | 1 day |
 | 9 | Guided admin setup | 2 days |
+| 10 | Programme: school import, class plans, cahier de textes link | 2 days |
+| 11 | Suivi d'élèves: signals, flag rules, remarks | 2 days |
+| 12 | Appréciations for the conseil | 1 day |
+| 13 | Messages famille (thread per student) | 1 to 2 days |
 
-Total: about 13 to 16 working days for one developer.
+Total: about 19 to 23 working days for one developer.
 
 ## 9. Decisions
 
@@ -159,3 +190,24 @@ Accepted 2026-10-25.
 | D3 | File storage for submissions | S3-compatible storage (Cloudflare R2) |
 | D4 | Database at scale | Keep libSQL and host it on Turso, or move to Postgres before the first school goes live |
 | D5 | Rubrics in the MVP, or /20 only | /20 only in the MVP. Rubrics come first after the MVP |
+
+Accepted 2026-10-26 (teacher-needs interview).
+
+| ID | Decision | Accepted |
+|---|---|---|
+| D6 | Teacher home structure | Studio (structure 1) |
+| D7 | Unit of programme progress | Chapitre split into notions |
+| D8 | Who sets the programme | The school loads it; the teacher reorders and plans weeks per class |
+| D9 | Programme and cahier de textes | The entry suggests the notion; the teacher confirms |
+| D10 | Student signals | Grades trend, absences and retards, missing work, remarks |
+| D11 | "Élève à suivre" source | School rules first; the teacher can add or dismiss a flag |
+| D12 | Remark visibility | Private by default; teacher switches one to "visible famille" |
+| D13 | Programme pace display | Bar on the home (notions vs weeks), planned weeks in the class Programme tab |
+| D14 | Family contact | Thread per student, teacher and parents. Remplacements out of MVP |
+
+Open (ask before building steps 10 to 13):
+
+1. Default thresholds for `flag_rules`, and whether the admin can change them.
+2. Who loads the programme: the admin, or a new "coordinateur de matière" role.
+3. Does the student see flags about them, or only the signals?
+4. Does the professeur principal write an appréciation générale in the MVP?
