@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>L'Éphéméride Calme — Appel Téléphone (3ème B)</title>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,500&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f3f6fb;
+  --surface: #ffffff;
+  --surface-2: #e8eef7;
+  --ink: #18202c;
+  --ink-2: #435063;
+  --line: #d8e1ee;
+  --pres: #196747;
+  --pres-soft: #e2f3eb;
+  --notes: #962246;
+  --notes-soft: #fce8ee;
+  --edt: #8c4808;
+  --edt-soft: #fef0df;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  width: 390px; height: 844px; overflow: hidden;
+  background: var(--bg); color: var(--ink);
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  padding: 16px; display: flex; flex-direction: column; gap: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.head { border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+.head h1 { font-family: "Newsreader", Georgia, serif; font-size: 28px; font-weight: 500; }
+.head p { font-size: 13.5px; color: var(--ink-2); margin-top: 4px; }
+.bar-stats {
+  display: flex; justify-content: space-between; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; font-size: 13.5px;
+}
+.sheet {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  padding: 6px 14px; flex: 1; display: flex; flex-direction: column; justify-content: space-around;
+}
+.student {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--surface-2);
+}
+.student:last-child { border-bottom: 0; }
+.student b { font-size: 14.5px; display: block; }
+.student span { font-size: 12.5px; color: var(--ink-2); }
+.seg {
+  display: inline-flex; background: var(--surface-2); padding: 3px; border-radius: 9px; gap: 2px;
+}
+.seg i {
+  font-style: normal; font-size: 12.5px; font-weight: 600; padding: 5px 10px; border-radius: 7px; color: var(--ink-2);
+}
+.seg i.on-p { background: var(--surface); color: var(--pres); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+.seg i.on-a { background: var(--notes); color: #fff; }
+.seg i.on-r { background: var(--edt); color: #fff; }
+.submit {
+  background: var(--pres); color: #fff; border: 0; border-radius: 12px;
+  padding: 15px; font: 600 15px inherit; width: 100%;
+}
+</style>
+</head>
+<body>
+  <header class="head">
+    <h1>Appel · 3ème B</h1>
+    <p>Lundi 26 octobre · 10:00 – 11:00 · Salle 7 (31 élèves)</p>
+  </header>
+
+  <div class="bar-stats">
+    <span><b style="color:var(--pres)">29</b> Présents</span>
+    <span><b style="color:var(--notes)">1</b> Absent</span>
+    <span><b style="color:var(--edt)">1</b> Retard</span>
+  </div>
+
+  <section class="sheet">
+    <div class="student">
+      <div><b>Aminata Ba</b><span>Présente par défaut</span></div>
+      <div class="seg"><i class="on-p">Présent</i><i>Abs.</i><i>Ret.</i></div>
+    </div>
+    <div class="student">
+      <div><b>Cheikh Diallo</b><span>Présent par défaut</span></div>
+      <div class="seg"><i class="on-p">Présent</i><i>Abs.</i><i>Ret.</i></div>
+    </div>
+    <div class="student">
+      <div><b>Ibrahima Fall</b><span style="color:var(--pres);font-weight:600">Justifié par la famille</span></div>
+      <div class="seg"><i>Présent</i><i class="on-a">Abs.</i><i>Ret.</i></div>
+    </div>
+    <div class="student">
+      <div><b>Khadija Gueye</b><span>Présente par défaut</span></div>
+      <div class="seg"><i class="on-p">Présent</i><i>Abs.</i><i>Ret.</i></div>
+    </div>
+    <div class="student">
+      <div><b>Ousmane Mbaye</b><span style="color:var(--edt);font-weight:600">Arrivé à 10:06 (+6 min)</span></div>
+      <div class="seg"><i>Présent</i><i>Abs.</i><i class="on-r">Ret.</i></div>
+    </div>
+    <div class="student">
+      <div><b>Mariama Ndiaye</b><span>Présente par défaut</span></div>
+      <div class="seg"><i class="on-p">Présent</i><i>Abs.</i><i>Ret.</i></div>
+    </div>
+    <div class="student">
+      <div><b>Seydou Sow</b><span>Présent par défaut</span></div>
+      <div class="seg"><i class="on-p">Présent</i><i>Abs.</i><i>Ret.</i></div>
+    </div>
+  </section>
+
+  <button class="submit">Enregistrer l'appel de 10:00</button>
+</body>
+</html>

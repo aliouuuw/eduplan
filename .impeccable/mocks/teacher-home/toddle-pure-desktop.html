@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>EduPlan · Direction 1 : EdTech Progress Studio (Desktop 1440×900)</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ground: #f2f4f7;
+  --surface: #ffffff;
+  --subtle: #f6f8fa;
+  --ink: #141619;
+  --ink-2: #48505c;
+  --meta: #5c6573;
+  --line: #e6e9ef;
+  --orange: #c24116;
+  --orange-soft: #fdece6;
+  --mint: #0f6e4f;
+  --mint-soft: #def5ec;
+  --blue: #1e56c2;
+  --blue-soft: #e8f0fe;
+  --amber: #8a5108;
+  --amber-soft: #fef2db;
+  --rose: #a82231;
+  --rose-soft: #fce8ea;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+button, input, select { font-family: inherit; }
+body {
+  width: 1440px; height: 900px; overflow: hidden;
+  background: var(--ground); color: var(--ink);
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  display: flex; padding: 18px; gap: 18px;
+}
+h1, h2, h3, .num-big { font-family: "Outfit", system-ui, sans-serif; }
+
+/* Floating vertical white pill icon dock (Image 1 signature) */
+.icon-dock {
+  width: 68px; background: var(--surface); border-radius: 24px;
+  padding: 18px 0; display: flex; flex-direction: column; align-items: center;
+  gap: 12px; flex-shrink: 0; border: 1px solid var(--line);
+}
+.dock-brand {
+  width: 42px; height: 42px; border-radius: 14px;
+  color: var(--orange); display: grid; place-items: center; margin-bottom: 8px;
+}
+.dock-item {
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  color: var(--ink-2); text-decoration: none; position: relative;
+}
+.dock-item.on {
+  background: var(--ink); color: #ffffff;
+}
+.dock-item svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.dock-dot {
+  position: absolute; top: 9px; right: 9px; width: 7px; height: 7px;
+  border-radius: 50%; background: var(--orange);
+}
+.dock-avatar {
+  margin-top: auto; width: 42px; height: 42px; border-radius: 50%;
+  background: #e2e8f0; color: var(--ink); font-weight: 700; font-size: 13px;
+  display: grid; place-items: center;
+}
+
+/* Main workspace */
+.workspace {
+  flex: 1; display: flex; flex-direction: column; gap: 18px; min-width: 0;
+}
+
+/* Top search & action bar */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.search-pill {
+  width: 420px; height: 46px; background: var(--surface); border-radius: 14px;
+  padding: 0 18px; display: flex; align-items: center; gap: 12px;
+  color: var(--meta); font-size: 14px; font-weight: 500; border: 1px solid var(--line);
+}
+.search-pill svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+.top-right { display: flex; align-items: center; gap: 10px; }
+.btn-white {
+  height: 46px; padding: 0 18px; background: var(--surface); border-radius: 14px;
+  border: 1px solid var(--line); color: var(--ink); font-size: 13.5px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-orange {
+  height: 46px; padding: 0 20px; background: var(--orange); border-radius: 14px;
+  border: 0; color: #ffffff; font-size: 13.5px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+
+/* 2-column asymmetric body: left 836px + right 462px, aligned rows */
+.body-grid {
+  flex: 1; display: grid; grid-template-columns: 836px 1fr; gap: 18px; min-height: 0;
+}
+.left-col {
+  display: grid; grid-template-rows: 168px 258px 1fr; gap: 18px; min-height: 0;
+}
+.right-col {
+  display: grid; grid-template-rows: 168px 1fr; gap: 18px; min-height: 0;
+}
+
+/* Top 2 metric cards with corner burst & up-right arrow */
+.stat-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.stat-card {
+  background: var(--surface); border-radius: 24px; padding: 20px 24px;
+  position: relative; overflow: hidden; display: flex; flex-direction: column;
+  justify-content: space-between; border: 1px solid var(--line);
+}
+.stat-head { display: flex; align-items: center; justify-content: space-between; }
+.stat-title { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; color: var(--ink); }
+.stat-title svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 2; }
+.arrow-chip {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--subtle);
+  color: var(--ink-2); display: grid; place-items: center;
+}
+.arrow-chip svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; }
+.num-big { font-size: 40px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; color: var(--ink); }
+.num-big span { color: var(--meta); font-weight: 600; }
+.stat-sub { font-size: 13px; color: var(--meta); font-weight: 500; }
+.corner-rays {
+  position: absolute; right: -10px; bottom: -10px; width: 96px; height: 96px; opacity: 0.06; pointer-events: none;
+}
+
+/* Middle curve card: Moyenne & avancement vers le bulletin */
+.curve-card {
+  background: var(--surface); border-radius: 24px; padding: 18px 24px;
+  display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--line);
+}
+.card-header { display: flex; align-items: center; justify-content: space-between; }
+.card-header h2 { font-size: 17px; font-weight: 700; color: var(--ink); }
+.pill-drop {
+  height: 32px; padding: 0 12px; border-radius: 99px; background: var(--subtle);
+  border: 1px solid var(--line); font-size: 12.5px; font-weight: 600; color: var(--ink-2);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.curve-hero { display: flex; align-items: baseline; gap: 12px; }
+.curve-hero strong { font-family: "Outfit", sans-serif; font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
+.curve-hero span { font-size: 13px; font-weight: 600; color: var(--mint); }
+
+.chart-wrap { position: relative; height: 108px; }
+.chart-wrap svg { width: 100%; height: 100%; overflow: visible; }
+.chart-axes {
+  display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600; color: var(--meta);
+  padding-top: 8px; border-top: 1px solid var(--line);
+}
+
+/* Bottom card: Aujourd'hui (Continue Watching style 4 course cards) */
+.courses-card {
+  background: var(--surface); border-radius: 24px; padding: 18px 24px;
+  display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--line);
+}
+.courses-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; flex: 1; margin-top: 10px; }
+.course-tile {
+  background: var(--subtle); border-radius: 14px; padding: 12px;
+  display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
+}
+.course-tile.live {
+  background: var(--mint-soft);
+}
+.course-art {
+  height: 68px; border-radius: 10px; padding: 9px 11px;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.art-4a { background: var(--blue-soft); color: var(--blue); }
+.art-3b { background: #ffffff; color: var(--mint); }
+.art-4b { background: var(--amber-soft); color: var(--amber); }
+.art-6a { background: var(--orange-soft); color: var(--orange); }
+.course-art time { font-size: 12.5px; font-weight: 700; }
+.course-art .room {
+  font-size: 12px; font-weight: 700; background: #ffffff; color: var(--ink);
+  padding: 2px 9px; border-radius: 99px; align-self: flex-start;
+}
+.course-tile b { font-size: 14px; font-weight: 700; color: var(--ink); display: block; }
+.course-tile small { font-size: 12.5px; color: var(--meta); display: block; margin-top: 2px; }
+
+/* Right Column: Warm Spotlight Hero (168px) + Mint Progress Card & Checklist */
+.spotlight-card {
+  background: var(--orange-soft); border-radius: 24px; padding: 16px 22px;
+  text-align: center; display: flex; flex-direction: column; align-items: center;
+  justify-content: space-between;
+}
+.avatar-cluster {
+  display: inline-flex; align-items: center; gap: 8px; background: #ffffff;
+  padding: 4px 12px 4px 6px; border-radius: 99px;
+}
+.av-stack { display: flex; }
+.av-stack i {
+  width: 24px; height: 24px; border-radius: 50%; font-style: normal;
+  font-size: 11px; font-weight: 700; display: grid; place-items: center;
+  border: 2px solid #fff; margin-left: -6px;
+}
+.av-stack i:first-child { margin-left: 0; }
+.avatar-cluster span { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.spotlight-card h1 { font-size: 20px; font-weight: 700; line-height: 1.2; color: var(--ink); }
+.btn-black-pill {
+  height: 38px; padding: 0 20px; border-radius: 99px;
+  background: var(--ink); color: #ffffff; border: 0; font-size: 13px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+
+/* Mint green task progress panel + checklist */
+.tasks-panel {
+  background: var(--surface); border-radius: 24px; padding: 16px;
+  display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--line);
+}
+.mint-header-card {
+  background: var(--mint-soft); border-radius: 14px; padding: 14px 18px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.mint-top { display: flex; justify-content: space-between; align-items: center; }
+.mint-top b { font-size: 14.5px; font-weight: 700; color: #0b4a35; }
+.mint-stat { display: flex; align-items: baseline; gap: 8px; }
+.mint-stat strong { font-family: "Outfit", sans-serif; font-size: 28px; font-weight: 700; color: var(--ink); }
+.mint-stat span { font-size: 13px; font-weight: 600; color: #0b4a35; }
+.hatch-bar {
+  height: 10px; border-radius: 99px; background: #bfe8d7;
+  overflow: hidden; display: flex;
+}
+.hatch-fill { width: 64%; background: var(--mint); border-radius: 99px; }
+
+.check-list { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.check-item {
+  border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px;
+  display: grid; grid-template-columns: 24px 1fr 22px; align-items: center; gap: 12px;
+  background: var(--subtle); flex: 1;
+}
+.item-icon {
+  display: grid; place-items: center;
+}
+.item-icon svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 2; }
+.check-item b { font-size: 14px; font-weight: 700; color: var(--ink); display: block; }
+.check-item small { font-size: 12.5px; color: var(--meta); display: block; margin-top: 2px; font-weight: 500; }
+.chk-box {
+  width: 20px; height: 20px; border-radius: 6px; border: 1.8px solid #b8c0cc;
+  display: grid; place-items: center; color: #fff; background: var(--surface);
+}
+.chk-box.done { background: var(--mint); border-color: var(--mint); }
+.chk-box svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2.5; }
+</style>
+</head>
+<body>
+
+<aside class="icon-dock">
+  <div class="dock-brand">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v6m0 6v6M3 12h6m6 0h6"/></svg>
+  </div>
+  <a class="dock-item on" href="#" aria-label="Accueil">
+    <svg viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg>
+  </a>
+  <a class="dock-item" href="#" aria-label="Mes classes">
+    <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+  </a>
+  <a class="dock-item" href="#" aria-label="Emploi du temps">
+    <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
+  </a>
+  <a class="dock-item" href="#" aria-label="Carnet de notes">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.6 9h16.8M3.6 15h16.8"/></svg>
+  </a>
+  <a class="dock-item" href="#" aria-label="Présences">
+    <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    <span class="dock-dot"></span>
+  </a>
+  <div class="dock-avatar">AD</div>
+</aside>
+
+<div class="workspace">
+  <header class="topbar">
+    <div class="search-pill">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      Rechercher une classe, un élève, un devoir…
+    </div>
+    <div class="top-right">
+      <button class="btn-white">Trimestre 1 · Semaine 8/12</button>
+      <button class="btn-white">+ Nouveau contenu</button>
+      <button class="btn-orange">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Faire l'appel · 3ème B
+      </button>
+    </div>
+  </header>
+
+  <div class="body-grid">
+    <div class="left-col">
+      <div class="stat-pair">
+        <section class="stat-card">
+          <div class="stat-head">
+            <div class="stat-title">
+              <svg style="color:var(--mint)" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              Séances du lundi
+            </div>
+            <span class="arrow-chip"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg></span>
+          </div>
+          <div class="num-big">02<span>/04</span></div>
+          <div class="stat-sub">4ème A validé (2 abs.) · 3ème B en cours Salle 7</div>
+          <svg class="corner-rays" viewBox="0 0 100 100"><path d="M100 0 L40 100 M100 20 L60 100 M100 45 L80 100 M80 0 L15 100 M55 0 L0 95" stroke="#141619" stroke-width="6"/></svg>
+        </section>
+
+        <section class="stat-card">
+          <div class="stat-head">
+            <div class="stat-title">
+              <svg style="color:var(--orange)" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg>
+              Copies et notes à traiter
+            </div>
+            <span class="arrow-chip"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg></span>
+          </div>
+          <div class="num-big">53<span> copies</span></div>
+          <div class="stat-sub">22 DM n°3 (4ème A) · 31 Contrôle Pythagore (3ème B)</div>
+          <svg class="corner-rays" viewBox="0 0 100 100"><path d="M100 0 L40 100 M100 20 L60 100 M100 45 L80 100 M80 0 L15 100 M55 0 L0 95" stroke="#141619" stroke-width="6"/></svg>
+        </section>
+      </div>
+
+      <section class="curve-card">
+        <div class="card-header">
+          <h2>Avancement vers le conseil de classe (11 déc.)</h2>
+          <span class="pill-drop">Trimestre 1</span>
+        </div>
+        <div class="curve-hero">
+          <strong>12,2 /20</strong>
+          <span>Moyenne générale Mathématiques · 9 sur 15 notes saisies</span>
+        </div>
+        <div class="chart-wrap">
+          <svg viewBox="0 0 760 105" preserveAspectRatio="none">
+            <path d="M0 78 C 95 72, 140 50, 220 56 C 300 62, 355 32, 445 38 C 520 44, 570 16, 635 22 C 690 28, 725 42, 760 36 L 760 105 L 0 105 Z" fill="#fdece6"/>
+            <path d="M0 78 C 95 72, 140 50, 220 56 C 300 62, 355 32, 445 38 C 520 44, 570 16, 635 22 C 690 28, 725 42, 760 36" fill="none" stroke="#c24116" stroke-width="2.6"/>
+            <line x1="635" y1="22" x2="635" y2="105" stroke="#c24116" stroke-dasharray="3 3"/>
+            <circle cx="635" cy="22" r="5" fill="#ffffff" stroke="#c24116" stroke-width="2.5"/>
+            <rect x="550" y="2" width="136" height="30" rx="8" fill="#ffffff" stroke="#e6e9ef"/>
+            <text x="618" y="21" text-anchor="middle" font-size="12" font-weight="700" fill="#141619">4ème B · 13,0 /20</text>
+          </svg>
+        </div>
+        <div class="chart-axes">
+          <span>Sem. 3</span>
+          <span>Sem. 4</span>
+          <span>4ème A · 12,4 (3/5)</span>
+          <span>3ème B · 11,1 (2/5)</span>
+          <span style="color:var(--ink);font-weight:700">Sem. 8 · 4ème B (4/5)</span>
+          <span>Sem. 10</span>
+          <span>Conseil 11 déc.</span>
+        </div>
+      </section>
+
+      <section class="courses-card">
+        <div class="card-header">
+          <h2>Cours d'aujourd'hui · Lundi 26 octobre</h2>
+          <span class="pill-drop">Emploi du temps</span>
+        </div>
+        <div class="courses-grid">
+          <div class="course-tile">
+            <div class="course-art art-4a">
+              <time>08:00 – 09:00</time>
+              <span class="room">Appel fait · 2 abs.</span>
+            </div>
+            <div>
+              <b>4ème A · Mathématiques</b>
+              <small>Salle 12 · Pythagore</small>
+            </div>
+          </div>
+
+          <div class="course-tile live">
+            <div class="course-art art-3b">
+              <time>10:00 – 11:00</time>
+              <span class="room" style="color:var(--mint)">En direct · Salle 7</span>
+            </div>
+            <div>
+              <b>3ème B · Mathématiques</b>
+              <small style="color:var(--mint);font-weight:600">Appel à valider (31 él.)</small>
+            </div>
+          </div>
+
+          <div class="course-tile">
+            <div class="course-art art-4b">
+              <time>14:00 – 15:00</time>
+              <span class="room">Salle 12</span>
+            </div>
+            <div>
+              <b>4ème B · Contrôle n°2</b>
+              <small>Évaluation · 27 élèves</small>
+            </div>
+          </div>
+
+          <div class="course-tile">
+            <div class="course-art art-6a">
+              <time>16:00 – 17:00</time>
+              <span class="room">Salle 3</span>
+            </div>
+            <div>
+              <b>6ème A · Soutien</b>
+              <small>Atelier fractions (12 él.)</small>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="right-col">
+      <section class="spotlight-card">
+        <div class="avatar-cluster">
+          <div class="av-stack">
+            <i style="background:#fde68a;color:#78350f">AB</i>
+            <i style="background:#bfdbfe;color:#1e3a8a">CD</i>
+            <i style="background:#fecdd3;color:#881337">IF</i>
+          </div>
+          <span>31 élèves · Salle 7 (10:00)</span>
+        </div>
+        <h1>Bonjour Aïssatou, l'appel de 3ème B est ouvert</h1>
+        <button class="btn-black-pill">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>
+          Faire l'appel maintenant
+        </button>
+      </section>
+
+      <section class="tasks-panel">
+        <div class="mint-header-card">
+          <div class="mint-top">
+            <b>Corrections et suivi du jour</b>
+            <span class="pill-drop" style="background:#ffffff">Tous</span>
+          </div>
+          <div class="mint-stat">
+            <strong>64%</strong>
+            <span>des copies du Trimestre 1 corrigées</span>
+          </div>
+          <div class="hatch-bar"><div class="hatch-fill"></div></div>
+        </div>
+
+        <div class="check-list">
+          <div class="check-item">
+            <span class="item-icon" style="color:var(--amber)">
+              <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </span>
+            <div>
+              <b>Devoir maison n°3 · 4ème A</b>
+              <small>22/28 rendus · 6 en retard · Coef. 1</small>
+            </div>
+            <span class="chk-box done"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+          </div>
+
+          <div class="check-item">
+            <span class="item-icon" style="color:var(--blue)">
+              <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 10h8M8 14h5"/></svg>
+            </span>
+            <div>
+              <b>Contrôle Pythagore · 3ème B</b>
+              <small>Copies papier · 31 notes à saisir · Coef. 2</small>
+            </div>
+            <span class="chk-box"></span>
+          </div>
+
+          <div class="check-item">
+            <span class="item-icon" style="color:var(--rose)">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></svg>
+            </span>
+            <div>
+              <b>Absences 08:00 · M. Ndiaye, F. Sarr</b>
+              <small>4ème A · 2 non justifiées · I. Fall justifié</small>
+            </div>
+            <span class="chk-box"></span>
+          </div>
+
+          <div class="check-item">
+            <span class="item-icon" style="color:var(--mint)">
+              <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </span>
+            <div>
+              <b>Exercices p. 84 · 4ème B</b>
+              <small>9/27 rendus · Échéance demain 08:00</small>
+            </div>
+            <span class="chk-box"></span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

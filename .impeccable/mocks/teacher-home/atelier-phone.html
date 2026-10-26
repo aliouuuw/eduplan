@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>L'Atelier Pédagogique — Appel Téléphone (3ème B)</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #eef4f0;
+  --surface: #ffffff;
+  --surface-2: #e2ece5;
+  --ink: #1a241f;
+  --ink-2: #3d4f46;
+  --line: #cddbd2;
+  --pres: #175c3c;
+  --pres-soft: #dff1e7;
+  --abs: #963614;
+  --abs-soft: #faeae3;
+  --late: #754c0b;
+  --late-soft: #f9efdb;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  width: 390px; height: 844px; overflow: hidden;
+  background: var(--bg); color: var(--ink);
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  display: flex; flex-direction: column; padding: 14px; gap: 12px;
+  font-variant-numeric: tabular-nums;
+}
+h1, h2 { font-family: "Bricolage Grotesque", system-ui, sans-serif; }
+.top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 4px;
+}
+.top span { font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.hero {
+  background: var(--pres-soft); border: 1px solid #b3dbc6; border-radius: 20px;
+  padding: 16px; display: flex; flex-direction: column; gap: 8px;
+}
+.hero h1 { font-size: 22px; font-weight: 700; }
+.hero-sub { display: flex; justify-content: space-between; align-items: center; }
+.pill-live {
+  background: var(--pres); color: #fff; font-size: 12.5px; font-weight: 600;
+  padding: 4px 10px; border-radius: 99px;
+}
+.hero p { font-size: 13.5px; color: var(--ink-2); }
+.summary {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 4px;
+}
+.sum-box {
+  background: var(--surface); border-radius: 12px; padding: 8px 10px; text-align: center;
+}
+.sum-box b { font-size: 17px; display: block; }
+.sum-box span { font-size: 12.5px; color: var(--ink-2); }
+.list {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
+  padding: 12px; display: flex; flex-direction: column; gap: 8px; flex: 1;
+}
+.list-head { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--ink-2); padding: 0 4px 4px; }
+.st-row {
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px;
+  padding: 9px 10px; border-radius: 13px; background: var(--surface-2);
+}
+.st-row b { font-size: 14.5px; display: block; }
+.st-row small { font-size: 12.5px; color: var(--ink-2); }
+.toggles { display: flex; gap: 5px; }
+.tg {
+  padding: 6px 10px; border-radius: 9px; font-size: 12.5px; font-weight: 600;
+  background: var(--surface); color: var(--ink-2); border: 1px solid var(--line);
+}
+.tg.p { background: var(--pres); color: #fff; border-color: var(--pres); }
+.tg.a { background: var(--abs); color: #fff; border-color: var(--abs); }
+.tg.r { background: var(--late); color: #fff; border-color: var(--late); }
+.cta {
+  background: var(--pres); color: #fff; border: 0; border-radius: 16px;
+  padding: 15px; font: 700 15px inherit; text-align: center;
+}
+</style>
+</head>
+<body>
+  <div class="top">
+    <span>← Accueil · Lundi 26 oct.</span>
+    <span>10:05</span>
+  </div>
+  <section class="hero">
+    <h1>Faire l'appel · 3ème B</h1>
+    <div class="hero-sub">
+      <span class="pill-live">En cours · 10:00 – 11:00</span>
+      <span style="font-size:13px;font-weight:700;color:var(--pres)">Salle 7</span>
+    </div>
+    <p>Mathématiques · Tous présumés présents, touchez les exceptions.</p>
+    <div class="summary">
+      <div class="sum-box"><b>29</b><span>Présents</span></div>
+      <div class="sum-box"><b style="color:var(--abs)">1</b><span>Absent</span></div>
+      <div class="sum-box"><b style="color:var(--late)">1</b><span>Retard</span></div>
+    </div>
+  </section>
+
+  <section class="list">
+    <div class="list-head">
+      <span>31 élèves · Tri alphabétique</span>
+      <span>P / A / R</span>
+    </div>
+    <div class="st-row">
+      <div><b>Aminata Ba</b><small>Présente</small></div>
+      <div class="toggles"><span class="tg p">P</span><span class="tg">A</span><span class="tg">R</span></div>
+    </div>
+    <div class="st-row">
+      <div><b>Cheikh Diallo</b><small>Présent</small></div>
+      <div class="toggles"><span class="tg p">P</span><span class="tg">A</span><span class="tg">R</span></div>
+    </div>
+    <div class="st-row" style="background:var(--abs-soft)">
+      <div><b>Ibrahima Fall</b><small style="color:var(--abs);font-weight:600">Justifié par la famille</small></div>
+      <div class="toggles"><span class="tg">P</span><span class="tg a">A</span><span class="tg">R</span></div>
+    </div>
+    <div class="st-row">
+      <div><b>Khadija Gueye</b><small>Présente</small></div>
+      <div class="toggles"><span class="tg p">P</span><span class="tg">A</span><span class="tg">R</span></div>
+    </div>
+    <div class="st-row" style="background:var(--late-soft)">
+      <div><b>Ousmane Mbaye</b><small style="color:var(--late);font-weight:600">Retard +5 min</small></div>
+      <div class="toggles"><span class="tg">P</span><span class="tg">A</span><span class="tg r">R</span></div>
+    </div>
+    <div class="st-row">
+      <div><b>Mariama Ndiaye</b><small>Présente</small></div>
+      <div class="toggles"><span class="tg p">P</span><span class="tg">A</span><span class="tg">R</span></div>
+    </div>
+    <div class="st-row">
+      <div><b>Seydou Sow</b><small>Présent</small></div>
+      <div class="toggles"><span class="tg p">P</span><span class="tg">A</span><span class="tg">R</span></div>
+    </div>
+  </section>
+
+  <button class="cta">Valider l'appel (29 présents · 1 absent · 1 retard)</button>
+</body>
+</html>

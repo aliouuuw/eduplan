@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Le Tableau du jour</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#16201c;--g0:#f4f6f5;--g1:#e5e9e7;--g5:#56625d;--amber:#e8a317;--amber-t:#fdf3dc;--amber-ink:#7a5200;--go:#2d7a52;--go-t:#e2f2e9}
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;overflow:hidden;background:var(--g0);font-family:Barlow,system-ui,sans-serif;color:var(--ink);font-variant-numeric:tabular-nums}
+header{height:68px;background:var(--ink);color:#e9eeec;display:flex;align-items:center;gap:28px;padding:0 28px}
+header b{font-size:20px;color:#fff}
+header a{color:#b9c4bf;font-size:15px;text-decoration:none}header a.on{color:#fff;font-weight:600}
+header .r{margin-left:auto;font-size:14px;color:#b9c4bf}
+.wrap{padding:24px 28px;display:flex;flex-direction:column;gap:18px}
+.h{display:flex;align-items:baseline;gap:16px}.h h1{font-size:30px;font-weight:700}.h span{color:var(--g5);font-size:16px}
+.board{background:#fff;border-radius:20px;padding:8px 8px}
+.row{display:grid;grid-template-columns:110px 160px 1fr 130px 170px 200px;align-items:center;padding:16px 20px;border-radius:14px;font-size:17px}
+.row+.row{margin-top:2px}
+.hd{font-size:13px;font-weight:600;color:var(--g5);padding:10px 20px 6px}
+.t{font-size:26px;font-weight:700}
+.cl{font-weight:700;font-size:20px}
+.past{color:#5f6b66}.past .t{color:#5f6b66}
+.live{background:var(--go-t)}
+.chg{background:var(--amber-t)}
+.salle s{color:var(--g5);margin-right:8px}.salle b{color:var(--amber-ink)}
+.st{font-size:14px;font-weight:600}
+.btn{background:var(--go);color:#fff;border-radius:11px;padding:10px 16px;font-size:15px;font-weight:600;justify-self:start}
+.note{font-size:13px;color:var(--amber-ink);font-weight:600}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.mod{background:#fff;border-radius:20px;padding:20px 22px}.mod h2{font-size:18px;margin-bottom:12px}
+.li{display:flex;justify-content:space-between;padding:11px 0;border-top:1px solid var(--g1);font-size:15px}.li:first-of-type{border-top:0}
+.li span{color:var(--g5)}
+</style></head><body>
+<header><b>EduPlan</b><a class="on" href="#">Aujourd'hui</a><a href="#">Mes classes</a><a href="#">Carnet de notes</a><a href="#">Présences</a><a href="#">Emploi du temps</a><span class="r">Aïssatou Diop · Trimestre 1</span></header>
+<div class="wrap">
+  <div class="h"><h1>Lundi 26 octobre</h1><span>4 cours · 1 changement</span></div>
+  <div class="board">
+    <div class="row hd"><span>Heure</span><span>Classe</span><span>Cours</span><span>Salle</span><span>Appel</span><span></span></div>
+    <div class="row past"><span class="t">08:00</span><span class="cl">4ème A</span><span>Mathématiques · Pythagore</span><span>12</span><span class="st">Fait · 2 absents</span><span></span></div>
+    <div class="row live"><span class="t">10:00</span><span class="cl">3ème B</span><span>Mathématiques · en cours</span><span>7</span><span class="st">Ouvert</span><span class="btn">Faire l'appel</span></div>
+    <div class="row chg"><span class="t">14:00</span><span class="cl">4ème B</span><span>Contrôle n°2</span><span class="salle"><s>12</s><b>15</b></span><span class="st">À 14:00</span><span class="note">Salle changée à 09:12</span></div>
+    <div class="row"><span class="t">16:00</span><span class="cl">6ème A</span><span>Soutien</span><span>3</span><span class="st">À 16:00</span><span></span></div>
+  </div>
+  <div class="two">
+    <section class="mod"><h2>À corriger</h2>
+      <div class="li">Devoir maison n°3 · 4ème A<span>22/28 rendus · 6 en retard</span></div>
+      <div class="li">Contrôle Pythagore · 3ème B<span>31 notes à saisir</span></div>
+      <div class="li">Exercices p. 84 · 4ème B<span>9/27 · pour demain</span></div>
+    </section>
+    <section class="mod"><h2>Absences à suivre</h2>
+      <div class="li">Moussa Ndiaye · 4ème A<span>Non justifiée · ce matin</span></div>
+      <div class="li">Fatou Sarr · 4ème A<span>Non justifiée · ce matin</span></div>
+      <div class="li">Ibrahima Fall · 3ème B<span>Justifiée par la famille</span></div>
+    </section>
+  </div>
+</div>
+</body></html>

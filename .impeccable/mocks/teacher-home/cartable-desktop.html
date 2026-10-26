@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Le Cartable à Onglets — Accueil Enseignant</title>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #eef3ef;
+  --surface: #ffffff;
+  --surface-2: #e2ebe4;
+  --ink: #1b2620;
+  --ink-2: #43544b;
+  --line: #cedbd1;
+  --pres: #1d6644;
+  --pres-soft: #dff2e8;
+  --travail: #254b8f;
+  --travail-soft: #e5edfb;
+  --notes: #9c2b3f;
+  --notes-soft: #fbe6ea;
+  --edt: #80520f;
+  --edt-soft: #faeed9;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  width: 1440px; height: 900px; overflow: hidden;
+  background: var(--bg); color: var(--ink);
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  display: flex; flex-direction: column;
+  font-variant-numeric: tabular-nums;
+}
+.topbar {
+  background: var(--surface); border-bottom: 1px solid var(--line);
+  padding: 0 28px; height: 68px; display: flex; align-items: center; gap: 22px;
+}
+.brand { font-family: "Newsreader", Georgia, serif; font-size: 26px; font-weight: 600; color: var(--ink); }
+.tabs { display: flex; gap: 6px; height: 100%; align-items: flex-end; }
+.tab {
+  padding: 12px 16px; border-radius: 12px 12px 0 0; font-size: 14.5px; font-weight: 600;
+  color: var(--ink-2); text-decoration: none; display: flex; align-items: center; gap: 8px;
+  border: 1px solid transparent; border-bottom: 0;
+}
+.tab.on { background: var(--bg); color: var(--ink); border-color: var(--line); }
+.tab i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.top-right { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: 13.5px; color: var(--ink-2); }
+.btn-new {
+  background: var(--pres); color: #fff; border: 0; border-radius: 10px;
+  padding: 9px 15px; font: 600 14px inherit;
+}
+.wrap { padding: 20px 28px; display: flex; flex-direction: column; gap: 18px; flex: 1; }
+.subhead { display: flex; justify-content: space-between; align-items: baseline; }
+.subhead h1 { font-family: "Newsreader", Georgia, serif; font-size: 32px; font-weight: 500; }
+.subhead span { font-size: 14.5px; color: var(--ink-2); }
+.strip-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.slot-card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  padding: 16px 18px; display: flex; flex-direction: column; justify-content: space-between; min-height: 152px;
+}
+.slot-card.live { background: var(--pres-soft); border-color: #9cd4b8; }
+.slot-card h2 { font-size: 20px; font-weight: 700; }
+.slot-meta { font-size: 13.5px; font-weight: 600; color: var(--ink-2); margin-top: 4px; }
+.slot-card p { font-size: 13.5px; color: var(--ink-2); margin-top: 3px; }
+.slot-foot { margin-top: 14px; display: flex; justify-content: space-between; align-items: center; }
+.btn-call {
+  background: var(--pres); color: #fff; border: 0; border-radius: 10px;
+  padding: 9px 14px; font: 600 14px inherit; width: 100%; text-align: center;
+}
+.tag { font-size: 12.5px; font-weight: 600; padding: 5px 10px; border-radius: 8px; }
+.bento { display: grid; grid-template-columns: 1.15fr 0.9fr 1.15fr; gap: 16px; flex: 1; min-height: 0; }
+.folder {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+  padding: 18px 20px; display: flex; flex-direction: column; gap: 12px;
+}
+.folder-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 10px; border-bottom: 1px solid var(--surface-2);
+}
+.folder-head h3 { font-size: 16.5px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.folder-head span { font-size: 13px; color: var(--ink-2); font-weight: 600; }
+.item {
+  background: var(--surface-2); border-radius: 12px; padding: 11px 14px;
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+}
+.item b { font-size: 14.5px; display: block; }
+.item small { font-size: 13px; color: var(--ink-2); display: block; margin-top: 2px; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">EduPlan</div>
+  <nav class="tabs">
+    <a class="tab on" href="#">Accueil</a>
+    <a class="tab" href="#"><i style="background:var(--travail)"></i>Mes classes</a>
+    <a class="tab" href="#"><i style="background:var(--notes)"></i>Carnet de notes</a>
+    <a class="tab" href="#"><i style="background:var(--pres)"></i>Présences</a>
+    <a class="tab" href="#"><i style="background:var(--edt)"></i>Emploi du temps</a>
+  </nav>
+  <div class="top-right">
+    <span><b>Trimestre 1</b> · Sem. 8/12</span>
+    <span>Aïssatou Diop · Dakar</span>
+    <button class="btn-new">+ Nouveau</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="subhead">
+    <h1>Lundi 26 octobre 2026 — Mathématiques</h1>
+    <span>Conseil de classe du Trimestre 1 prévu le 11 décembre</span>
+  </div>
+
+  <section class="strip-4">
+    <div class="slot-card">
+      <div>
+        <h2>4ème A</h2>
+        <div class="slot-meta">08:00 – 09:00 · Salle 12</div>
+        <p>Théorème de Pythagore</p>
+      </div>
+      <div class="slot-foot">
+        <span class="tag" style="background:var(--pres-soft);color:var(--pres)">Appel fait · 2 absents</span>
+      </div>
+    </div>
+
+    <div class="slot-card live">
+      <div>
+        <h2>3ème B · 31 élèves</h2>
+        <div class="slot-meta" style="color:var(--pres)">En cours · 10:00 – 11:00 · Salle 7</div>
+        <p>Registre de présence ouvert</p>
+      </div>
+      <div class="slot-foot">
+        <button class="btn-call">Faire l'appel (10:00)</button>
+      </div>
+    </div>
+
+    <div class="slot-card">
+      <div>
+        <h2>4ème B</h2>
+        <div class="slot-meta">14:00 – 15:00 · Salle 12</div>
+        <p>Contrôle n°2 sur table</p>
+      </div>
+      <div class="slot-foot">
+        <span class="tag" style="background:var(--edt-soft);color:var(--edt)">Dans 4 heures</span>
+      </div>
+    </div>
+
+    <div class="slot-card">
+      <div>
+        <h2>6ème A</h2>
+        <div class="slot-meta">16:00 – 17:00 · Salle 3</div>
+        <p>Soutien méthodologie</p>
+      </div>
+      <div class="slot-foot">
+        <span class="tag" style="background:var(--surface-2);color:var(--ink-2)">À 16:00</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="bento">
+    <div class="folder">
+      <div class="folder-head">
+        <h3><span class="tag" style="background:var(--travail-soft);color:var(--travail)">Travail</span> À corriger</h3>
+        <span>3 devoirs</span>
+      </div>
+      <div class="item">
+        <div><b>Devoir maison n°3 · 4ème A</b><small>22/28 rendus · 6 en retard · Coef. 1</small></div>
+        <span class="tag" style="background:var(--travail-soft);color:var(--travail)">Corriger</span>
+      </div>
+      <div class="item">
+        <div><b>Contrôle Pythagore · 3ème B</b><small>Copies papier · 31 notes à saisir · Coef. 2</small></div>
+        <span class="tag" style="background:var(--notes-soft);color:var(--notes)">Saisir 31</span>
+      </div>
+      <div class="item">
+        <div><b>Exercices p. 84 · 4ème B</b><small>9/27 rendus · Pour demain 08:00</small></div>
+        <span class="tag" style="background:var(--surface);color:var(--ink-2)">9/27</span>
+      </div>
+    </div>
+
+    <div class="folder">
+      <div class="folder-head">
+        <h3><span class="tag" style="background:var(--pres-soft);color:var(--pres)">Présences</span> Absences du jour</h3>
+        <span>3 élèves</span>
+      </div>
+      <div class="item">
+        <div><b>Moussa Ndiaye</b><small>4ème A · Ce matin 08:00</small></div>
+        <span class="tag" style="background:var(--notes-soft);color:var(--notes)">Non justifiée</span>
+      </div>
+      <div class="item">
+        <div><b>Fatou Sarr</b><small>4ème A · Ce matin 08:00</small></div>
+        <span class="tag" style="background:var(--notes-soft);color:var(--notes)">Non justifiée</span>
+      </div>
+      <div class="item">
+        <div><b>Ibrahima Fall</b><small>3ème B · Parent informé</small></div>
+        <span class="tag" style="background:var(--pres-soft);color:var(--pres)">Justifiée</span>
+      </div>
+    </div>
+
+    <div class="folder">
+      <div class="folder-head">
+        <h3><span class="tag" style="background:var(--notes-soft);color:var(--notes)">Notes</span> Classes vers le bulletin</h3>
+        <span>Trimestre 1</span>
+      </div>
+      <div class="item">
+        <div><b>4ème A · 28 élèves</b><small>3 notes sur 5 saisies au bulletin</small></div>
+        <b style="color:var(--notes);font-size:16px">12,4/20</b>
+      </div>
+      <div class="item">
+        <div><b>3ème B · 31 élèves</b><small>2 notes sur 5 saisies au bulletin</small></div>
+        <b style="color:var(--notes);font-size:16px">11,1/20</b>
+      </div>
+      <div class="item">
+        <div><b>4ème B · 27 élèves</b><small>4 notes sur 5 saisies au bulletin</small></div>
+        <b style="color:var(--notes);font-size:16px">13,0/20</b>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

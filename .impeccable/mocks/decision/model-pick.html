@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>L'article de l'école</title>
+<style>
+:root{--blue:#1f3c9b;--blue-d:#172e78;--sky:#e9eef8;--gold:#f2b631;--ink:#14183a;--ink2:#3f4566;--line:#d3dbef;
+--f:#c2367a;--m:#2f6fd0;--s:#3a9a3a;--h:#a8432a;--l:#1a9a9a;--e:#8bb21f;--a:#d23b2f}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1440px;height:900px;overflow:hidden;font:13.5px/1.6 Verdana,Tahoma,sans-serif;color:var(--ink);background:var(--sky)}
+::selection{background:var(--gold)}
+header{background:var(--blue);color:#fff;height:62px;display:flex;align-items:center;gap:34px;padding:0 40px}
+.brand{font:italic 700 26px Georgia,serif}
+.brand b{color:var(--gold);font-style:normal}
+.tabs{display:flex;gap:4px;align-self:flex-end}
+.tabs a{color:#dfe6fb;text-decoration:none;font-size:13px;padding:10px 18px;border-radius:5px 5px 0 0}
+.tabs a.on{background:var(--sky);color:var(--ink);font-weight:700}
+.search{margin-left:auto;width:360px;height:34px;background:#fff;border-radius:4px;color:var(--ink2);font-size:12.5px;display:flex;align-items:center;padding:0 12px}
+.page{display:grid;grid-template-columns:1fr 372px;gap:28px;padding:24px 40px}
+article{background:#fff;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.titlebar{background:#fff;padding:22px 34px 16px;border-bottom:3px solid var(--blue)}
+h1{font:400 38px/1.1 Georgia,serif}
+.meta{font-size:12px;color:var(--ink2);margin-top:8px}
+.body{padding:18px 34px 0;max-width:760px}
+.lead{font:17px/1.6 Georgia,serif;color:var(--ink)}
+h2{font:700 15px Verdana;color:var(--blue);margin:20px 0 6px}
+p{margin-bottom:6px}
+a.in{color:var(--blue);text-decoration:underline;text-underline-offset:2px}
+.gap{background:#fff6dc;border:1px solid #ecd28a;border-radius:4px;padding:10px 14px;margin-top:8px}
+.gap strong{display:block}
+.gap a{font-weight:700;color:var(--blue);font-size:12.5px}
+aside .box{background:#fff;border:1px solid var(--line);border-radius:6px;margin-bottom:18px;overflow:hidden}
+.box h3{background:var(--blue);color:#fff;font:700 13px Verdana;padding:9px 14px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+td{padding:6px 14px;border-top:1px solid #edf0f8}
+td:first-child{color:var(--ink2);width:46%}
+td:last-child{font-variant-numeric:tabular-nums;font-weight:700}
+.media{padding:12px 14px}
+.grid{display:grid;grid-template-columns:28px repeat(5,1fr);gap:2px;font-size:12px;color:var(--ink2)}
+.grid i{height:14px;border-radius:2px}
+.grid span{text-align:center}
+.f{background:var(--f)}.m{background:var(--m)}.s{background:var(--s)}.h{background:var(--h)}.l{background:var(--l)}.e{background:var(--e)}.a{background:var(--a)}
+.cap{font-size:12px;color:var(--ink2);margin-top:8px}
+.see a{display:block;padding:7px 14px;border-top:1px solid #edf0f8;color:var(--blue);font-size:13px}
+</style></head>
+<body>
+<header>
+  <div class="brand">Edu<b>Plan</b></div>
+  <nav class="tabs"><a class="on" href="#">Accueil</a><a href="#">Structure</a><a href="#">Planification</a><a href="#">Réglages</a></nav>
+  <div class="search">Rechercher dans l'école…</div>
+</header>
+<div class="page">
+  <article>
+    <div class="titlebar">
+      <h1>École Internationale de Dakar</h1>
+      <div class="meta">Article de l'école · Année scolaire 2025-2026 · Mis à jour mardi 21 octobre</div>
+    </div>
+    <div class="body">
+      <p class="lead">L'École Internationale de Dakar accueille 480 élèves dans 24 classes, du CP à la Terminale. Ses 17 enseignants couvrent 19 matières, sur 40 créneaux par semaine.</p>
+      <h2>Structure</h2>
+      <p>Le <a class="in" href="#">Primaire</a> compte 10 classes, du CP au CM2. Le <a class="in" href="#">Secondaire</a> en compte 14, de la 6ème à la Terminale, chacune en sections A et B.</p>
+      <h2>Corps enseignant</h2>
+      <p>Chaque matière a un enseignant qualifié. Trois enseignants portent pourtant 50 heures ou plus par semaine.</p>
+      <div class="gap"><strong>Charge à répartir</strong>Aminata Sow, français secondaire : 70 h · Marie Diop, français primaire : 60 h · Amadou Ba, maths primaire : 50 h<br><a href="#">Répartir la charge</a></div>
+      <h2>Emploi du temps</h2>
+      <p>Les journées vont de 8 h à 16 h 50 : huit périodes de 50 minutes, deux pauses et la pause de midi. Voir les <a class="in" href="#">emplois du temps</a> ou les <a class="in" href="#">disponibilités</a> des enseignants.</p>
+    </div>
+  </article>
+  <aside>
+    <div class="box"><h3>Fiche</h3><table>
+      <tr><td>Code</td><td>DAKAR-INT-2025</td></tr>
+      <tr><td>Année</td><td>2025-2026</td></tr>
+      <tr><td>Niveaux</td><td>Primaire, Secondaire</td></tr>
+      <tr><td>Classes</td><td>24</td></tr>
+      <tr><td>Élèves</td><td>480</td></tr>
+      <tr><td>Enseignants</td><td>17</td></tr>
+      <tr><td>Matières</td><td>19</td></tr>
+      <tr><td>Créneaux / semaine</td><td>40</td></tr>
+    </table></div>
+    <div class="box"><h3>Média : CM2 A, semaine 8</h3><div class="media">
+      <div class="grid"><span></span><span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span>
+      <span>8h</span><i class="m"></i><i class="f"></i><i class="m"></i><i class="f"></i><i class="m"></i>
+      <span>9h</span><i class="m"></i><i class="m"></i><i class="f"></i><i class="m"></i><i class="f"></i>
+      <span>10h</span><i class="f"></i><i class="m"></i><i class="f"></i><i class="s"></i><i class="h"></i>
+      <span>11h</span><i class="f"></i><i class="s"></i><i class="h"></i><i class="a"></i><i class="s"></i>
+      <span>12h</span><i class="h"></i><i class="h"></i><i class="l"></i><i class="h"></i><i class="l"></i>
+      <span>14h</span><i class="l"></i><i class="e"></i><i class="s"></i><i class="l"></i><i class="a"></i>
+      <span>15h</span><i class="s"></i><i class="l"></i><i class="e"></i><i class="e"></i><i class="e"></i>
+      <span>16h</span><i class="a"></i><i class="a"></i><i class="m"></i><i class="f"></i><i class="m"></i></div>
+      <div class="cap">Chaque couleur est une famille de matières.</div></div></div>
+    <div class="box see"><h3>Voir aussi</h3><a href="#">Classes</a><a href="#">Matières</a><a href="#">Enseignants</a><a href="#">Invitations</a></div>
+  </aside>
+</div>
+</body></html>

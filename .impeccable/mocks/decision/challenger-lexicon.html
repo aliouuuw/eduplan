@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Le Lexique</title>
+<style>
+:root{--ink:#1b1a17;--ink2:#4a463d;--paper:#f1ead9;--rule:#1b1a17;
+--v:#d8432b;--y:#e8b81f;--g:#1f8a5b;--u:#24479c;--r:#b8456b;--s:#7a5a3a;--p:#7a3f8f}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1440px;height:900px;overflow:hidden;background:var(--paper);color:var(--ink);font:16.5px/1.5 Georgia,serif}
+::selection{background:var(--y)}
+.bar{display:flex;align-items:center;gap:28px;padding:16px 56px;font:13px Verdana,sans-serif}
+.bar b{font:italic 700 22px Georgia,serif;margin-right:12px}
+.bar a{color:var(--ink);text-decoration:none}
+.bar a.on{text-decoration:underline;text-underline-offset:4px}
+.bar .q{margin-left:auto;width:320px;border-bottom:1.5px solid var(--ink);padding:4px 0;color:var(--ink2)}
+.head{display:flex;justify-content:space-between;align-items:baseline;margin:0 56px;padding:8px 0;border-top:2px solid var(--rule);border-bottom:1px solid var(--rule);font:700 14px Georgia,serif;letter-spacing:.04em}
+.head span:nth-child(2){font-weight:400;font-style:italic;letter-spacing:0}
+.sheet{display:grid;grid-template-columns:150px 620px 1fr;gap:40px;padding:22px 56px 0}
+.shoulder{font:13px Verdana,sans-serif}
+.shoulder p{padding:6px 0;border-bottom:1px solid #cfc6b0}
+.shoulder p s{color:var(--ink2)}
+.shoulder p.cur{font-weight:700}
+.entry{margin-bottom:14px}
+.entry .w{font-weight:700;font-size:20px}
+.entry .g{font-style:italic;color:var(--ink2)}
+.entry.lead{border-bottom:1px solid var(--rule);padding-bottom:14px}
+.entry.lead .w{font-size:28px}
+.entry a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.note{font:13px Verdana,sans-serif;color:#9e2c17;font-weight:700}
+.plate{border:1.5px solid var(--ink);padding:14px;background:#f7f1e2}
+.plate h3{font:italic 400 15px Georgia,serif;text-align:center;margin-bottom:10px}
+.pg{display:grid;grid-template-columns:34px repeat(5,1fr);gap:3px;font:12px Verdana,sans-serif;color:var(--ink2)}
+.pg span{text-align:center}
+.pg i{height:26px}
+.f{background:var(--r)}.m{background:var(--u)}.s{background:var(--g)}.h{background:var(--s)}.l{background:var(--y)}.e{background:var(--v)}.a{background:var(--p)}
+.key{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-top:12px;font:12px Verdana,sans-serif}
+.key span::before{content:"";display:inline-block;width:10px;height:10px;margin-right:6px;background:var(--c)}
+.fig{font:italic 13px Georgia,serif;text-align:center;margin-top:10px;color:var(--ink2)}
+</style></head>
+<body>
+<div class="bar"><b>EduPlan</b><a class="on" href="#">Accueil</a><a href="#">Structure</a><a href="#">Planification</a><a href="#">Réglages</a><span class="q">Chercher une entrée…</span></div>
+<div class="head"><span>CM1 A</span><span>École Internationale de Dakar, 2025-2026</span><span>CM2 B</span></div>
+<div class="sheet">
+  <div class="shoulder">
+    <p><s>Primaire</s></p><p class="cur">CM1 – CM2</p><p>CP – CE2</p><p>Secondaire</p><p>6ème – 3ème</p><p>2nde – Terminale</p>
+  </div>
+  <div>
+    <div class="entry lead"><span class="w">CM2 A</span> <span class="g">n. f., Primaire.</span> 32 places, 20 élèves inscrits. Français 6 h, mathématiques 5 h, sciences 3 h, histoire-géographie 3 h, anglais 3 h, EPS 3 h, arts 2 h, musique 2 h ; soit 27 h sur 40 créneaux. Enseignants : Marie Diop, Amadou Ba, Fatou Sall, Khady Gueye. <a href="#">Emploi du temps</a>.<br><span class="note">Français : Marie Diop porte 60 h par semaine sur dix classes.</span></div>
+    <div class="entry"><span class="w">CM2 B</span> <span class="g">n. f., Primaire.</span> 32 places, 20 élèves. Mêmes matières et mêmes enseignants que CM2 A. <a href="#">Emploi du temps</a>.</div>
+    <div class="entry"><span class="w">CM1 A</span> <span class="g">n. f., Primaire.</span> 30 places, 20 élèves. <a href="#">Voir l'entrée</a>.</div>
+    <div class="entry"><span class="w">CM1 B</span> <span class="g">n. f., Primaire.</span> 30 places, 20 élèves. <a href="#">Voir l'entrée</a>.</div>
+  </div>
+  <div>
+    <div class="plate"><h3>Planche I. Semaine 8 de CM2 A</h3>
+      <div class="pg"><span></span><span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span>
+      <span>8h</span><i class="m"></i><i class="f"></i><i class="m"></i><i class="f"></i><i class="m"></i>
+      <span>9h</span><i class="m"></i><i class="m"></i><i class="f"></i><i class="m"></i><i class="f"></i>
+      <span>10h</span><i class="f"></i><i class="m"></i><i class="f"></i><i class="s"></i><i class="h"></i>
+      <span>11h</span><i class="f"></i><i class="s"></i><i class="h"></i><i class="a"></i><i class="s"></i>
+      <span>12h</span><i class="h"></i><i class="h"></i><i class="l"></i><i class="h"></i><i class="l"></i>
+      <span>14h</span><i class="l"></i><i class="e"></i><i class="s"></i><i class="l"></i><i class="a"></i>
+      <span>15h</span><i class="s"></i><i class="l"></i><i class="e"></i><i class="e"></i><i class="e"></i>
+      <span>16h</span><i class="a"></i><i class="a"></i><i class="m"></i><i class="f"></i><i class="m"></i></div>
+      <div class="key"><span style="--c:var(--r)">Français</span><span style="--c:var(--u)">Mathématiques</span><span style="--c:var(--g)">Sciences</span><span style="--c:var(--s)">Histoire-géo</span><span style="--c:var(--y)">Anglais</span><span style="--c:var(--v)">EPS</span><span style="--c:var(--p)">Arts, musique</span></div>
+    </div>
+    <p class="fig">Les couleurs ne vivent que dans les planches.</p>
+  </div>
+</div>
+</body></html>

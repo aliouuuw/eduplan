@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>La Frise de la semaine</title>
+<style>
+:root{--blue:#1f3c9b;--blue-d:#172e78;--blue-l:#e8edf9;--gold:#f2b631;--ink:#14183a;--ink2:#3f4566;--line:#d9dff0;
+--f:#c2367a;--m:#2f6fd0;--s:#3a9a3a;--h:#a8432a;--l:#1a9a9a;--p:#6c3fa0;--e:#8bb21f;--a:#d23b2f}
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1440px;height:900px;overflow:hidden;font:13px/1.45 Verdana,Tahoma,sans-serif;color:var(--ink);background:#f5f7fc;display:flex}
+::selection{background:var(--gold);color:var(--ink)}
+.rail{width:232px;background:var(--blue);color:#dfe6fb;display:flex;flex-direction:column;padding:22px 0}
+.brand{font:italic 700 26px Georgia,serif;color:#fff;padding:0 22px 22px}
+.brand b{color:var(--gold);font-style:normal}
+.grp{font-size:12px;color:#c9d3f3;padding:16px 22px 6px}
+.nav a{display:block;color:#dfe6fb;text-decoration:none;padding:7px 22px;font-size:12.5px}
+.nav a.on{background:var(--blue-d);color:#fff;font-weight:700}
+.me{margin-top:auto;padding:14px 22px;border-top:1px solid #34509f;font-size:12px}
+.me small{display:block;color:#c9d3f3}
+main{flex:1;display:flex;flex-direction:column;min-width:0}
+.top{height:58px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:20px;padding:0 32px}
+.search{flex:0 0 460px;height:34px;border:2px solid var(--blue);border-radius:4px;display:flex;align-items:center;padding:0 12px;color:var(--ink2);font-size:12.5px}
+.top .sch{margin-left:auto;font-size:12px;color:var(--ink2)}
+.top .sch b{color:var(--ink)}
+.wrap{padding:22px 32px 0}
+h1{font:400 30px/1.1 Georgia,serif;color:var(--ink)}
+.sub{color:var(--ink2);font-size:12.5px;margin-top:6px}
+.frise{margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px 18px 12px;position:relative}
+.days{display:grid;grid-template-columns:110px repeat(5,1fr);gap:6px;margin-bottom:6px}
+.days span{font:700 12px Verdana;color:#fff;padding:5px 8px;border-radius:3px;background:var(--blue)}
+.days span:nth-child(odd){background:#2d4cb0}
+.days span.today{background:var(--gold);color:var(--ink)}
+.days span:first-child{background:none;color:var(--ink2);font-weight:400}
+.row{display:grid;grid-template-columns:110px repeat(5,1fr);gap:6px;align-items:center;margin-top:5px}
+.row b{font-size:12px;font-weight:700}
+.d{display:grid;grid-template-columns:repeat(8,1fr);gap:2px}
+.d i{height:20px;border-radius:2px}
+.f{background:var(--f)}.m{background:var(--m)}.s{background:var(--s)}.h{background:var(--h)}.l{background:var(--l)}.p{background:var(--p)}.e{background:var(--e)}.a{background:var(--a)}
+.x{background:repeating-linear-gradient(135deg,#fff 0 3px,#c9cfdf 3px 5px);outline:1px solid #c9cfdf;outline-offset:-1px}
+.lane{font-size:12px;color:var(--ink2);margin-top:10px}
+.now{position:absolute;top:44px;bottom:38px;left:calc(18px + 110px + 6px + (100% - 36px - 110px - 30px)/5 + 6px + ((100% - 36px - 110px - 30px)/5)*0.3);width:2px;background:var(--ink)}
+.now em{position:absolute;top:-16px;left:-22px;font:700 12px Verdana;font-style:normal;background:var(--ink);color:#fff;padding:1px 5px;border-radius:2px;white-space:nowrap}
+.legend{display:flex;gap:16px;margin-top:12px;font-size:12px;color:var(--ink2)}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px;background:var(--c)}
+.below{display:grid;grid-template-columns:1.35fr 1fr .8fr;gap:36px;margin-top:22px}
+h2{font:400 19px Georgia,serif;margin-bottom:10px}
+.todo li{list-style:none;padding:10px 0;border-top:1px solid var(--line)}
+.todo li strong{display:block;font-size:13px}
+.todo li span{font-size:12px;color:var(--ink2)}
+.todo li a{font-size:12px;color:var(--blue);font-weight:700}
+.todo li.done{color:var(--ink2);position:relative}
+.todo li.done strong{text-decoration:line-through;text-decoration-color:var(--ink2)}
+.stamp{position:absolute;right:4px;top:12px;font:700 12px Verdana;color:#256b25;border:2px solid #256b25;padding:2px 8px;border-radius:3px;transform:rotate(-6deg)}
+.nums{display:grid;grid-template-columns:1fr 1fr;row-gap:14px}
+.nums div{font:400 46px/1 Georgia,serif;color:var(--blue)}
+.nums small{display:block;font:12px Verdana;color:var(--ink2);margin-top:4px}
+.quick a{display:block;padding:9px 0;border-top:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:13px}
+.quick a small{display:block;color:var(--ink2);font-size:12px}
+.btn{display:inline-block;margin-top:14px;background:var(--gold);color:var(--ink);font:700 12.5px Verdana;padding:9px 16px;border-radius:4px;text-decoration:none}
+</style></head>
+<body>
+<nav class="rail">
+  <div class="brand">Edu<b>Plan</b></div>
+  <div class="nav">
+    <a class="on" href="#">Accueil</a>
+    <div class="grp">Structure</div>
+    <a href="#">Groupes de classes</a><a href="#">Classes</a><a href="#">Matières</a><a href="#">Enseignants</a>
+    <div class="grp">Planification</div>
+    <a href="#">Modèles</a><a href="#">Créneaux</a><a href="#">Emplois du temps</a>
+    <div class="grp">Réglages</div>
+    <a href="#">Utilisateurs</a><a href="#">Invitations</a>
+  </div>
+  <div class="me">Admin Dakar<small>Administration</small></div>
+</nav>
+<main>
+  <div class="top">
+    <div class="search">Rechercher une classe, une matière, un enseignant…</div>
+    <div class="sch"><b>École Internationale de Dakar</b> · 2025-2026</div>
+  </div>
+  <div class="wrap">
+    <h1>Mardi 21 octobre</h1>
+    <p class="sub">Semaine 8 · 40 créneaux par classe · 6 classes affichées sur 24</p>
+    <section class="frise">
+      <div class="days"><span>Classe</span><span>Lundi</span><span class="today">Mardi</span><span>Mercredi</span><span>Jeudi</span><span>Vendredi</span></div>
+      <div class="lane">Primaire</div>
+      <div class="row"><b>CP A</b><div class="d"><i class="f"></i><i class="f"></i><i class="m"></i><i class="m"></i><i class="s"></i><i class="a"></i><i class="e"></i><i class="l"></i></div><div class="d"><i class="f"></i><i class="m"></i><i class="m"></i><i class="h"></i><i class="f"></i><i class="a"></i><i class="s"></i><i class="e"></i></div><div class="d"><i class="f"></i><i class="f"></i><i class="m"></i><i class="l"></i><i class="h"></i><i class="a"></i><i class="s"></i><i class="f"></i></div><div class="d"><i class="m"></i><i class="f"></i><i class="h"></i><i class="s"></i><i class="e"></i><i class="l"></i><i class="a"></i><i class="m"></i></div><div class="d"><i class="f"></i><i class="m"></i><i class="l"></i><i class="h"></i><i class="s"></i><i class="e"></i><i class="a"></i><i class="f"></i></div></div>
+      <div class="row"><b>CM2 B</b><div class="d"><i class="m"></i><i class="m"></i><i class="f"></i><i class="f"></i><i class="h"></i><i class="l"></i><i class="s"></i><i class="a"></i></div><div class="d"><i class="f"></i><i class="x"></i><i class="m"></i><i class="s"></i><i class="h"></i><i class="e"></i><i class="l"></i><i class="a"></i></div><div class="d"><i class="m"></i><i class="f"></i><i class="f"></i><i class="h"></i><i class="l"></i><i class="s"></i><i class="e"></i><i class="m"></i></div><div class="d"><i class="f"></i><i class="m"></i><i class="s"></i><i class="a"></i><i class="h"></i><i class="l"></i><i class="e"></i><i class="f"></i></div><div class="d"><i class="m"></i><i class="f"></i><i class="h"></i><i class="s"></i><i class="l"></i><i class="a"></i><i class="e"></i><i class="m"></i></div></div>
+      <div class="lane">Secondaire</div>
+      <div class="row"><b>6ème A</b><div class="d"><i class="f"></i><i class="m"></i><i class="s"></i><i class="h"></i><i class="l"></i><i class="l"></i><i class="e"></i><i class="m"></i></div><div class="d"><i class="m"></i><i class="f"></i><i class="h"></i><i class="s"></i><i class="l"></i><i class="e"></i><i class="f"></i><i class="m"></i></div><div class="d"><i class="s"></i><i class="m"></i><i class="f"></i><i class="h"></i><i class="l"></i><i class="m"></i><i class="e"></i><i class="f"></i></div><div class="d"><i class="f"></i><i class="h"></i><i class="m"></i><i class="l"></i><i class="s"></i><i class="f"></i><i class="m"></i><i class="e"></i></div><div class="d"><i class="m"></i><i class="f"></i><i class="s"></i><i class="h"></i><i class="l"></i><i class="l"></i><i class="m"></i><i class="f"></i></div></div>
+      <div class="row"><b>3ème B</b><div class="d"><i class="m"></i><i class="s"></i><i class="f"></i><i class="l"></i><i class="h"></i><i class="e"></i><i class="m"></i><i class="f"></i></div><div class="d"><i class="s"></i><i class="m"></i><i class="x"></i><i class="f"></i><i class="h"></i><i class="l"></i><i class="e"></i><i class="m"></i></div><div class="d"><i class="f"></i><i class="m"></i><i class="h"></i><i class="s"></i><i class="l"></i><i class="f"></i><i class="m"></i><i class="e"></i></div><div class="d"><i class="m"></i><i class="f"></i><i class="s"></i><i class="l"></i><i class="h"></i><i class="m"></i><i class="f"></i><i class="l"></i></div><div class="d"><i class="s"></i><i class="f"></i><i class="m"></i><i class="h"></i><i class="e"></i><i class="l"></i><i class="m"></i><i class="f"></i></div></div>
+      <div class="row"><b>1ère A</b><div class="d"><i class="p"></i><i class="m"></i><i class="s"></i><i class="f"></i><i class="l"></i><i class="h"></i><i class="p"></i><i class="e"></i></div><div class="d"><i class="m"></i><i class="p"></i><i class="f"></i><i class="s"></i><i class="h"></i><i class="l"></i><i class="m"></i><i class="e"></i></div><div class="d"><i class="f"></i><i class="m"></i><i class="p"></i><i class="l"></i><i class="s"></i><i class="h"></i><i class="m"></i><i class="f"></i></div><div class="d"><i class="s"></i><i class="m"></i><i class="h"></i><i class="p"></i><i class="f"></i><i class="l"></i><i class="e"></i><i class="m"></i></div><div class="d"><i class="m"></i><i class="f"></i><i class="p"></i><i class="h"></i><i class="l"></i><i class="s"></i><i class="m"></i><i class="p"></i></div></div>
+      <div class="row"><b>Terminale B</b><div class="d"><i class="p"></i><i class="p"></i><i class="m"></i><i class="h"></i><i class="l"></i><i class="s"></i><i class="e"></i><i class="m"></i></div><div class="d"><i class="m"></i><i class="p"></i><i class="h"></i><i class="l"></i><i class="p"></i><i class="s"></i><i class="m"></i><i class="e"></i></div><div class="d"><i class="p"></i><i class="m"></i><i class="l"></i><i class="h"></i><i class="s"></i><i class="m"></i><i class="p"></i><i class="f"></i></div><div class="d"><i class="m"></i><i class="h"></i><i class="p"></i><i class="s"></i><i class="l"></i><i class="m"></i><i class="e"></i><i class="p"></i></div><div class="d"><i class="p"></i><i class="m"></i><i class="h"></i><i class="l"></i><i class="s"></i><i class="p"></i><i class="m"></i><i class="h"></i></div></div>
+      <div class="now"><em>10:00</em></div>
+      <div class="legend"><span style="--c:var(--f)">Français</span><span style="--c:var(--m)">Maths, physique, info</span><span style="--c:var(--s)">Sciences de la vie</span><span style="--c:var(--h)">Histoire-géo</span><span style="--c:var(--l)">Langues</span><span style="--c:var(--p)">Philo, éco</span><span style="--c:var(--e)">EPS</span><span style="--c:var(--a)">Arts, musique</span><span style="--c:#c9cfdf">Sans enseignant</span></div>
+    </section>
+    <div class="below">
+      <section><h2>À régler</h2><ul class="todo">
+        <li><strong>Français, Primaire : 60 h par semaine pour 1 enseignante</strong><span>Marie Diop · CP A, CP B, CE1 A, CE1 B, CE2 A, CE2 B, CM1 A, CM1 B, CM2 A, CM2 B</span><br><a href="#">Répartir la charge</a></li>
+        <li><strong>Français, Secondaire : 70 h par semaine pour 1 enseignante</strong><span>Aminata Sow · 14 classes de la 6ème à la Terminale</span><br><a href="#">Répartir la charge</a></li>
+        <li class="done"><strong>Créneaux 2025-2026 publiés</strong><span>40 créneaux par semaine, pauses incluses</span><b class="stamp">Réglé</b></li>
+      </ul></section>
+      <section><h2>L'école en chiffres</h2><div class="nums">
+        <div>24<small>classes, du CP à la Terminale</small></div><div>480<small>élèves inscrits</small></div>
+        <div>17<small>enseignants</small></div><div>19<small>matières</small></div></div></section>
+      <section><h2>Accès rapide</h2><div class="quick">
+        <a href="#">Emplois du temps<small>Construire ou corriger une semaine</small></a>
+        <a href="#">Disponibilités<small>Qui peut enseigner quand</small></a>
+        <a href="#">Invitations<small>Ajouter un enseignant ou un parent</small></a></div>
+        <a class="btn" href="#">Lancer la planification</a></section>
+    </div>
+  </div>
+</main>
+</body></html>

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>EduPlan · Direction 2 : LearnUp Soft Sky (Mobile 390×844)</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sheet: #ffffff;
+  --sky-soft: #eef4fc;
+  --sky-card: #e1ecfa;
+  --cobalt: #1d5bd6;
+  --cobalt-ink: #0f3685;
+  --coral: #b82921;
+  --coral-soft: #fdeceb;
+  --mint: #147a52;
+  --mint-soft: #e2f5ed;
+  --amber: #8f5106;
+  --amber-soft: #fef3de;
+  --ink: #151922;
+  --ink-2: #464f61;
+  --meta: #5b6578;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+button { font-family: inherit; }
+body {
+  width: 390px; height: 844px; overflow: hidden;
+  background: var(--sheet); color: var(--ink);
+  font-family: "Manrope", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  display: flex; flex-direction: column; padding: 14px 16px; gap: 12px;
+}
+h1, .big { font-family: "Outfit", system-ui, sans-serif; }
+.top { display: flex; justify-content: space-between; align-items: center; }
+.circle-btn {
+  width: 40px; height: 40px; border-radius: 50%; background: var(--sky-soft);
+  display: grid; place-items: center; font-weight: 700; color: var(--ink);
+}
+.circle-btn svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; }
+.top b { font-size: 16px; font-weight: 700; }
+
+/* Vertical Capsule Day Picker from Image 2 */
+.capsule-days { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.day-cap {
+  background: var(--sky-soft); border-radius: 99px; padding: 8px 0;
+  text-align: center; display: flex; flex-direction: column; align-items: center;
+  gap: 3px; font-size: 12px; font-weight: 600; color: var(--meta);
+}
+.day-cap b {
+  width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 13px; font-weight: 700; color: var(--ink);
+}
+.day-cap.active { background: var(--cobalt); color: #fff; }
+.day-cap.active b { background: #fff; color: var(--cobalt); }
+
+.banner {
+  background: var(--sky-card);
+  border-radius: 22px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
+}
+.banner h1 { font-size: 19px; font-weight: 700; }
+.banner p { font-size: 12.5px; color: var(--ink-2); margin-top: 2px; font-weight: 600; }
+.pill-tally {
+  background: var(--sheet); padding: 6px 12px; border-radius: 99px;
+  font-size: 13px; font-weight: 700; color: var(--cobalt-ink);
+}
+
+.list {
+  flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 7px;
+}
+.row-card {
+  background: var(--sky-soft); border-radius: 18px; padding: 9px 12px;
+  display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 10px;
+}
+.row-card.abs { background: var(--coral-soft); }
+.row-card.late { background: var(--amber-soft); }
+.av {
+  width: 36px; height: 36px; border-radius: 50%; background: var(--sheet);
+  display: grid; place-items: center; font-size: 12.5px; font-weight: 700; color: var(--cobalt-ink);
+}
+.row-card b { font-size: 14px; font-weight: 700; display: block; }
+.row-card small { display: block; font-size: 12px; color: var(--meta); font-weight: 500; }
+.row-card.abs small { color: var(--coral); font-weight: 600; }
+.row-card.late small { color: var(--amber); font-weight: 600; }
+.seg { display: flex; gap: 3px; background: var(--sheet); padding: 3px; border-radius: 99px; }
+.seg i {
+  font-style: normal; width: 30px; height: 28px; border-radius: 99px;
+  display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--ink-2);
+}
+.seg i.p { background: var(--cobalt); color: #fff; }
+.seg i.a { background: var(--coral); color: #fff; }
+.seg i.r { background: var(--amber); color: #fff; }
+
+.cta {
+  height: 52px; border-radius: 99px; background: var(--ink); color: #fff;
+  border: 0; font-size: 15px; font-weight: 700; width: 100%;
+}
+</style>
+</head>
+<body>
+  <header class="top">
+    <span class="circle-btn"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></span>
+    <b>Appel · 3ème B (Salle 7)</b>
+    <span class="circle-btn"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
+  </header>
+
+  <div class="capsule-days">
+    <div class="day-cap">Sam<b>24</b></div>
+    <div class="day-cap">Dim<b>25</b></div>
+    <div class="day-cap active"><b>26</b>Lun</div>
+    <div class="day-cap">Mar<b>27</b></div>
+    <div class="day-cap">Mer<b>28</b></div>
+    <div class="day-cap">Jeu<b>29</b></div>
+  </div>
+
+  <section class="banner">
+    <div>
+      <h1>Mathématiques · 10:00</h1>
+      <p>29 présents · 1 absent · 1 retard</p>
+    </div>
+    <span class="pill-tally">29 / 31</span>
+  </section>
+
+  <section class="list">
+    <div class="row-card">
+      <div class="av">AB</div>
+      <div><b>Aminata Ba</b><small>Présente</small></div>
+      <div class="seg"><i class="p">P</i><i>A</i><i>R</i></div>
+    </div>
+    <div class="row-card">
+      <div class="av">CD</div>
+      <div><b>Cheikh Diallo</b><small>Présent</small></div>
+      <div class="seg"><i class="p">P</i><i>A</i><i>R</i></div>
+    </div>
+    <div class="row-card abs">
+      <div class="av" style="color:var(--coral)">IF</div>
+      <div><b>Ibrahima Fall</b><small>Justifié par la famille</small></div>
+      <div class="seg"><i>P</i><i class="a">A</i><i>R</i></div>
+    </div>
+    <div class="row-card">
+      <div class="av">KG</div>
+      <div><b>Khadija Gueye</b><small>Présente</small></div>
+      <div class="seg"><i class="p">P</i><i>A</i><i>R</i></div>
+    </div>
+    <div class="row-card late">
+      <div class="av" style="color:var(--amber)">OM</div>
+      <div><b>Ousmane Mbaye</b><small>Retard +5 min (10:05)</small></div>
+      <div class="seg"><i>P</i><i>A</i><i class="r">R</i></div>
+    </div>
+    <div class="row-card">
+      <div class="av">MN</div>
+      <div><b>Mariama Ndiaye</b><small>Présente</small></div>
+      <div class="seg"><i class="p">P</i><i>A</i><i>R</i></div>
+    </div>
+    <div class="row-card">
+      <div class="av">SS</div>
+      <div><b>Seydou Sow</b><small>Présent</small></div>
+      <div class="seg"><i class="p">P</i><i>A</i><i>R</i></div>
+    </div>
+  </section>
+
+  <button class="cta">Valider l'appel de 10:00</button>
+</body>
+</html>

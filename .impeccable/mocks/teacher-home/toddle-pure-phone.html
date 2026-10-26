@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>EduPlan · Direction 1 : EdTech Progress Studio (Mobile 390×844)</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ground: #f2f4f7;
+  --surface: #ffffff;
+  --subtle: #f6f8fa;
+  --ink: #141619;
+  --ink-2: #48505c;
+  --meta: #5c6573;
+  --line: #e6e9ef;
+  --orange: #c24116;
+  --orange-soft: #fdece6;
+  --mint: #0f6e4f;
+  --mint-soft: #def5ec;
+  --amber: #8a5108;
+  --amber-soft: #fef2db;
+  --rose: #a82231;
+  --rose-soft: #fce8ea;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+button { font-family: inherit; }
+body {
+  width: 390px; height: 844px; overflow: hidden;
+  background: var(--ground); color: var(--ink);
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  display: flex; flex-direction: column; padding: 14px 16px; gap: 12px;
+}
+h1, .num { font-family: "Outfit", system-ui, sans-serif; }
+.topbar { display: flex; justify-content: space-between; align-items: center; }
+.circle-btn {
+  width: 38px; height: 38px; border-radius: 50%; background: var(--surface);
+  display: grid; place-items: center; color: var(--ink);
+  border: 1px solid var(--line);
+}
+.circle-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.2; }
+.topbar b { font-size: 15px; font-weight: 700; }
+
+.mint-card {
+  background: var(--mint-soft);
+  border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px;
+}
+.mint-top { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; font-weight: 700; color: #0b4a35; }
+.mint-card h1 { font-size: 22px; font-weight: 700; color: var(--ink); }
+.mint-stat { display: flex; align-items: baseline; justify-content: space-between; }
+.mint-stat .num { font-size: 30px; font-weight: 700; }
+.mint-stat span { font-size: 12.5px; font-weight: 600; color: #0b4a35; }
+.bar { height: 9px; border-radius: 99px; background: #bfe8d7; overflow: hidden; }
+.bar i { display: block; width: 93%; height: 100%; background: var(--mint); border-radius: 99px; }
+
+.list-panel {
+  flex: 1; background: var(--surface); border-radius: 22px; padding: 12px;
+  display: flex; flex-direction: column; justify-content: space-between; gap: 7px;
+  border: 1px solid var(--line);
+}
+.st-item {
+  border: 1px solid var(--line); border-radius: 15px; padding: 8px 11px;
+  display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 10px;
+}
+.st-item.abs { background: var(--rose-soft); border-color: #f7c8ce; }
+.st-item.late { background: var(--amber-soft); border-color: #f6dca8; }
+.av {
+  width: 36px; height: 36px; border-radius: 11px; background: var(--subtle);
+  display: grid; place-items: center; font-size: 12.5px; font-weight: 700; color: var(--ink-2);
+}
+.st-item b { font-size: 14px; font-weight: 700; display: block; }
+.st-item small { font-size: 12px; color: var(--meta); display: block; margin-top: 1px; font-weight: 500; }
+.st-item.abs small { color: var(--rose); font-weight: 600; }
+.st-item.late small { color: var(--amber); font-weight: 600; }
+.seg { display: flex; gap: 3px; background: var(--subtle); padding: 3px; border-radius: 10px; }
+.seg i {
+  font-style: normal; width: 29px; height: 28px; border-radius: 7px;
+  display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--ink-2);
+}
+.seg i.p { background: var(--mint); color: #fff; }
+.seg i.a { background: var(--rose); color: #fff; }
+.seg i.r { background: var(--amber); color: #fff; }
+
+.cta {
+  height: 52px; border-radius: 99px; background: var(--ink); color: #fff;
+  border: 0; font-size: 15px; font-weight: 700; width: 100%;
+}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <span class="circle-btn"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></span>
+    <b>Appel · 10:00 Salle 7</b>
+    <span class="circle-btn"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+  </header>
+
+  <section class="mint-card">
+    <div class="mint-top">
+      <span>EN DIRECT · 10:00 – 11:00</span>
+      <span>Mathématiques</span>
+    </div>
+    <h1>3ème B · 31 élèves</h1>
+    <div class="mint-stat">
+      <div><span class="num">29/31</span> <span>présents</span></div>
+      <span>1 absent · 1 retard</span>
+    </div>
+    <div class="bar"><i></i></div>
+  </section>
+
+  <section class="list-panel">
+    <div class="st-item">
+      <div class="av">AB</div>
+      <div><b>Aminata Ba</b><small>Présente · 10:00</small></div>
+      <div class="seg"><i class="p">P</i><i>A</i><i>R</i></div>
+    </div>
+    <div class="st-item">
+      <div class="av">CD</div>
+      <div><b>Cheikh Diallo</b><small>Présent · 10:00</small></div>
+      <div class="seg"><i class="p">P</i><i>A</i><i>R</i></div>
+    </div>
+    <div class="st-item abs">
+      <div class="av" style="background:#fff;color:var(--rose)">IF</div>
+      <div><b>Ibrahima Fall</b><small>Justifié par la famille</small></div>
+      <div class="seg"><i>P</i><i class="a">A</i><i>R</i></div>
+    </div>
+    <div class="st-item">
+      <div class="av">KG</div>
+      <div><b>Khadija Gueye</b><small>Présente · 10:00</small></div>
+      <div class="seg"><i class="p">P</i><i>A</i><i>R</i></div>
+    </div>
+    <div class="st-item late">
+      <div class="av" style="background:#fff;color:var(--amber)">OM</div>
+      <div><b>Ousmane Mbaye</b><small>Retard +5 min (10:05)</small></div>
+      <div class="seg"><i>P</i><i>A</i><i class="r">R</i></div>
+    </div>
+    <div class="st-item">
+      <div class="av">MN</div>
+      <div><b>Mariama Ndiaye</b><small>Présente · 10:00</small></div>
+      <div class="seg"><i class="p">P</i><i>A</i><i>R</i></div>
+    </div>
+    <div class="st-item">
+      <div class="av">SS</div>
+      <div><b>Seydou Sow</b><small>Présent · 10:00</small></div>
+      <div class="seg"><i class="p">P</i><i>A</i><i>R</i></div>
+    </div>
+  </section>
+
+  <button class="cta">Valider l'appel de 3ème B</button>
+</body>
+</html>

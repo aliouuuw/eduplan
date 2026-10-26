@@ -1,0 +1,259 @@
+{
+  "title": "EduPlan : choisir l'univers visuel (Accueil enseignant)",
+  "question": "Cinq directions d'univers (Desktop 1440×900 + Téléphone 390×844). Vous pouvez choisir une carte ou mixer dans le champ de commentaire (ex. « palette de L'Atelier, mise en page de L'Éphéméride »).",
+  "options": [
+    {
+      "id": "atelier",
+      "kind": "assigned",
+      "label": "L'Atelier Pédagogique",
+      "kicker": "THE ROLL",
+      "lineage": "Carnets d'atelier Toddle & Seesaw, gouaches douces et écussons de classe illustrés",
+      "thesis": "Un espace chaleureux à rail clair où le cours en direct ouvre la page avec son écusson géométrique.",
+      "palette": [
+        "#f7f4ee",
+        "#efeae1",
+        "#1f2421",
+        "#c85a32",
+        "#2a6f4e",
+        "#3b5998",
+        "#946210"
+      ],
+      "materials": [
+        "rail clair ton sur ton #efeae1",
+        "écussons géométriques par classe et aplats fonctionnels doux"
+      ],
+      "viewport": "Rail clair à gauche ; en-tête avec ruban du Trimestre 1 ; grande carte « En cours · 10:00 » (3ème B, Faire l'appel) accompagnée de la frise des 4 cours ; en bas, pile « À corriger », suivi des absences et cartes de classes vers le conseil.",
+      "risk": "La chaleur illustrée demande de la retenue sur les tableaux denses du carnet de notes.",
+      "raised": [
+        {
+          "from": "challenger-emission",
+          "raise": "L'état des cours se lit par la forme du trait sur le rail horaire (plein, doublé en cours, pointillé à venir) en plus de la teinte."
+        },
+        {
+          "from": "challenger-atlas",
+          "raise": "L'urgence suit une échelle fixe de diamètre de repères (appel ouvert > copies en retard > à venir)."
+        },
+        {
+          "from": "challenger-lexicon",
+          "raise": "Les consignes et appréciations tiennent une mesure stricte de 60 caractères avec repères de trimestre en tête."
+        },
+        {
+          "from": "challenger-feed",
+          "raise": "Une seule action prioritaire (« Faire l'appel · 3ème B ») domine le premier regard."
+        },
+        {
+          "from": "challenger-wallet",
+          "raise": "Les appels faits et absences justifiées restent visibles avec un cachet horodaté plutôt que de disparaître."
+        }
+      ],
+      "html": ".impeccable/mocks/teacher-home/atelier-desktop.html"
+    },
+    {
+      "id": "ephemeride",
+      "kind": "pick",
+      "kicker": "IMPECCABLE’S PICK",
+      "label": "L'Éphéméride Calme",
+      "lineage": "Agendas de bureau Things 3, Craft et papeterie Clairefontaine à marge calme",
+      "thesis": "Une feuille de route sereine, guidée par la typographie éditoriale et l'action immédiate.",
+      "palette": [
+        "#f6f7f9",
+        "#eef0f4",
+        "#18202c",
+        "#2563eb",
+        "#1f7a54",
+        "#b45309",
+        "#9d174d"
+      ],
+      "materials": [
+        "navigation latérale ultra-légère",
+        "typographie serif éditoriale Newsreader + Plus Jakarta Sans"
+      ],
+      "viewport": "Marge de navigation claire ; grande date éditoriale et carte prioritaire « Maintenant : 3ème B, Salle 7 — Faire l'appel » ; deux colonnes calmes (déroulé horaire et travaux à corriger) ; progression des classes vers le conseil en pied.",
+      "risk": "Direction proche des outils de productivité calmes ; l'identité scolaire repose sur le vocabulaire français et les teintes de fonction.",
+      "html": ".impeccable/mocks/teacher-home/ephemeride-desktop.html"
+    },
+    {
+      "id": "cartable",
+      "kind": "grounded",
+      "label": "Le Cartable à Onglets",
+      "lineage": "Chemises cartonnées par fonction et navigation haute à onglets colorés",
+      "thesis": "Zéro barre latérale : toute la largeur appartient au travail, organisée par chemises de fonction.",
+      "palette": [
+        "#f4f6f3",
+        "#ffffff",
+        "#1b2620",
+        "#236b48",
+        "#2d5299",
+        "#a8384b",
+        "#8f5e14"
+      ],
+      "materials": [
+        "barre haute à onglets chemises",
+        "4 colonnes du jour côte à côte + bento bas"
+      ],
+      "viewport": "Barre supérieure avec onglets de fonction et recherche ; bande horizontale des 4 cours du lundi (10:00 3ème B illuminé en sauge avec bouton d'appel) ; 3 modules côte à côte (À corriger, Absences à suivre, Vers le bulletin).",
+      "risk": "La barre haute limite le nombre d'entrées de premier niveau pour les rôles très riches comme l'admin.",
+      "html": ".impeccable/mocks/teacher-home/cartable-desktop.html"
+    },
+    {
+      "id": "carnet-vivant",
+      "kind": "grounded",
+      "label": "Le Carnet Vivant",
+      "lineage": "ClassDojo, Amie Calendar et les tableaux magnétiques de salle des profs",
+      "thesis": "Un dock flottant en pilule et un ruban chronologique vivant où classes et copies se manipulent comme des cartes.",
+      "palette": [
+        "#f5f3f7",
+        "#ffffff",
+        "#1e1b29",
+        "#0f6e66",
+        "#c94a29",
+        "#3855a6",
+        "#7d4e0d"
+      ],
+      "materials": [
+        "rail d'icônes flottant en pilule",
+        "blocs horaires proportionnels et pastilles d'élèves"
+      ],
+      "viewport": "Rail flottant compact à gauche ; frise chronologique à gauche avec curseur « 10:15 » sur 3ème B et appel en un clic ; à droite, cartes de correction avec jauges de copies et portraits d'élèves absents à suivre.",
+      "risk": "Le rail compact demande des infobulles claires lors de la prise en main.",
+      "html": ".impeccable/mocks/teacher-home/carnet-vivant-desktop.html"
+    },
+    {
+      "id": "challenger-plate",
+      "kind": "challenger",
+      "catalogId": "design-annual-s-plate-section",
+      "label": "La Planche d'Atelier",
+      "verdict": "competitive",
+      "lineage": "Planche d'annuaire de design sur papier non couché, repères de coupe et cachet de validation",
+      "thesis": "La journée de classe composée comme une planche d'architecte : repères précis, grille franche et cachet d'appel.",
+      "palette": [
+        "#f5f4f6",
+        "#faf6f5",
+        "#eef3ef",
+        "#16181a",
+        "#2d5a43",
+        "#3b4d8c",
+        "#a63a2b"
+      ],
+      "materials": [
+        "papier non couché à dérive chaude/sauge",
+        "croix de repérage aux angles et cachet circulaire « Appel validé »"
+      ],
+      "viewport": "Feuille continue avec barre de jetons du Trimestre 1 ; grille franche à repères où le créneau de 10:00 (3ème B) porte le cachet d'appel actif ; table de correction et moyennes alignées au millimètre.",
+      "case": "Clarté remarquable pour la lecture rapide des chiffres et des notes ; moins enfantin mais très distinctif.",
+      "risk": "La rigueur graphique peut paraître plus éditoriale que scolaire si les teintes de fonction sont trop discrètes.",
+      "hero": "https://impeccable.style/worlds/cards/design-annual-s-plate-section-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/design-annual-s-plate-section.webp",
+      "html": ".impeccable/mocks/teacher-home/plate-desktop.html"
+    },
+    {
+      "id": "challenger-emission",
+      "kind": "challenger",
+      "catalogId": "operate-c-emission-line-rail",
+      "label": "Spectre sur rail sombre",
+      "verdict": "declined",
+      "lineage": "Spectrogramme sur boîte lumineuse sombre",
+      "thesis": "Un rail unique sur fond anthracite où chaque cours est une raie spectrale.",
+      "palette": ["#1c1d1f", "#f2efe9", "#e8a317"],
+      "materials": ["continuum anthracite", "raies de 1px"],
+      "viewport": "Rail sombre et raies lumineuses.",
+      "case": "Perd sur les deux axes : fond sombre contraire au brief lumineux et métaphore optique étrangère à l'école.",
+      "risk": "Froideur technique.",
+      "kept": "L'encodage de l'état des cours par la forme du trait sur le rail horaire.",
+      "hero": "https://impeccable.style/worlds/cards/operate-c-emission-line-rail-hero.webp"
+    },
+    {
+      "id": "challenger-atlas",
+      "kind": "challenger",
+      "catalogId": "notation-diagram-systems-star-atlas",
+      "label": "Atlas céleste",
+      "verdict": "declined",
+      "lineage": "Cartes du ciel nocturnes",
+      "thesis": "L'importance des tâches codée par la magnitude de points sur fond bleu nuit.",
+      "palette": ["#0f1a33", "#f2f2ea", "#e0563a"],
+      "materials": ["fond nuit", "points de magnitude"],
+      "viewport": "Carte étoilée des classes.",
+      "case": "Déjà écarté au tour précédent ; fond sombre incompatible avec le brief.",
+      "risk": "Ornemental sur un écran de travail.",
+      "kept": "Échelle fixe de diamètre pour hiérarchiser les priorités.",
+      "hero": "https://impeccable.style/worlds/cards/notation-diagram-systems-star-atlas-hero.webp"
+    },
+    {
+      "id": "challenger-lexicon",
+      "kind": "challenger",
+      "catalogId": "rw-lexicon-shoulder-and-plate",
+      "label": "Lexique à manchette",
+      "verdict": "declined",
+      "lineage": "Dictionnaire du XIXe siècle à manchette et planche",
+      "thesis": "Colonnes de texte dense en noir avec mots-guides en tête et couleurs isolées dans un cadre.",
+      "palette": ["#efe8da", "#14110f", "#c23a22"],
+      "materials": ["filets maigres", "manchette d'index"],
+      "viewport": "Deux colonnes de texte serré et une planche encadrée.",
+      "case": "Trop livresque et austère pour l'appel sur téléphone à 07h55.",
+      "risk": "Manque de douceur et d'accessibilité tactile.",
+      "kept": "Mesure de 60 caractères et repères de trimestre en tête de page.",
+      "hero": "https://impeccable.style/worlds/cards/rw-lexicon-shoulder-and-plate-hero.webp"
+    },
+    {
+      "id": "challenger-feed",
+      "kind": "challenger",
+      "catalogId": "pop-culture-shelf-vertical-video-feed-surface",
+      "label": "Flux plein écran",
+      "verdict": "declined",
+      "lineage": "Flux vertical plein écran à une seule carte par vue",
+      "thesis": "Un seul cours occupe tout l'écran, le suivant attend au défilement.",
+      "palette": ["#111111", "#ffffff", "#2563eb"],
+      "materials": ["plein écran", "rail d'actions à droite"],
+      "viewport": "Une seule carte plein écran.",
+      "case": "Cache la vue d'ensemble de la journée et des copies à corriger.",
+      "risk": "Impossible de scanner la journée d'un coup d'œil sur ordinateur.",
+      "kept": "L'évidence de l'action immédiate au premier regard.",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-vertical-video-feed-surface-hero.webp"
+    },
+    {
+      "id": "challenger-wallet",
+      "kind": "challenger",
+      "catalogId": "vernacular-ephemera-jet-age-ticket-wallet",
+      "label": "Pochette de billets",
+      "verdict": "declined",
+      "lineage": "Carnet de billets d'avion à coupons détachables",
+      "thesis": "Chaque cours est un coupon qui se tamponne une fois l'appel fait.",
+      "palette": ["#ffffff", "#1b2a52", "#c82333"],
+      "materials": ["coupons carbone", "tampon rouge"],
+      "viewport": "Pile de coupons horaires.",
+      "case": "La métaphore aérienne détourne l'identité scolaire.",
+      "risk": "Ressemble au Tableau du jour déjà rejeté.",
+      "kept": "Les états validés restent visibles avec un cachet doux au lieu de disparaître.",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-jet-age-ticket-wallet-hero.webp"
+    }
+  ],
+  "reroll": {
+    "registers": [
+      "safer",
+      "bolder"
+    ]
+  },
+  "buildPath": {
+    "value": "code"
+  },
+  "canon": true,
+  "canonCard": {
+    "kind": "canon",
+    "label": "Le standard de catégorie",
+    "thesis": "Toddle et Google Classroom joués sans détour : cartes de classes et colonne À faire.",
+    "palette": [
+      "#ffffff",
+      "#f8f9fa",
+      "#1a73e8",
+      "#202124"
+    ],
+    "materials": [
+      "cartes à bandeau",
+      "surfaces blanches"
+    ],
+    "viewport": "Grille de cartes de classes et colonne À faire à droite.",
+    "risk": "Indiscernable des outils standards.",
+    "html": ".impeccable/mocks/decision/v3-canon.html"
+  },
+  "steer": true
+}
