@@ -163,7 +163,7 @@ Guardrails:
 
 | Step | Work | Estimate |
 |---|---|---|
-| 1 | Design pass: tokens, app shell, class space, teacher home (mock in `.impeccable/`). Teacher home: **Studio** picked 2026-10-26. Tokens: `DESIGN_HANDOVER_TEACHER_HOME.md` section 4. Mocks: `.impeccable/mocks/teacher-home/studio-{desktop,phone}.html`. Brief: `.impeccable/surfaces/src-app-dashboard-teacher-page-tsx.md`. Still to mock: Programme and Élèves à suivre modules, class Programme and Élèves tabs | 1 to 2 days |
+| 1 | Design pass: tokens, app shell, class space, teacher home (mock in `.impeccable/`). Teacher home: **Studio** picked 2026-10-26. Tokens: `DESIGN_HANDOVER_TEACHER_HOME.md` section 4. Mocks: `.impeccable/mocks/teacher-home/studio-{desktop,phone}.html`. Brief: `.impeccable/surfaces/src-app-dashboard-teacher-page-tsx.md`. Home with the Programme and Élèves à suivre modules: `.impeccable/mocks/teacher-home/studio-suivi-desktop.html`. Still to mock: class Programme and Élèves tabs | 1 to 2 days |
 | 2 | New shell and IA in code, routes for each role | 1 day |
 | 3 | Schema: years, terms, topics, posts, attachments, submissions, grades | 1 day |
 | 4 | Class space and post creation | 2 days |

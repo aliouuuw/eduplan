@@ -10,7 +10,7 @@ Last update: 2026-10-26. For: the next agent or designer who continues EduPlan's
 | **Live mocks** | 3 structures in the same visual language, desktop + phone each: `studio-*`, `lagune-*`, `feuille-*` in `.impeccable/mocks/teacher-home/`. Compare them in `index.html` there |
 | **Picked (2026-10-26)** | Structure 1, **Studio**. Brief: `.impeccable/surfaces/src-app-dashboard-teacher-page-tsx.md` |
 | **Teacher needs (section 7)** | Interview done 2026-10-26. Results: `MVP_REWORK_PLAN.md` sections 3, 5, 6, 9 (D6 to D14) |
-| **Next** | Mock the new Studio modules (Programme, Élèves à suivre) and the class Programme and Élèves tabs, then code |
+| **Next** | Studio with the 2 new modules: `studio-suivi-desktop.html` (render: `.impeccable/review/v6/`). Next: the class Programme and Élèves tabs, then code |
 | **Not done** | No application code changed for the new design. Nothing from the design work is committed |
 
 ## 2. Read first
