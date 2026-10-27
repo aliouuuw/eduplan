@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { auth } from '@/lib/auth';
+import { isPublicRoute } from '@/lib/public-routes';
 
 export async function proxy(request: NextRequest) {
   const session = await auth();
@@ -24,12 +25,8 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/register', '/'];
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
-
   // If not authenticated and trying to access protected route
-  if (!session && !isPublicRoute) {
+  if (!session && !isPublicRoute(pathname)) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
