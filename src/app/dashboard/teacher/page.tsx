@@ -49,13 +49,8 @@ function SheetLink({ href, children }: { href: string; children: ReactNode }) {
   );
 }
 
-function placeOf(room: string) {
-  const place = room.split(' · ')[0] ?? room;
-  return place.replace(/^Salle/, 'salle');
-}
-
-function topicOf(room: string) {
-  return room.split(' · ')[1] ?? '';
+function slotRoomLabel(room: string) {
+  return room.replace(/^Salle/, 'salle');
 }
 
 function SlotCard({ slot }: { slot: HomeSlot }) {
@@ -75,7 +70,7 @@ function SlotCard({ slot }: { slot: HomeSlot }) {
         {slot.start} · {slot.end}
       </time>
       <h3 className="font-display mt-1.5 text-xl tracking-tight">{classLabel(slot.className)}</h3>
-      <p className={cn('text-[13.5px] leading-snug', live ? 'text-now-ink' : 'text-ink-2')}>{slot.room}</p>
+      <p className={cn('text-[13.5px] leading-snug', live ? 'text-now-ink' : 'text-ink-2')}>{slot.placeLabel}</p>
       {live && (
         <span className="mt-auto flex items-center gap-1.5 pt-3 text-[13px] font-medium text-now-ink">
           <Clock className="size-[15px]" />
@@ -103,20 +98,17 @@ export default async function TeacherHomePage() {
   const now = new Date();
   const home = await getTeacherHome(db, viewer.userId, viewer.schoolId, now);
   const first = viewer.name.split(' ')[0] || viewer.name;
-  const subtitle = home.week
-    ? frSpaces(`${formatDay(now)} · trimestre 1, semaine ${home.week} sur ${home.weeks}`)
-    : formatDay(now);
+  const termLine = home.termName && home.week ? `${home.termName.toLowerCase()}, semaine ${home.week} sur ${home.weeks}` : null;
+  const subtitle = termLine ? frSpaces(`${formatDay(now)} · ${termLine}`) : formatDay(now);
   const live = home.slots.find((slot) => slot.state === 'live');
   const nextSlot = home.slots.find((slot) => slot.state === 'later');
   const gradesLeft = home.gradesTarget - home.gradesEntered;
-  const homeworkCopies = home.copiesSubmitted + home.copiesLate;
-  const paperCopies = Math.max(0, home.copiesToGrade - homeworkCopies);
-  const absenceAlert = home.flags.filter((flag) => flag.reason.includes('absence'));
+  const absenceAlert = home.flags.filter((flag) => flag.ruleKind === 'absences');
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title={`Bonjour, ${first}`} subtitle={subtitle} />
-      {home.programme.length === 0 && home.flags.length === 0 ? (
+      {home.programme.length === 0 && home.flags.length === 0 && home.slots.length === 0 ? (
         <EmptyState title="Aucun cours pour l'instant">
           L'administration vous assigne une classe et une matière. Les copies, le programme et les élèves à suivre s'affichent ici.
         </EmptyState>
@@ -147,28 +139,29 @@ export default async function TeacherHomePage() {
                     value={home.copiesToGrade}
                     unit="copies"
                     caption={
-                      paperCopies > 0
-                        ? `${homeworkCopies} devoirs maison · ${paperCopies} contrôles papier`
+                      home.copiesPaper > 0
+                        ? `${home.copiesHomework} devoirs maison · ${home.copiesPaper} contrôles papier`
                         : 'Devoirs rendus, pas encore notés'
                     }
                   >
-                    {paperCopies > 0 ? (
-                      <MeterSplit
-                        label={`${homeworkCopies} devoirs maison, ${paperCopies} contrôles papier`}
-                        parts={[
-                          { value: homeworkCopies, tone: 'progress' },
-                          { value: paperCopies, tone: 'soft-now' },
-                        ]}
-                      />
-                    ) : (
-                      <MeterSplit
-                        label={`${home.copiesSubmitted} rendus, ${home.copiesLate} en retard`}
-                        parts={[
-                          { value: home.copiesSubmitted, tone: 'progress' },
-                          { value: home.copiesLate, tone: 'soft-now' },
-                        ]}
-                      />
-                    )}
+                    <MeterSplit
+                      label={
+                        home.copiesPaper > 0
+                          ? `${home.copiesHomework} devoirs maison, ${home.copiesPaper} contrôles papier`
+                          : `${home.copiesSubmitted} rendus, ${home.copiesLate} en retard`
+                      }
+                      parts={
+                        home.copiesPaper > 0
+                          ? [
+                              { value: home.copiesHomework, tone: 'progress' },
+                              { value: home.copiesPaper, tone: 'soft-now' },
+                            ]
+                          : [
+                              { value: home.copiesSubmitted, tone: 'progress' },
+                              { value: home.copiesLate, tone: 'soft-now' },
+                            ]
+                      }
+                    />
                   </Stat>
                 </CardContent>
               </Card>
@@ -194,6 +187,8 @@ export default async function TeacherHomePage() {
                     weeks={home.weeks}
                     entered={home.gradesEntered}
                     expected={home.gradesExpected}
+                    gradesTarget={home.gradesTarget}
+                    gradesByWeek={home.gradesByWeek}
                   />
                 </CardContent>
               </Card>
@@ -252,9 +247,9 @@ export default async function TeacherHomePage() {
                     {`En cours depuis ${live.start}`}
                   </p>
                   <h2 className="font-display mt-3 text-[32px] leading-[1.15] tracking-tight">
-                    {`${classLabel(live.className)}, ${placeOf(live.room)}`}
+                    {`${classLabel(live.className)}, ${slotRoomLabel(live.room)}`}
                   </h2>
-                  {topicOf(live.room) && <p className="mt-1 text-muted-foreground">{topicOf(live.room)}</p>}
+                  {live.topic && <p className="mt-1 text-muted-foreground">{live.topic}</p>}
                   <Button asChild size="sm" className="mt-5 w-fit">
                     <Link href="/dashboard/teacher/presences">
                       <Check />
@@ -270,7 +265,7 @@ export default async function TeacherHomePage() {
                     <p className="text-sm font-medium text-progress-ink">Prochain cours</p>
                     <h2 className="font-display mt-2 text-2xl tracking-tight">{classLabel(nextSlot.className)}</h2>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {nextSlot.start} · {nextSlot.room}
+                      {nextSlot.start} · {nextSlot.placeLabel}
                     </p>
                   </CardContent>
                 </Card>
@@ -309,7 +304,12 @@ export default async function TeacherHomePage() {
               </Card>
             )}
             <Card>
-              <SheetHead title="Programme" meta={<span className="text-sm text-muted-foreground">Trimestre 1</span>} href="/dashboard/teacher/classes" linkLabel="Détail" />
+              <SheetHead
+                title="Programme"
+                meta={home.termName ? <span className="text-sm text-muted-foreground">{home.termName}</span> : undefined}
+                href="/dashboard/teacher/classes"
+                linkLabel="Détail"
+              />
               <CardContent>
                 {home.programme.map((row, index) => {
                   const ahead = row.covered - row.expected;

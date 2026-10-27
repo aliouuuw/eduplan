@@ -7,7 +7,7 @@ import { getTeacherHome, termWeek } from './teacher-home';
 const NOW = new Date('2026-10-27T10:30:00Z');
 
 test('27 Oct 2026 is week 8 of the demo term', () => {
-  expect(termWeek(NOW, '2026-09-07')).toBe(8);
+  expect(termWeek(NOW, '2026-09-07', 12)).toBe(8);
 });
 
 test('Aïssatou home matches the mock counts', async () => {
@@ -16,11 +16,15 @@ test('Aïssatou home matches the mock counts', async () => {
   const home = await getTeacherHome(db, 'demo-aissatou', 'demo-dakar', NOW);
   expect(home.week).toBe(8);
   expect(home.copiesToGrade).toBe(53);
+  expect(home.copiesHomework).toBe(22);
+  expect(home.copiesPaper).toBe(31);
   expect(home.gradesTarget).toBe(15);
   expect(home.gradesExpected).toBe(10);
+  expect(home.termName).toBe('Trimestre 1');
   expect(home.gradesEntered).toBe(9);
   expect(home.flags).toHaveLength(4);
   const byClass = Object.fromEntries(home.programme.map((row) => [row.className, row]));
+  expect(byClass['4ème A'].expected).toBe(12);
   expect(byClass['4ème A']).toMatchObject({ covered: 13, total: 18 });
   expect(byClass['4ème B']).toMatchObject({ covered: 10, total: 18 });
   expect(byClass['3ème B']).toMatchObject({ covered: 11, total: 20 });

@@ -14,6 +14,7 @@ import {
   studentFlags,
   submissions,
   teacherClasses,
+  teacherTermGradeTargets,
   terms,
   timeSlots,
   timetables,
@@ -22,9 +23,14 @@ import {
 } from '@/db/schema';
 import type { Database } from '@/lib/db';
 
-const TERM_WEEKS = 12;
+import {
+  cumulativeGradesByWeek,
+  expectedGradeEntriesAtWeek,
+  expectedNotionsAtWeek,
+  termWeekCount,
+} from './teacher-home-math';
 
-export function termWeek(now: Date, startsOn: string, weeks = TERM_WEEKS): number {
+export function termWeek(now: Date, startsOn: string, weeks: number): number {
   const start = Date.parse(`${startsOn}T00:00:00Z`);
   const days = Math.floor((now.getTime() - start) / 86_400_000);
   const week = Math.floor(days / 7) + 1;
@@ -46,6 +52,7 @@ export type HomeFlag = {
   className: string;
   reason: string;
   source: 'rule' | 'teacher';
+  ruleKind: 'average' | 'absences' | 'missing' | null;
 };
 
 export type HomeSlot = {
@@ -54,6 +61,8 @@ export type HomeSlot = {
   end: string;
   className: string;
   room: string;
+  topic: string;
+  placeLabel: string;
   state: 'done' | 'live' | 'later';
   absents: number;
 };
@@ -70,19 +79,21 @@ export type HomeCorrection = {
 export type TeacherHome = {
   week: number | null;
   weeks: number;
+  termName: string | null;
   copiesToGrade: number;
+  copiesHomework: number;
+  copiesPaper: number;
   copiesSubmitted: number;
   copiesLate: number;
   gradesEntered: number;
   gradesTarget: number;
   gradesExpected: number;
+  gradesByWeek: number[];
   programme: HomeProgramme[];
   flags: HomeFlag[];
   slots: HomeSlot[];
   corrections: HomeCorrection[];
 };
-
-const GRADES_TARGET = 15;
 
 export function schoolWeekday(now: Date): number {
   const day = now.getUTCDay();
@@ -94,6 +105,12 @@ function slotState(now: Date, start: string, end: string): HomeSlot['state'] {
   if (hm >= end) return 'done';
   if (hm >= start) return 'live';
   return 'later';
+}
+
+function slotPlaceLabel(room: string, topic: string, legacyName: string | null) {
+  if (room && topic) return `${room} · ${topic}`;
+  if (room) return room;
+  return legacyName ?? '';
 }
 
 export async function getTeacherHome(
@@ -119,20 +136,41 @@ export async function getTeacherHome(
     : [];
   const day = now.toISOString().slice(0, 10);
   const term = termRows.find((row) => row.startsOn <= day && row.endsOn >= day);
-  const week = term ? termWeek(now, term.startsOn) : null;
-  const gradesExpected = week ? Math.round((GRADES_TARGET * week) / TERM_WEEKS) : 0;
-  const empty = {
+  const weeks = term ? termWeekCount(term.startsOn, term.endsOn) : 12;
+  const week = term ? termWeek(now, term.startsOn, weeks) : null;
+
+  const [gradeTargetRow] = term
+    ? await db
+        .select()
+        .from(teacherTermGradeTargets)
+        .where(
+          and(
+            eq(teacherTermGradeTargets.schoolId, schoolId),
+            eq(teacherTermGradeTargets.teacherId, teacherId),
+            eq(teacherTermGradeTargets.termId, term.id),
+          ),
+        )
+        .limit(1)
+    : [undefined];
+  const gradesTarget = gradeTargetRow?.expectedEntries ?? 0;
+  const gradesExpected = week ? expectedGradeEntriesAtWeek(week, gradesTarget, weeks) : 0;
+
+  const empty: TeacherHome = {
     week,
-    weeks: TERM_WEEKS,
+    weeks,
+    termName: term?.name ?? null,
     copiesToGrade: 0,
+    copiesHomework: 0,
+    copiesPaper: 0,
     copiesSubmitted: 0,
     copiesLate: 0,
     gradesEntered: 0,
-    gradesTarget: GRADES_TARGET,
+    gradesTarget,
     gradesExpected,
+    gradesByWeek: Array.from({ length: weeks }, () => 0),
     programme: [],
     flags: [],
-    slots: [] as HomeSlot[],
+    slots: [],
     corrections: [],
   };
   if (classIds.length === 0) return empty;
@@ -156,7 +194,9 @@ export async function getTeacherHome(
       chapter: chapter?.title ?? '',
       covered: coveredRows.filter((row) => ids.has(row.notionId)).length,
       total,
-      expected: week ? Math.round((total * week) / TERM_WEEKS) : total,
+      expected: week
+        ? expectedNotionsAtWeek(week, total, plan.plannedWeekStart, plan.plannedWeekEnd, weeks)
+        : 0,
     });
   }
 
@@ -164,6 +204,7 @@ export async function getTeacherHome(
     .select()
     .from(posts)
     .where(and(eq(posts.authorId, teacherId), eq(posts.schoolId, schoolId), eq(posts.type, 'assignment')));
+  const postFormat = new Map(myPosts.map((row) => [row.id, row.assignmentFormat ?? 'homework']));
   const postIds = myPosts.map((row) => row.id);
   const copies = postIds.length ? await db.select().from(submissions).where(inArray(submissions.postId, postIds)) : [];
   const corrections: HomeCorrection[] = [];
@@ -187,6 +228,9 @@ export async function getTeacherHome(
         .from(grades)
         .where(and(eq(grades.schoolId, schoolId), eq(grades.termId, term.id), inArray(grades.classId, classIds)))
     : [];
+  const gradesByWeek = term
+    ? cumulativeGradesByWeek(gradeRows, term.startsOn, weeks, termWeek)
+    : Array.from({ length: weeks }, () => 0);
 
   const flagRows = subjectIds.length
     ? await db
@@ -207,6 +251,7 @@ export async function getTeacherHome(
       className: className.get(enrollment?.classId ?? '') ?? '',
       reason: flag.reason,
       source: flag.source,
+      ruleKind: flag.ruleKind,
     });
   }
 
@@ -231,28 +276,40 @@ export async function getTeacherHome(
       .select()
       .from(attendanceRecords)
       .where(and(eq(attendanceRecords.timetableId, entry.id), eq(attendanceRecords.date, date), eq(attendanceRecords.status, 'absent')));
+    const room = slot.room ?? '';
+    const topic = slot.topic ?? '';
     slots.push({
       id: entry.id,
       start: slot.startTime,
       end: slot.endTime,
       className: className.get(entry.classId) ?? entry.classId,
-      room: slot.name ?? '',
+      room,
+      topic,
+      placeLabel: slotPlaceLabel(room, topic, slot.name),
       state: slotState(now, slot.startTime, slot.endTime),
       absents: absents.length,
     });
   }
   slots.sort((a, b) => a.start.localeCompare(b.start));
 
-  const toGrade = copies.filter((row) => row.status === 'submitted' || row.status === 'late');
+  const waiting = copies.filter((row) => row.status === 'submitted' || row.status === 'late');
+  const homeworkWaiting = waiting.filter((row) => postFormat.get(row.postId) !== 'paper');
+  const paperWaiting = waiting.filter((row) => postFormat.get(row.postId) === 'paper');
+  const homeworkCopies = copies.filter((row) => postFormat.get(row.postId) !== 'paper');
+
   return {
     week,
-    weeks: TERM_WEEKS,
-    copiesToGrade: toGrade.length,
-    copiesSubmitted: copies.filter((row) => row.status === 'submitted').length,
-    copiesLate: copies.filter((row) => row.status === 'late').length,
+    weeks,
+    termName: term?.name ?? null,
+    copiesToGrade: waiting.length,
+    copiesHomework: homeworkWaiting.length,
+    copiesPaper: paperWaiting.length,
+    copiesSubmitted: homeworkCopies.filter((row) => row.status === 'submitted').length,
+    copiesLate: homeworkCopies.filter((row) => row.status === 'late').length,
     gradesEntered: gradeRows.length,
-    gradesTarget: GRADES_TARGET,
+    gradesTarget,
     gradesExpected,
+    gradesByWeek,
     programme,
     flags,
     slots,

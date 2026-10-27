@@ -32,6 +32,7 @@ import {
   submissions,
   teacherClasses,
   teacherSubjects,
+  teacherTermGradeTargets,
   terms,
   topics,
   users,
@@ -54,6 +55,7 @@ async function clear(db: Database) {
     messages, messageThreads, appreciations, schoolSettings, flagRules, studentFlags, remarks,
     attendanceRecords, timetables, timeSlots,
     notionCoverage, classChapterPlans, notions, chapters, programmes, notifications,
+    teacherTermGradeTargets,
     attendanceRecords, grades, attachments, submissions, posts, topics, terms, academicYears,
     studentEnrollments, teacherClasses, teacherSubjects,
   ] as const) {
@@ -246,6 +248,8 @@ export async function seedDemo(db: Database) {
       chapterId: row.chapterId,
       position: 1,
       plannedWeek: 8,
+      plannedWeekStart: 5,
+      plannedWeekEnd: 10,
       status: row.status,
       createdAt: NOW,
       updatedAt: NOW,
@@ -273,11 +277,20 @@ export async function seedDemo(db: Database) {
     updatedAt: NOW,
   });
   await db.insert(studentFlags).values([
-    { id: 'flag-moussa', schoolId: DEMO_SCHOOL_ID, studentId: 'stu-moussa', subjectId: 'demo-math', source: 'rule', reason: '3 absences sans justificatif', createdAt: NOW },
-    { id: 'flag-khady', schoolId: DEMO_SCHOOL_ID, studentId: 'stu-khady', subjectId: 'demo-math', source: 'rule', reason: 'Moyenne 8,5 / 20', createdAt: NOW },
-    { id: 'flag-ibrahima', schoolId: DEMO_SCHOOL_ID, studentId: 'stu-ibrahima', subjectId: 'demo-math', source: 'rule', reason: '2 devoirs non rendus', createdAt: NOW },
-    { id: 'flag-fatou', schoolId: DEMO_SCHOOL_ID, studentId: 'stu-fatou', subjectId: 'demo-math', source: 'teacher', reason: 'Ne participe plus depuis 2 semaines', createdAt: NOW },
+    { id: 'flag-moussa', schoolId: DEMO_SCHOOL_ID, studentId: 'stu-moussa', subjectId: 'demo-math', source: 'rule', ruleKind: 'absences', reason: '3 absences sans justificatif', createdAt: NOW },
+    { id: 'flag-khady', schoolId: DEMO_SCHOOL_ID, studentId: 'stu-khady', subjectId: 'demo-math', source: 'rule', ruleKind: 'average', reason: 'Moyenne 8,5 / 20', createdAt: NOW },
+    { id: 'flag-ibrahima', schoolId: DEMO_SCHOOL_ID, studentId: 'stu-ibrahima', subjectId: 'demo-math', source: 'rule', ruleKind: 'missing', reason: '2 devoirs non rendus', createdAt: NOW },
+    { id: 'flag-fatou', schoolId: DEMO_SCHOOL_ID, studentId: 'stu-fatou', subjectId: 'demo-math', source: 'teacher', ruleKind: null, reason: 'Ne participe plus depuis 2 semaines', createdAt: NOW },
   ]);
+  await db.insert(teacherTermGradeTargets).values({
+    id: 'demo-aissatou-t1-grades',
+    schoolId: DEMO_SCHOOL_ID,
+    teacherId: 'demo-aissatou',
+    termId: 'demo-t1',
+    expectedEntries: 15,
+    createdAt: NOW,
+    updatedAt: NOW,
+  });
 
   await db.insert(posts).values({
     id: 'demo-dm3',
@@ -286,6 +299,7 @@ export async function seedDemo(db: Database) {
     subjectId: 'demo-math',
     authorId: 'demo-aissatou',
     type: 'assignment',
+    assignmentFormat: 'homework',
     title: 'Devoir maison n°3',
     maxGrade: 20,
     createdAt: NOW,
@@ -312,6 +326,7 @@ export async function seedDemo(db: Database) {
     subjectId: 'demo-math',
     authorId: 'demo-aissatou',
     type: 'assignment',
+    assignmentFormat: 'paper',
     title: 'Contrôle Pythagore',
     maxGrade: 20,
     createdAt: NOW,
@@ -344,6 +359,8 @@ export async function seedDemo(db: Database) {
       dayOfWeek: 2,
       startTime: slot.start,
       endTime: slot.end,
+      room: slot.room,
+      topic: slot.topic,
       name: `${slot.room} · ${slot.topic}`,
       isBreak: false,
       createdAt: NOW,
@@ -376,6 +393,8 @@ export async function seedDemo(db: Database) {
 
   const gradeStudents = ['stu-khady', 'stu-khady', ...students.filter((s) => s.id !== 'stu-khady').slice(0, 7).map((s) => s.id)];
   for (let i = 0; i < gradeStudents.length; i++) {
+    const weekOffset = i % 7;
+    const createdAt = new Date(Date.parse('2026-09-07T12:00:00Z') + weekOffset * 7 * 86_400_000);
     await db.insert(grades).values({
       id: `grade-${i}`,
       schoolId: DEMO_SCHOOL_ID,
@@ -385,8 +404,8 @@ export async function seedDemo(db: Database) {
       termId: 'demo-t1',
       value: gradeStudents[i] === 'stu-khady' ? (i === 0 ? 8 : 9) : 12,
       coefficient: 1,
-      createdAt: NOW,
-      updatedAt: NOW,
+      createdAt,
+      updatedAt: createdAt,
     });
   }
 }

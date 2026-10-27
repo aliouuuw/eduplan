@@ -179,7 +179,9 @@ export const timeSlots = sqliteTable('time_slots', {
   dayOfWeek: integer('day_of_week').notNull(), // 1-7 (Monday-Sunday)
   startTime: text('start_time').notNull(), // HH:MM format
   endTime: text('end_time').notNull(), // HH:MM format
-  name: text('name'), // e.g., "1st Period", "Morning Break"
+  name: text('name'), // legacy label; prefer room + topic
+  room: text('room'),
+  topic: text('topic'),
   isBreak: integer('is_break', { mode: 'boolean' }).default(false),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
@@ -244,6 +246,8 @@ export const posts = sqliteTable('posts', {
   authorId: text('author_id').notNull(),
   notionId: text('notion_id'),
   type: text('type', { enum: ['lesson', 'material', 'assignment'] }).notNull(),
+  /** homework = digital submission; paper = contrôle saisi en classe */
+  assignmentFormat: text('assignment_format', { enum: ['homework', 'paper'] }),
   title: text('title').notNull(),
   body: text('body'),
   dueAt: integer('due_at', { mode: 'timestamp' }),
@@ -353,6 +357,8 @@ export const classChapterPlans = sqliteTable('class_chapter_plans', {
   chapterId: text('chapter_id').notNull(),
   position: integer('position').notNull(),
   plannedWeek: integer('planned_week'),
+  plannedWeekStart: integer('planned_week_start'),
+  plannedWeekEnd: integer('planned_week_end'),
   status: text('status', { enum: ['upcoming', 'current', 'done'] }).notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
@@ -378,12 +384,23 @@ export const remarks = sqliteTable('remarks', {
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
 
+export const teacherTermGradeTargets = sqliteTable('teacher_term_grade_targets', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  teacherId: text('teacher_id').notNull(),
+  termId: text('term_id').notNull(),
+  expectedEntries: integer('expected_entries').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
 export const studentFlags = sqliteTable('student_flags', {
   id: text('id').primaryKey(),
   schoolId: text('school_id').notNull(),
   studentId: text('student_id').notNull(),
   subjectId: text('subject_id').notNull(),
   source: text('source', { enum: ['rule', 'teacher'] }).notNull(),
+  ruleKind: text('rule_kind', { enum: ['average', 'absences', 'missing'] }),
   reason: text('reason').notNull(),
   dismissedBy: text('dismissed_by'),
   dismissedAt: integer('dismissed_at', { mode: 'timestamp' }),
