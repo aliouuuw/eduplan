@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { teacherClasses, teacherSubjects, users, subjects, classes } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { getTeacherMetrics } from './teacher-utils';
+import { activeTeacher } from '@/lib/teacher-scope';
 
 export interface TeacherWorkload {
   teacherId: string;
@@ -223,7 +224,7 @@ export async function getQualifiedTeachers(subjectId: string, schoolId: string) 
       and(
         eq(teacherSubjects.subjectId, subjectId),
         eq(teacherSubjects.schoolId, schoolId),
-        eq(users.role, 'teacher')
+        activeTeacher()
       )
     );
 }

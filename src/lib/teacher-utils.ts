@@ -1,5 +1,6 @@
 import { teacherClasses, teacherSubjects, teacherAvailability, users, subjects, classes } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
+import { activeTeacher } from '@/lib/teacher-scope';
 
 /**
  * Comprehensive teacher metrics and utilities
@@ -239,6 +240,40 @@ export async function hasAvailabilityConflict(
 }
 
 /**
+ * Weekly hours and assignment count per teacher, in one query.
+ * Same rule as getTeacherMetrics and calculateTeacherWorkload: only assignments whose class and
+ * subject still exist count (teacher_classes has no foreign keys, so orphaned rows can remain).
+ */
+export async function getWorkloadByTeacher(
+  schoolId: string,
+  teacherIds?: string[]
+): Promise<Map<string, { hours: number; count: number }>> {
+  const { db } = await import('@/lib/db');
+  const byTeacher = new Map<string, { hours: number; count: number }>();
+  if (teacherIds && teacherIds.length === 0) return byTeacher;
+
+  const rows = await db
+    .select({ teacherId: teacherClasses.teacherId, weeklyHours: teacherClasses.weeklyHours })
+    .from(teacherClasses)
+    .innerJoin(classes, eq(teacherClasses.classId, classes.id))
+    .innerJoin(subjects, eq(teacherClasses.subjectId, subjects.id))
+    .where(
+      and(
+        eq(teacherClasses.schoolId, schoolId),
+        teacherIds ? inArray(teacherClasses.teacherId, teacherIds) : undefined
+      )
+    );
+
+  for (const row of rows) {
+    const current = byTeacher.get(row.teacherId) ?? { hours: 0, count: 0 };
+    current.hours += row.weeklyHours || 0;
+    current.count += 1;
+    byTeacher.set(row.teacherId, current);
+  }
+  return byTeacher;
+}
+
+/**
  * Teachers in a school whose open hours are above zero.
  * Same rule as the subjects list: availability hours minus assigned hours.
  * One pass for the school. The list page used to repeat this per subject.
@@ -246,18 +281,12 @@ export async function hasAvailabilityConflict(
 export async function countTeachersWithOpenCapacity(schoolId: string): Promise<number> {
   const { db } = await import('@/lib/db');
 
-  const [teacherRows, assignmentRows, slotRows] = await Promise.all([
+  const [teacherRows, workload, slotRows] = await Promise.all([
     db
       .select({ id: users.id })
       .from(users)
-      .where(and(eq(users.schoolId, schoolId), eq(users.role, 'teacher'))),
-    db
-      .select({
-        teacherId: teacherClasses.teacherId,
-        weeklyHours: teacherClasses.weeklyHours,
-      })
-      .from(teacherClasses)
-      .where(eq(teacherClasses.schoolId, schoolId)),
+      .where(and(eq(users.schoolId, schoolId), activeTeacher())),
+    getWorkloadByTeacher(schoolId),
     db
       .select({
         teacherId: teacherAvailability.teacherId,
@@ -268,11 +297,6 @@ export async function countTeachersWithOpenCapacity(schoolId: string): Promise<n
       .where(eq(teacherAvailability.schoolId, schoolId)),
   ]);
 
-  const workloadHours = new Map<string, number>();
-  for (const row of assignmentRows) {
-    workloadHours.set(row.teacherId, (workloadHours.get(row.teacherId) ?? 0) + (row.weeklyHours || 0));
-  }
-
   const availabilityMinutes = new Map<string, number>();
   for (const row of slotRows) {
     const minutes = calculateDurationMinutes(row.startTime, row.endTime);
@@ -282,7 +306,7 @@ export async function countTeachersWithOpenCapacity(schoolId: string): Promise<n
   let openCount = 0;
   for (const teacher of teacherRows) {
     const availabilityHours = Math.round(((availabilityMinutes.get(teacher.id) ?? 0) / 60) * 100) / 100;
-    const openHours = availabilityHours - (workloadHours.get(teacher.id) ?? 0);
+    const openHours = availabilityHours - (workload.get(teacher.id)?.hours ?? 0);
     if (openHours > 0) openCount += 1;
   }
 
@@ -302,7 +326,7 @@ export async function getAvailableTeachersForAssignment(
     db
       .select({ id: users.id })
       .from(users)
-      .where(and(eq(users.schoolId, schoolId), eq(users.role, 'teacher'))),
+      .where(and(eq(users.schoolId, schoolId), activeTeacher())),
     subjectId
       ? db
           .select({ teacherId: teacherSubjects.teacherId })

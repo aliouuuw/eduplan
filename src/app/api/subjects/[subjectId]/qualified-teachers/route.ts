@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { and, eq, inArray } from 'drizzle-orm';
 import { auth, isSchoolAdmin, isSuperAdmin } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { teacherClasses } from '@/db/schema';
 import { getQualifiedTeachers } from '@/lib/assignment-validation';
+import { getWorkloadByTeacher } from '@/lib/teacher-utils';
 
 /**
  * GET /api/subjects/[subjectId]/qualified-teachers
@@ -34,28 +32,9 @@ export async function GET(
     const qualifiedTeachers = await getQualifiedTeachers(subjectId, schoolId || '');
     const teacherIds = qualifiedTeachers.map((teacher) => teacher.id);
 
-    const workloadByTeacher = new Map<string, { hours: number; count: number }>();
-    if (schoolId && teacherIds.length > 0) {
-      const assignmentRows = await db
-        .select({
-          teacherId: teacherClasses.teacherId,
-          weeklyHours: teacherClasses.weeklyHours,
-        })
-        .from(teacherClasses)
-        .where(
-          and(
-            eq(teacherClasses.schoolId, schoolId),
-            inArray(teacherClasses.teacherId, teacherIds)
-          )
-        );
-
-      for (const row of assignmentRows) {
-        const current = workloadByTeacher.get(row.teacherId) ?? { hours: 0, count: 0 };
-        current.hours += row.weeklyHours || 0;
-        current.count += 1;
-        workloadByTeacher.set(row.teacherId, current);
-      }
-    }
+    const workloadByTeacher = schoolId
+      ? await getWorkloadByTeacher(schoolId, teacherIds)
+      : new Map<string, { hours: number; count: number }>();
 
     return NextResponse.json({
       qualifiedTeachers: qualifiedTeachers.map((teacher) => {

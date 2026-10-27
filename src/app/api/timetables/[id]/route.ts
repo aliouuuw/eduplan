@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { timetables, timeSlots, users } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
+import { activeTeacher } from '@/lib/teacher-scope';
 
 // Utility functions
 function getCurrentTimestamp(): Date {
@@ -165,7 +166,7 @@ export async function PUT(
           and(
             eq(users.id, validated.teacherId),
             eq(users.schoolId, schoolId),
-            eq(users.role, 'teacher')
+            activeTeacher()
           )
         )
         .limit(1);

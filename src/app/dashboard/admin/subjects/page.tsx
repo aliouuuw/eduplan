@@ -49,7 +49,7 @@ export default function AdminSubjectsPage() {
     if (!session?.user?.schoolId) return;
 
     try {
-      const response = await fetch(`/api/subjects?schoolId=${session.user.schoolId}`);
+      const response = await fetch(`/api/subjects?schoolId=${session.user.schoolId}&withCapacity=1`);
       if (response.ok) {
         const data = await response.json();
         const fetchedSubjects = data.subjects || [];
@@ -61,13 +61,9 @@ export default function AdminSubjectsPage() {
             : 0
         }));
 
-        setSubjects((current) => {
-          const detailsById = new Map(current.map((subject) => [subject.id, subject.classDetails]));
-          return subjectsWithCoverage.map((subject: SubjectWithUsage) => ({
-            ...subject,
-            classDetails: detailsById.get(subject.id),
-          }));
-        });
+        // A refetch means assignments may have changed: drop cached class lists and reload the open rows.
+        setSubjects(subjectsWithCoverage);
+        expandedRows.forEach((id) => void loadClassDetails(id));
       }
     } catch (error) {
       console.error('Error fetching subjects:', error);

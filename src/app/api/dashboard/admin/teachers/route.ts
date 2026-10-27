@@ -3,6 +3,7 @@ import { auth, isSchoolAdmin, isSuperAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { users, teacherSubjects, teacherClasses } from '@/db/schema';
 import { eq, and, count, sql } from 'drizzle-orm';
+import { activeTeacher } from '@/lib/teacher-scope';
 
 /**
  * GET /api/dashboard/admin/teachers
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
     const schoolId = session.user.schoolId;
 
     // Get all teachers for this school
-    const whereConditions = [eq(users.role, 'teacher')];
+    const whereConditions = [activeTeacher()];
     if (schoolId) {
       whereConditions.push(eq(users.schoolId, schoolId));
     }

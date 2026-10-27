@@ -4,6 +4,7 @@ import { getTeacherMetrics } from '@/lib/teacher-utils';
 import { db } from '@/lib/db';
 import { users } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { activeTeacher } from '@/lib/teacher-scope';
 
 /**
  * GET /api/teachers/stats?schoolId=xxx
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
     const teachers = await db
       .select({ id: users.id })
       .from(users)
-      .where(and(eq(users.schoolId, schoolId), eq(users.role, 'teacher')))
+      .where(and(eq(users.schoolId, schoolId), activeTeacher()))
       .orderBy(users.name);
 
     // Fetch metrics for all teachers

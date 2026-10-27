@@ -3,6 +3,7 @@ import { auth, isSchoolAdmin, isSuperAdmin } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { users, teacherAvailability } from '@/db/schema';
 import { eq, and, count } from 'drizzle-orm';
+import { activeTeacher } from '@/lib/teacher-scope';
 
 /**
  * GET /api/teachers
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
       .from(users)
       .where(
         and(
-          eq(users.role, 'teacher'),
+          activeTeacher(),
           eq(users.schoolId, schoolId)
         )
       )

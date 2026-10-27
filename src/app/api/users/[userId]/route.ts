@@ -10,6 +10,7 @@ import {
   teacherAvailability
 } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
+import { activeTeacher } from '@/lib/teacher-scope';
 
 /**
  * GET /api/users/[userId]
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // Get teacher basic info
     const userWhereConditions = [
       eq(users.id, userId),
-      eq(users.role, 'teacher')
+      activeTeacher()
     ];
     if (schoolId) {
       userWhereConditions.push(eq(users.schoolId, schoolId));

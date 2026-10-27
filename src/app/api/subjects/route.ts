@@ -100,6 +100,10 @@ export async function GET(request: NextRequest) {
 
     allSubjects.sort((a, b) => a.name.localeCompare(b.name));
 
+    // Teacher capacity costs three school-wide scans per school: only the subjects list asks for it.
+    if (searchParams.get('withCapacity') !== '1') {
+      return NextResponse.json({ subjects: allSubjects });
+    }
     const schoolIds = [...new Set(allSubjects.map((subject) => subject.schoolId))];
     const capacityEntries = await Promise.all(
       schoolIds.map(async (id) => [id, await countTeachersWithOpenCapacity(id)] as const)
