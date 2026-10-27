@@ -17,35 +17,32 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'School ID not found' }, { status: 400 });
     }
 
-    // Get user counts by role (excluding the current admin)
-    const userStats = await db
-      .select({
-        role: users.role,
-        count: sql<number>`count(*)`,
-      })
-      .from(users)
-      .where(and(
-        eq(users.schoolId, schoolId),
-        eq(users.isActive, true),
-        ne(users.id, session.user.id) // Exclude the current admin user
-      ))
-      .groupBy(users.role);
-
-    // Get total counts
-    const totalClasses = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(classes)
-      .where(eq(classes.schoolId, schoolId));
-
-    const totalSubjects = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(subjects)
-      .where(eq(subjects.schoolId, schoolId));
-
-    const totalLevels = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(academicLevels)
-      .where(eq(academicLevels.schoolId, schoolId));
+    const [userStats, totalClasses, totalSubjects, totalLevels] = await Promise.all([
+      db
+        .select({
+          role: users.role,
+          count: sql<number>`count(*)`,
+        })
+        .from(users)
+        .where(and(
+          eq(users.schoolId, schoolId),
+          eq(users.isActive, true),
+          ne(users.id, session.user.id)
+        ))
+        .groupBy(users.role),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(classes)
+        .where(eq(classes.schoolId, schoolId)),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(subjects)
+        .where(eq(subjects.schoolId, schoolId)),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(academicLevels)
+        .where(eq(academicLevels.schoolId, schoolId)),
+    ]);
 
     // Process user stats
     const stats = {

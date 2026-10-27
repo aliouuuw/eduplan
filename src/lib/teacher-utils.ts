@@ -108,40 +108,54 @@ export async function getTeacherMetrics(
     throw new Error('Teacher not found');
   }
 
-  // 1. Calculate Workload (current assignments)
-  const assignments = await db
-    .select({
-      assignmentId: teacherClasses.id,
-      classId: classes.id,
-      className: classes.name,
-      subjectId: subjects.id,
-      subjectName: subjects.name,
-      weeklyHours: teacherClasses.weeklyHours,
-      academicYear: classes.academicYear,
-    })
-    .from(teacherClasses)
-    .innerJoin(classes, eq(teacherClasses.classId, classes.id))
-    .innerJoin(subjects, eq(teacherClasses.subjectId, subjects.id))
-    .where(
-      and(
-        eq(teacherClasses.teacherId, teacherId),
-        eq(teacherClasses.schoolId, schoolId)
-      )
-    );
+  const [assignments, availabilitySlots, qualifications] = await Promise.all([
+    db
+      .select({
+        assignmentId: teacherClasses.id,
+        classId: classes.id,
+        className: classes.name,
+        subjectId: subjects.id,
+        subjectName: subjects.name,
+        weeklyHours: teacherClasses.weeklyHours,
+        academicYear: classes.academicYear,
+      })
+      .from(teacherClasses)
+      .innerJoin(classes, eq(teacherClasses.classId, classes.id))
+      .innerJoin(subjects, eq(teacherClasses.subjectId, subjects.id))
+      .where(
+        and(
+          eq(teacherClasses.teacherId, teacherId),
+          eq(teacherClasses.schoolId, schoolId)
+        )
+      ),
+    db
+      .select()
+      .from(teacherAvailability)
+      .where(
+        and(
+          eq(teacherAvailability.teacherId, teacherId),
+          eq(teacherAvailability.schoolId, schoolId)
+        )
+      ),
+    db
+      .select({
+        qualificationId: teacherSubjects.id,
+        subjectId: subjects.id,
+        subjectName: subjects.name,
+        subjectCode: subjects.code,
+      })
+      .from(teacherSubjects)
+      .innerJoin(subjects, eq(teacherSubjects.subjectId, subjects.id))
+      .where(
+        and(
+          eq(teacherSubjects.teacherId, teacherId),
+          eq(teacherSubjects.schoolId, schoolId)
+        )
+      ),
+  ]);
 
   const totalWeeklyHours = assignments.reduce((sum, a) => sum + (a.weeklyHours || 0), 0);
   const uniqueClasses = new Set(assignments.map(a => a.classId)).size;
-
-  // 2. Calculate Availability (time slots)
-  const availabilitySlots = await db
-    .select()
-    .from(teacherAvailability)
-    .where(
-      and(
-        eq(teacherAvailability.teacherId, teacherId),
-        eq(teacherAvailability.schoolId, schoolId)
-      )
-    );
 
   const slots: TeacherAvailabilitySlot[] = availabilitySlots.map(slot => ({
     id: slot.id,
@@ -156,24 +170,7 @@ export async function getTeacherMetrics(
   const totalAvailabilityMinutes = slots.reduce((sum, slot) => sum + slot.durationMinutes, 0);
   const totalAvailabilityHours = Math.round((totalAvailabilityMinutes / 60) * 100) / 100; // Round to 2 decimals
 
-  // 3. Get Qualifications
-  const qualifications = await db
-    .select({
-      qualificationId: teacherSubjects.id,
-      subjectId: subjects.id,
-      subjectName: subjects.name,
-      subjectCode: subjects.code,
-    })
-    .from(teacherSubjects)
-    .innerJoin(subjects, eq(teacherSubjects.subjectId, subjects.id))
-    .where(
-      and(
-        eq(teacherSubjects.teacherId, teacherId),
-        eq(teacherSubjects.schoolId, schoolId)
-      )
-    );
-
-  // 4. Calculate Capacity
+  // Calculate Capacity
   const availableHours = totalAvailabilityHours - totalWeeklyHours;
   const utilizationPercentage = totalAvailabilityHours > 0 
     ? Math.round((totalWeeklyHours / totalAvailabilityHours) * 100)
@@ -242,6 +239,57 @@ export async function hasAvailabilityConflict(
 }
 
 /**
+ * Teachers in a school whose open hours are above zero.
+ * Same rule as the subjects list: availability hours minus assigned hours.
+ * One pass for the school. The list page used to repeat this per subject.
+ */
+export async function countTeachersWithOpenCapacity(schoolId: string): Promise<number> {
+  const { db } = await import('@/lib/db');
+
+  const [teacherRows, assignmentRows, slotRows] = await Promise.all([
+    db
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.schoolId, schoolId), eq(users.role, 'teacher'))),
+    db
+      .select({
+        teacherId: teacherClasses.teacherId,
+        weeklyHours: teacherClasses.weeklyHours,
+      })
+      .from(teacherClasses)
+      .where(eq(teacherClasses.schoolId, schoolId)),
+    db
+      .select({
+        teacherId: teacherAvailability.teacherId,
+        startTime: teacherAvailability.startTime,
+        endTime: teacherAvailability.endTime,
+      })
+      .from(teacherAvailability)
+      .where(eq(teacherAvailability.schoolId, schoolId)),
+  ]);
+
+  const workloadHours = new Map<string, number>();
+  for (const row of assignmentRows) {
+    workloadHours.set(row.teacherId, (workloadHours.get(row.teacherId) ?? 0) + (row.weeklyHours || 0));
+  }
+
+  const availabilityMinutes = new Map<string, number>();
+  for (const row of slotRows) {
+    const minutes = calculateDurationMinutes(row.startTime, row.endTime);
+    availabilityMinutes.set(row.teacherId, (availabilityMinutes.get(row.teacherId) ?? 0) + minutes);
+  }
+
+  let openCount = 0;
+  for (const teacher of teacherRows) {
+    const availabilityHours = Math.round(((availabilityMinutes.get(teacher.id) ?? 0) / 60) * 100) / 100;
+    const openHours = availabilityHours - (workloadHours.get(teacher.id) ?? 0);
+    if (openHours > 0) openCount += 1;
+  }
+
+  return openCount;
+}
+
+/**
  * Get teachers with availability for assignment (sorted by capacity)
  */
 export async function getAvailableTeachersForAssignment(
@@ -250,26 +298,25 @@ export async function getAvailableTeachersForAssignment(
 ): Promise<Array<TeacherMetrics & { isQualified: boolean }>> {
   const { db } = await import('@/lib/db');
 
-  // Get all teachers
-  const teachers = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(and(eq(users.schoolId, schoolId), eq(users.role, 'teacher')));
+  const [teachers, qualified] = await Promise.all([
+    db
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.schoolId, schoolId), eq(users.role, 'teacher'))),
+    subjectId
+      ? db
+          .select({ teacherId: teacherSubjects.teacherId })
+          .from(teacherSubjects)
+          .where(
+            and(
+              eq(teacherSubjects.subjectId, subjectId),
+              eq(teacherSubjects.schoolId, schoolId)
+            )
+          )
+      : Promise.resolve([]),
+  ]);
 
-  // Get qualified teachers if subject specified
-  let qualifiedTeacherIds = new Set<string>();
-  if (subjectId) {
-    const qualified = await db
-      .select({ teacherId: teacherSubjects.teacherId })
-      .from(teacherSubjects)
-      .where(
-        and(
-          eq(teacherSubjects.subjectId, subjectId),
-          eq(teacherSubjects.schoolId, schoolId)
-        )
-      );
-    qualifiedTeacherIds = new Set(qualified.map(q => q.teacherId));
-  }
+  const qualifiedTeacherIds = new Set(qualified.map(q => q.teacherId));
 
   // Get metrics for each teacher
   const teachersWithMetrics = await Promise.all(
