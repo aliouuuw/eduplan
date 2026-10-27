@@ -42,5 +42,3 @@ local.db-*
 *.tsbuildinfo
 next-env.d.ts
 
-# Ranade (ITF Free Font License): self-hosting allowed, public redistribution is not. Fetched by `bun run fonts`.
-src/app/fonts/*.woff2

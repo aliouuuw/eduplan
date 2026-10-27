@@ -3,9 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "bun run fonts",
     "dev": "next dev",
-    "prebuild": "bun run fonts && bun run tsc --noEmit",
+    "prebuild": "bun run tsc --noEmit",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -15,7 +14,6 @@
     "seed:superadmin": "bun run scripts/seed-superadmin.ts",
     "seed:timetable": "bun run scripts/seed-timetable-data.ts",
     "migrate:templates": "bun run scripts/migrate-time-slot-templates.ts",
-    "fonts": "bun run scripts/fetch-fonts.ts",
     "test": "bun test"
   },
   "dependencies": {

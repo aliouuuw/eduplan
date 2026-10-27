@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import AuthSessionProvider from "@/components/providers/session-provider";
 import { Toaster } from "@/components/ui/toaster";
 
-// Self-hosted (ITF Free Font License). The file is gitignored and fetched by `bun run fonts`.
-const ranade = localFont({
-  src: "./fonts/ranade-variable.woff2",
-  variable: "--font-ranade",
-  weight: "100 700",
+// D33: Poppins. next/font downloads it at build time and serves it from our domain (SIL OFL).
+const poppins = Poppins({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-poppins",
   display: "swap",
 });
 
@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={ranade.variable}>
+    <html lang="fr" className={poppins.variable}>
       <body>
         <AuthSessionProvider>
           {children}

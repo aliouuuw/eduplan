@@ -50,6 +50,7 @@ Context: `PRODUCT.md` (who and why), `MVP_REWORK_PLAN.md` (scope, IA, flows, ord
 | D30 | Round 2 blends | **H · Mono verre** — F × [MonoCode](https://github.com/hardbeat920/monocode): neutral shell, inset workspace glass, hairline strokes, system UI. **I · Folio** — A × G: white cards on lavender mist with editorial type and section rules. Compare: `.impeccable/mocks/teacher-home/variantes-round2.html` | 10-27 |
 | D31 | Round 2 second slot (replaces the Folio half of D30) | **I · Mono sombre** replaces Folio. Same inset shell as H, MonoCode dark: shell `#0d0d0d`, panel `#141414`, light ink, same two accents. Compare: `variantes-round2.html` | 10-27 |
 | D32 | Visual language (replaces D25 and D26) | **A+ · Plat vif** is the language for the app (`variants/plat.css` + `variants/vif.css`). Mock the other screens in it: class space (Programme, Élèves), grading, phone register. Shared stylesheet for new screens: `.impeccable/mocks/teacher/src/app.css`. Gallery: `.impeccable/mocks/teacher/index.html` | 10-27 |
+| D33 | Typeface (replaces Ranade in D25) | **Poppins**, picked on `/design-system` against Ranade, Chillax, Instrument Sans, PT Sans and Google Sans. One family in two roles: `font-display` (titles, big numbers, class names: 500, tracking -0.025em) and `font-sans`. Self-hosted with `next/font/google` (SIL OFL) | 10-27 |
 
 ## Open
 

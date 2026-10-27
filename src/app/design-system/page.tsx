@@ -35,22 +35,19 @@ import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { classLabel, frSpaces } from "@/lib/fr"
 
-import { FontStage } from "./font-switcher"
 
 export const metadata = { title: "Système de design · EduPlan" }
 
 // Dev-only preview of every component in A+ Plat vif. Compare with .impeccable/mocks/teacher/.
-export default async function DesignSystemPage({ searchParams }: { searchParams: Promise<{ font?: string }> }) {
+export default function DesignSystemPage() {
   if (process.env.NODE_ENV === "production") notFound()
-  const { font } = await searchParams
 
   return (
-    <FontStage initial={font}>
     <main className="mx-auto flex max-w-6xl flex-col gap-10 px-8 py-12">
       <header>
         <h1 className="text-[38px] leading-tight">Système de design</h1>
         <p className="mt-1.5 text-muted-foreground">
-          A+ Plat vif · corail = maintenant, lavande = progrès · décision D32
+          A+ Plat vif · corail = maintenant, lavande = progrès · Poppins · décisions D32 et D33
         </p>
       </header>
 
@@ -256,8 +253,8 @@ export default async function DesignSystemPage({ searchParams }: { searchParams:
       <Section title="Caractère">
         <div className="grid gap-x-10 gap-y-6 lg:grid-cols-2">
           <Trait title="Deux voix typographiques">
-            Une voix d&apos;affichage pour les titres, les grands chiffres et les noms de classe ; une voix
-            d&apos;interface pour tout le reste. Le sélecteur en haut change les deux.
+            Poppins porte les deux : une voix d&apos;affichage (titres, grands chiffres, noms de classe, 500,
+            approche serrée) et une voix d&apos;interface pour tout le reste.
           </Trait>
           <Trait title="Typographie française">
             <span className="font-display text-[22px] text-foreground">
@@ -367,7 +364,6 @@ export default async function DesignSystemPage({ searchParams }: { searchParams:
         </div>
       </Section>
     </main>
-    </FontStage>
   )
 }
 

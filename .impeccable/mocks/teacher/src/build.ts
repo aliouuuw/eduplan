@@ -18,7 +18,7 @@ const dock = (active: string) =>
   `<nav class="dock" aria-label="Navigation"><div class="brand">e</div>${Object.keys(icons)
     .map((k) => `<a class="nav-item${k === active ? " is-active" : ""}" href="#"${k === active ? ' aria-current="page"' : ""}><span class="nav-ic"><svg viewBox="0 0 24 24">${icons[k]}</svg></span>${labels[k]}</a>`)
     .join("")}<div class="dock-end"><svg viewBox="0 0 24 24" aria-label="Notifications"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5h4"/></svg><span class="avatar">AD</span></div></nav>`;
-const head = `<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=ranade@400,500,700&display=swap">\n<style>\n${app}</style>`;
+const head = `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">\n<style>\n${app}</style>`;
 
 const pages = readdirSync(dir).filter((f) => f.endsWith(".html"));
 for (const f of pages) {

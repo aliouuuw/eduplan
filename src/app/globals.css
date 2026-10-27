@@ -14,9 +14,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* Two type roles. --ff-* are set by the /design-system font switcher; without them both roles are Ranade. */
-  --font-sans: var(--ff-sans, var(--font-ranade)), system-ui, sans-serif;
-  --font-display: var(--ff-display, var(--ff-sans, var(--font-ranade))), system-ui, sans-serif;
+  /* Two type roles (D33: both Poppins). Display = titles, big numbers, class names; sans = everything else. */
+  --font-sans: var(--font-poppins), system-ui, sans-serif;
+  --font-display: var(--font-poppins), system-ui, sans-serif;
   --font-mono: ui-monospace, monospace;
 
   --color-background: var(--background);
@@ -83,7 +83,7 @@
 
 :root {
   --fw-display: 500;
-  --ls-display: -0.02em;
+  --ls-display: -0.025em;
   --background: #f6f4fc;
   --foreground: #24212f;
   --card: #ffffff;
