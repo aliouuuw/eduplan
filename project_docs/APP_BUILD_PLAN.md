@@ -9,7 +9,7 @@ Status: plan, 2026-10-27. Starts after the design system (D32) landed in code. S
 | Stack | Next 16, React 19.3 (React Compiler on), Tailwind v4, Radix, Drizzle on libSQL, NextAuth 5, Bun |
 | Design system | A+ Plat vif in `src/app/globals.css` and `src/components/ui/` (24 restyled, 2 new: `switch`, `progress`). Preview: `/design-system` (dev only) |
 | Checks | `bunx tsc --noEmit` clean · `bun run lint` 0 errors, 30 warnings · `bun test` 1 test · `bun run build` passes |
-| Data | 16 tables (structure, accounts, timetable). None of the MVP teaching tables exist yet |
+| Data | Teaching tables in migration `0008`. Demo school `demo-dakar` via `bun run seed:demo`. Needs a database URL and a migrate before the seed writes |
 | Screens | Admin and superadmin pages from the first version, with the interim lilac look and the `useEffect` fetch pattern. Teacher home is a stub. No parent or student routes |
 | Mocks to build from | `.impeccable/mocks/teacher/` (Programme, Élèves, Correction, Appel) and `.impeccable/mocks/teacher-home/studio-vif-desktop.html` |
 
@@ -21,7 +21,7 @@ Each phase ends with every check green and a screenshot of the new screen next t
 |---|---|---|---|---|
 | 1 ✅ | Shell and routes (done 2026-10-27, branch `feat/app-shell`) | The A+ dock and page header as layout components; one route tree per role (IA, MVP plan section 5); French copy in the shell; empty states that name the next action | 2 | 1 day |
 | 2 ✅ | Data access pattern (done 2026-10-27, branch `feat/data-pattern`; reference page: admin invitations) | Server components read through `src/lib/data/<area>.ts`; writes through server actions with zod; one auth helper per role. Rebuild one admin page this way as the reference, then turn the four React Compiler rules back to "error" for new code | 2 | 1 day |
-| 3 | Schema | `academic_years`, `terms`, `topics`, `posts`, `attachments`, `submissions`, `grades`, `attendance_records`, `notifications`, then the D7 to D14 tables (`programmes`, `chapters`, `notions`, `class_chapter_plans`, `notion_coverage`, `remarks`, `student_flags`, `flag_rules`, `appreciations`, `message_threads`, `messages`). Seed script with the demo data of the mocks | 3 | 1 to 2 days |
+| 3 | Schema + demo seed (2026-10-27). Tables: `0008_lonely_matthew_murdock.sql`. Seed: `bun run seed:demo` (`src/lib/data/demo-seed.ts`, school `demo-dakar`). Not shown in the UI yet (phase 4) | 3 | 1 to 2 days |
 | 4 | Teacher home | Studio A+ with live data: today's courses, live course, copies to grade, grade pace, Programme and Élèves à suivre summaries | 7 | 1 to 2 days |
 | 5 | Class space | Tabs Travail, Programme, Élèves, Notes, Présences, Emploi du temps (mocks: `classe-programme`, `classe-eleves`) | 4, 10, 11 | 3 to 4 days |
 | 6 | Grading loop | Post an assignment, submissions, the correction screen (mock: `correction`), gradebook /20 with coefficients | 5 | 2 to 3 days |
@@ -29,7 +29,7 @@ Each phase ends with every check green and a screenshot of the new screen next t
 | 8 | Other roles | Parent and student homes, appréciations (D18), family thread (D14), weekly digest (D2) | 7, 8, 12, 13 | 3 to 4 days |
 | 9 | Admin setup | Guided setup flow; rebuild the remaining admin pages on the phase 2 pattern | 9 | 2 days |
 
-Before phase 3 and phase 8, answer the four open questions at the end of `DECISIONS.md` (flag thresholds, who loads the programme, whether students see flags, appréciation générale).
+The four product questions are answered (D34–D37). Phase 8 can use those rows.
 
 ## 3. How each feature is built
 

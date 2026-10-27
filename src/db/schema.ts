@@ -85,6 +85,7 @@ export const classes = sqliteTable('classes', {
   name: text('name').notNull(), // e.g., "6ème A", "CM2 B"
   academicYear: text('academic_year').notNull(), // e.g., "2024-2025"
   capacity: integer('capacity').default(30),
+  headTeacherId: text('head_teacher_id'), // professeur principal (D37)
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });
@@ -195,6 +196,243 @@ export const timetables = sqliteTable('timetables', {
   status: text('status', { enum: ['draft', 'active'] }).default('draft'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+// Teaching loop (MVP_REWORK_PLAN.md §4). Rubrics stay out (D5).
+// No SQL foreign keys: same pattern as teacher_classes (orphans must not count).
+
+export const academicYears = sqliteTable('academic_years', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  name: text('name').notNull(),
+  startsOn: text('starts_on').notNull(),
+  endsOn: text('ends_on').notNull(),
+  isCurrent: integer('is_current', { mode: 'boolean' }).default(false),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const terms = sqliteTable('terms', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  academicYearId: text('academic_year_id').notNull(),
+  name: text('name').notNull(),
+  position: integer('position').notNull(),
+  startsOn: text('starts_on').notNull(),
+  endsOn: text('ends_on').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const topics = sqliteTable('topics', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  classId: text('class_id').notNull(),
+  subjectId: text('subject_id').notNull(),
+  title: text('title').notNull(),
+  position: integer('position').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const posts = sqliteTable('posts', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  classId: text('class_id').notNull(),
+  subjectId: text('subject_id').notNull(),
+  topicId: text('topic_id'),
+  authorId: text('author_id').notNull(),
+  notionId: text('notion_id'),
+  type: text('type', { enum: ['lesson', 'material', 'assignment'] }).notNull(),
+  title: text('title').notNull(),
+  body: text('body'),
+  dueAt: integer('due_at', { mode: 'timestamp' }),
+  maxGrade: real('max_grade'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const attachments = sqliteTable('attachments', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  postId: text('post_id'),
+  submissionId: text('submission_id'),
+  storageKey: text('storage_key').notNull(),
+  fileName: text('file_name').notNull(),
+  mime: text('mime').notNull(),
+  size: integer('size').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const submissions = sqliteTable('submissions', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  postId: text('post_id').notNull(),
+  studentId: text('student_id').notNull(),
+  status: text('status', { enum: ['assigned', 'submitted', 'late', 'returned'] }).notNull(),
+  body: text('body'),
+  submittedAt: integer('submitted_at', { mode: 'timestamp' }),
+  returnedAt: integer('returned_at', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const grades = sqliteTable('grades', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  studentId: text('student_id').notNull(),
+  subjectId: text('subject_id').notNull(),
+  classId: text('class_id').notNull(),
+  termId: text('term_id').notNull(),
+  submissionId: text('submission_id'),
+  value: real('value').notNull(),
+  coefficient: real('coefficient').notNull(),
+  comment: text('comment'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const attendanceRecords = sqliteTable('attendance_records', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  studentId: text('student_id').notNull(),
+  timetableId: text('timetable_id').notNull(),
+  date: text('date').notNull(),
+  status: text('status', { enum: ['present', 'absent', 'late'] }).notNull(),
+  minutesLate: integer('minutes_late'),
+  justification: text('justification'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const notifications = sqliteTable('notifications', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  userId: text('user_id').notNull(),
+  kind: text('kind').notNull(),
+  title: text('title').notNull(),
+  body: text('body').notNull(),
+  readAt: integer('read_at', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const programmes = sqliteTable('programmes', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  subjectId: text('subject_id').notNull(),
+  levelId: text('level_id').notNull(),
+  name: text('name').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const chapters = sqliteTable('chapters', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  programmeId: text('programme_id').notNull(),
+  title: text('title').notNull(),
+  position: integer('position').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const notions = sqliteTable('notions', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  chapterId: text('chapter_id').notNull(),
+  title: text('title').notNull(),
+  position: integer('position').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const classChapterPlans = sqliteTable('class_chapter_plans', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  classId: text('class_id').notNull(),
+  chapterId: text('chapter_id').notNull(),
+  position: integer('position').notNull(),
+  plannedWeek: integer('planned_week'),
+  status: text('status', { enum: ['upcoming', 'current', 'done'] }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const notionCoverage = sqliteTable('notion_coverage', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  classId: text('class_id').notNull(),
+  notionId: text('notion_id').notNull(),
+  postId: text('post_id'),
+  coveredAt: integer('covered_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const remarks = sqliteTable('remarks', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  studentId: text('student_id').notNull(),
+  authorId: text('author_id').notNull(),
+  subjectId: text('subject_id').notNull(),
+  body: text('body').notNull(),
+  visibility: text('visibility', { enum: ['private', 'family'] }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const studentFlags = sqliteTable('student_flags', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  studentId: text('student_id').notNull(),
+  subjectId: text('subject_id').notNull(),
+  source: text('source', { enum: ['rule', 'teacher'] }).notNull(),
+  reason: text('reason').notNull(),
+  dismissedBy: text('dismissed_by'),
+  dismissedAt: integer('dismissed_at', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const flagRules = sqliteTable('flag_rules', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  kind: text('kind', { enum: ['average', 'absences', 'missing'] }).notNull(),
+  threshold: real('threshold').notNull(),
+  enabled: integer('enabled', { mode: 'boolean' }).default(true).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const schoolSettings = sqliteTable('school_settings', {
+  schoolId: text('school_id').primaryKey(),
+  showFlagsToStudents: integer('show_flags_to_students', { mode: 'boolean' }).default(false).notNull(),
+  showFlagsToParents: integer('show_flags_to_parents', { mode: 'boolean' }).default(false).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const appreciations = sqliteTable('appreciations', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  studentId: text('student_id').notNull(),
+  subjectId: text('subject_id'),
+  termId: text('term_id').notNull(),
+  authorId: text('author_id').notNull(),
+  body: text('body').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const messageThreads = sqliteTable('message_threads', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  studentId: text('student_id').notNull(),
+  teacherId: text('teacher_id').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const messages = sqliteTable('messages', {
+  id: text('id').primaryKey(),
+  schoolId: text('school_id').notNull(),
+  threadId: text('thread_id').notNull(),
+  authorId: text('author_id').notNull(),
+  body: text('body').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
 
 // Relations
