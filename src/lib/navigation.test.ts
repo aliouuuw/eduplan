@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { NAV, activeHref } from "./navigation";
+import { ADMIN_SECTIONS, NAV, TEACHER_SECTIONS, activeHref } from "./navigation";
 
 test("the deepest matching section is active", () => {
   const t = NAV.teacher;
@@ -17,5 +17,14 @@ test("every role has a home first and at most six items", () => {
   for (const [role, items] of Object.entries(NAV)) {
     expect(items[0].href).toBe(`/dashboard/${role}`);
     expect(items.length).toBeLessThanOrEqual(6);
+  }
+});
+
+test("every page a dock item claims is linked from its section tabs", () => {
+  // `match` lights a dock item on a page; without a tab link that page has no way in.
+  const sections = { teacher: TEACHER_SECTIONS, admin: ADMIN_SECTIONS } as const;
+  for (const [role, items] of Object.entries(NAV)) {
+    const links = (sections[role as keyof typeof sections] ?? []).flatMap((s) => s.links.map((l) => l.href));
+    for (const it of items) for (const m of it.match ?? []) expect(links).toContain(m);
   }
 });

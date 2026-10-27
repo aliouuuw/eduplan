@@ -80,8 +80,21 @@ export const NAV: Record<Role, NavItem[]> = {
   ],
 }
 
+export type Section = { prefixes: string[]; links: { href: string; label: string }[] }
+
+/** Sub-pages of the teacher sections, shown as tabs under the page header. */
+export const TEACHER_SECTIONS: Section[] = [
+  {
+    prefixes: [`${T}/timetable`, `${T}/availability`],
+    links: [
+      { href: `${T}/timetable`, label: "Emploi du temps" },
+      { href: `${T}/availability`, label: "Disponibilités" },
+    ],
+  },
+]
+
 /** Sub-pages of the admin sections, shown as tabs under the page header. */
-export const ADMIN_SECTIONS: { prefixes: string[]; links: { href: string; label: string }[] }[] = [
+export const ADMIN_SECTIONS: Section[] = [
   {
     prefixes: [`${A}/classes`, `${A}/class-groups`, `${A}/subjects`, `${A}/teachers`],
     links: [

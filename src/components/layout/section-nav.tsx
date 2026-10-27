@@ -3,11 +3,12 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
+import type { Section } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
 
 // Tabs between the pages of one section (e.g. École: Classes, Niveaux, Matières, Enseignants).
 // Links, not Radix tabs: each one is its own route.
-export function SectionNav({ sections }: { sections: { prefixes: string[]; links: { href: string; label: string }[] }[] }) {
+export function SectionNav({ sections }: { sections: Section[] }) {
   const pathname = usePathname()
   const section = sections.find((s) => s.prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`)))
   if (!section) return null
