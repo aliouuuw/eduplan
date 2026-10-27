@@ -16,6 +16,7 @@ School platform for francophone schools (Senegal first). Product: `PRODUCT.md`. 
 - Visual language: A+ Plat vif (D32). Tokens and rules: `src/app/globals.css` (read its header comment). Components: `src/components/ui/`. Live preview: `/design-system` (dev only).
 - Reference mocks to match: `.impeccable/mocks/teacher/` (gallery `index.html`) and `.impeccable/mocks/teacher-home/studio-vif-desktop.html`.
 - Use tokens (`text-now-ink`, `bg-progress-soft`, `shadow-lift`, `fill-progress`...), never raw hex in components.
+- Two type roles: `font-display` (page and card titles, big numbers, class names) and `font-sans` (everything else). Format class names with `classLabel()` and French punctuation with `frSpaces()` from `src/lib/fr.ts`.
 - UI copy is French. Grades are /20 with coefficients and trimestres.
 
 ## Gotchas

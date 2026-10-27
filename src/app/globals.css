@@ -14,7 +14,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-ranade), system-ui, sans-serif;
+  /* Two type roles. --ff-* are set by the /design-system font switcher; without them both roles are Ranade. */
+  --font-sans: var(--ff-sans, var(--font-ranade)), system-ui, sans-serif;
+  --font-display: var(--ff-display, var(--ff-sans, var(--font-ranade))), system-ui, sans-serif;
   --font-mono: ui-monospace, monospace;
 
   --color-background: var(--background);
@@ -80,6 +82,8 @@
 }
 
 :root {
+  --fw-display: 500;
+  --ls-display: -0.02em;
   --background: #f6f4fc;
   --foreground: #24212f;
   --card: #ffffff;
@@ -124,13 +128,22 @@
   }
   html {
     background: #f3f1fb;
+    /* never fake a bold: a single-weight display face stays as drawn */
+    font-synthesis-weight: none;
+    scrollbar-color: #d9d2fb transparent;
   }
   body {
     @apply text-foreground font-sans antialiased;
     min-height: 100vh;
     font-variant-numeric: tabular-nums;
     /* the A+ ground: lavender mist with one soft light from the top right, no blobs */
-    background: linear-gradient(200deg, #fdf6f4 0%, #f8f4fb 22%, #f5f3fc 48%, #f3f1fb 100%);
+    /* fine grain under everything removes banding in the light wash; it never sits over content */
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .3 0 0 0 0 .55 0 0 0 .045 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+      linear-gradient(200deg, #fdf6f4 0%, #f8f4fb 22%, #f5f3fc 48%, #f3f1fb 100%);
+  }
+  input, textarea {
+    caret-color: var(--progress-ink);
   }
   ::selection {
     background: #e3ddff;
@@ -144,6 +157,19 @@
     letter-spacing: -0.02em;
     text-wrap: balance;
   }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: var(--fw-display);
+    letter-spacing: var(--ls-display);
+  }
+}
+
+/* The display voice: page titles, card titles, big numbers, class names. */
+@utility font-display {
+  font-family: var(--font-display);
+  font-weight: var(--fw-display);
+  letter-spacing: var(--ls-display);
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 /* Gradient fills, only for things that carry meaning. */

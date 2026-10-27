@@ -33,19 +33,24 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { classLabel, frSpaces } from "@/lib/fr"
+
+import { FontStage } from "./font-switcher"
 
 export const metadata = { title: "Système de design · EduPlan" }
 
 // Dev-only preview of every component in A+ Plat vif. Compare with .impeccable/mocks/teacher/.
-export default function DesignSystemPage() {
+export default async function DesignSystemPage({ searchParams }: { searchParams: Promise<{ font?: string }> }) {
   if (process.env.NODE_ENV === "production") notFound()
+  const { font } = await searchParams
 
   return (
+    <FontStage initial={font}>
     <main className="mx-auto flex max-w-6xl flex-col gap-10 px-8 py-12">
       <header>
-        <h1 className="text-[38px] font-medium leading-tight">Système de design</h1>
+        <h1 className="text-[38px] leading-tight">Système de design</h1>
         <p className="mt-1.5 text-muted-foreground">
-          A+ Plat vif · corail = maintenant, lavande = progrès · Ranade · décision D32
+          A+ Plat vif · corail = maintenant, lavande = progrès · décision D32
         </p>
       </header>
 
@@ -64,13 +69,15 @@ export default function DesignSystemPage() {
 
       <Section title="Typographie">
         <div className="flex flex-col gap-2">
-          <p className="text-[38px] font-medium leading-tight tracking-[-0.03em]">Bonjour, Aïssatou</p>
-          <p className="text-[24px] font-medium tracking-[-0.02em]">3ème B, salle 7</p>
-          <p className="text-lg font-medium">Rythme des notes jusqu&apos;au conseil</p>
+          <p className="font-display text-[44px] leading-tight">Bonjour, Aïssatou</p>
+          <p className="font-display text-[26px]">{classLabel("3ème B")}, salle 7</p>
+          <p className="font-display text-lg">Rythme des notes jusqu&apos;au conseil</p>
           <p>Corps de texte : 9 notes saisies, 10 attendues à ce jour.</p>
           <p className="text-[13.5px] text-muted-foreground">Légende : trimestre 1, semaine 8 sur 12</p>
-          <p className="text-[52px] font-medium leading-none tracking-[-0.035em]">
-            53 <span className="text-lg font-normal tracking-normal text-muted-foreground">copies</span>
+          <p className="font-display text-[56px] leading-none">
+            53 <span className="font-sans text-lg font-normal tracking-normal text-muted-foreground">copies</span>
+            <span className="ml-8">8,5</span>
+            <span className="font-sans text-lg font-normal tracking-normal text-muted-foreground"> / 20</span>
           </p>
         </div>
       </Section>
@@ -234,7 +241,7 @@ export default function DesignSystemPage() {
               En cours depuis 10:00
             </span>
             <div>
-              <p className="text-[30px] font-medium leading-tight tracking-[-0.02em]">3ème B, salle 7</p>
+              <p className="font-display text-[30px] leading-tight">{classLabel("3ème B")}, salle 7</p>
               <p className="text-muted-foreground">Mathématiques · 31 élèves · 1 excusé</p>
             </div>
             <Progress value={40} tone="now" glow label="Cours en cours, 40 %" />
@@ -245,6 +252,30 @@ export default function DesignSystemPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Section title="Caractère">
+        <div className="grid gap-x-10 gap-y-6 lg:grid-cols-2">
+          <Trait title="Deux voix typographiques">
+            Une voix d&apos;affichage pour les titres, les grands chiffres et les noms de classe ; une voix
+            d&apos;interface pour tout le reste. Le sélecteur en haut change les deux.
+          </Trait>
+          <Trait title="Typographie française">
+            <span className="font-display text-[22px] text-foreground">
+              {classLabel("6ème A")} · {classLabel("1ère S")} · {classLabel("2nde A")}
+            </span>
+            <br />
+            {frSpaces("Échéance : 11 décembre. Prêt ? « Très bon travail »")}
+          </Trait>
+          <Trait title="Onglet qui glisse">
+            La feuille blanche de l&apos;onglet actif glisse d&apos;un onglet à l&apos;autre. Sans JavaScript,
+            l&apos;onglet actif garde sa propre feuille.
+          </Trait>
+          <Trait title="Grain du fond">
+            Un grain très fin sous le fond lavande efface les bandes du dégradé. Il ne passe jamais sur le
+            contenu.
+          </Trait>
+        </div>
+      </Section>
 
       <Section title="Alertes">
         <div className="grid gap-4 lg:grid-cols-2">
@@ -336,6 +367,7 @@ export default function DesignSystemPage() {
         </div>
       </Section>
     </main>
+    </FontStage>
   )
 }
 
@@ -360,11 +392,20 @@ function Swatch({ name, token, className }: { name: string; token: string; class
   )
 }
 
+function Trait({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <h3 className="font-display text-lg">{title}</h3>
+      <p className="text-[14.5px] leading-relaxed text-ink-2">{children}</p>
+    </div>
+  )
+}
+
 function ProgressRow({ cls, note, value, ahead }: { cls: string; note: string; value: number; ahead?: boolean }) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between">
-        <span className="font-medium">{cls}</span>
+        <span className="font-display text-[17px]">{classLabel(cls)}</span>
         <span className={`text-[13.5px] font-medium ${ahead ? "text-progress-ink" : "text-now-ink"}`}>{note}</span>
       </div>
       <Progress value={value} expected={66.7} glow={ahead} label={`${cls}, programme`} />
