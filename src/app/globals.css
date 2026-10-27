@@ -60,6 +60,11 @@
   --color-progress-ink: var(--progress-ink);
   --color-progress-soft: var(--progress-soft);
   --color-progress-faint: var(--progress-faint);
+  --color-progress-edge: var(--progress-edge);
+  --color-progress-muted: var(--progress-muted);
+  --color-now-strong: var(--now-strong);
+  --color-now-soft-hover: var(--now-soft-hover);
+  --color-track: var(--track);
 
   /* 10 / 14 / 20 / 28: chips, inner blocks, cards, sheets */
   --radius-sm: 0.625rem;
@@ -121,6 +126,11 @@
   --progress-ink: #5a47c7;
   --progress-soft: #eeebfd;
   --progress-faint: #f7f6fe;
+  --progress-edge: #c4bcef;   /* empty checkbox / radio ring */
+  --progress-muted: #d9d2fb;  /* scrollbar thumb */
+  --now-strong: #9a3220;      /* initials and dense text on now-soft */
+  --now-soft-hover: #fbd9d0;
+  --track: #e4e0f2;           /* switch off */
 
   --sidebar: transparent;
   --sidebar-foreground: #6c687d;
@@ -140,7 +150,7 @@
     background: #f3f1fb;
     /* never fake a bold: a single-weight display face stays as drawn */
     font-synthesis-weight: none;
-    scrollbar-color: #d9d2fb transparent;
+    scrollbar-color: var(--progress-muted) transparent;
   }
   body {
     @apply text-foreground font-sans antialiased;

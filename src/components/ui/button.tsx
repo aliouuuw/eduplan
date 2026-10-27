@@ -14,7 +14,7 @@ const buttonVariants = cva(
         default: "fill-primary text-primary-foreground shadow-glow-primary hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.18),0_16px_26px_-12px_rgb(214_90_64/0.65),0_4px_10px_-6px_rgb(36_33_47/0.5)]",
         destructive:
           // Tonal on purpose: A+ never fills a surface with saturated coral.
-          "bg-now-soft text-now-ink hover:bg-[#fbd9d0]",
+          "bg-now-soft text-now-ink hover:bg-now-soft-hover",
         outline:
           "bg-card text-foreground shadow-lift hover:bg-progress-faint [&_svg]:text-progress-ink",
         secondary:

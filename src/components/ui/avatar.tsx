@@ -32,7 +32,7 @@ function Avatar({
         size === "sm" && "size-8 text-xs",
         size === "md" && "size-10 text-sm",
         size === "lg" && "size-14 text-lg",
-        tone === "now" && "bg-now-soft text-[#9a3220]",
+        tone === "now" && "bg-now-soft text-now-strong",
         tone === "progress" && "bg-progress-soft text-progress-ink",
         tone === "neutral" && "bg-muted text-ink-2",
         className
