@@ -14,8 +14,8 @@
     "seed:superadmin": "bun run scripts/seed-superadmin.ts",
     "seed:timetable": "bun run scripts/seed-timetable-data.ts",
     "migrate:templates": "bun run scripts/migrate-time-slot-templates.ts",
-    "test": "bun test",
-    "check": "bunx tsc --noEmit && bun run lint && bun test",
+    "test": "bun test --conditions react-server",
+    "check": "bunx tsc --noEmit && bun run lint && bun run test",
     "check:changed": "sh scripts/check-changed.sh"
   },
   "dependencies": {
@@ -50,6 +50,7 @@
     "react-day-picker": "^9.11.1",
     "react-dom": "^19.3.1",
     "react-hook-form": "^7.64.0",
+    "server-only": "0.0.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "zod": "^4.1.12"

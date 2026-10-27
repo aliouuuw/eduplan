@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { classLabel, frSpaces } from "./fr";
+import { classLabel, formatDay, frSpaces } from "./fr";
 
 test("class names use French superscript ordinals", () => {
   expect(classLabel("3ème B")).toBe("3ᵉ B");
@@ -23,4 +23,9 @@ test("frSpaces handles the review cases", () => {
   const once = frSpaces("« Bravo » : prêt ?");
   expect(frSpaces(once)).toBe(once);
   expect(once).toBe("«\u202FBravo\u202F»\u202F: prêt\u202F?");
+});
+
+test("formatDay writes French short dates in Dakar time", () => {
+  expect(formatDay(new Date("2026-10-26T23:30:00Z"))).toBe("26 oct. 2026");
+  expect(formatDay(new Date("2026-12-11T08:00:00Z"))).toBe("11 déc. 2026");
 });

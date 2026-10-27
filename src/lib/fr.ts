@@ -28,3 +28,10 @@ export function frSpaces(text: string): string {
     .replace(/«[ \u00A0\u202F]?/g, `«${NNBSP}`);
   return spaced.replace(/\u0000(\d+)\u0000/g, (_, i: string) => urls[Number(i)]);
 }
+
+const DAY = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", year: "numeric", timeZone: "Africa/Dakar" });
+
+/** "26 oct. 2026". Dakar time (UTC+0), so a date never shifts by a day between server and screen. */
+export function formatDay(date: Date): string {
+  return DAY.format(date);
+}

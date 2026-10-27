@@ -29,7 +29,9 @@ School platform for francophone schools (Senegal first). Product: `PRODUCT.md`. 
 
 ## Gotchas
 
-- The admin pages fetch in `useEffect` and set state (30 lint warnings). Do not copy this pattern: new pages are server components that read through `src/lib`.
+- Data pattern (reference: `src/app/dashboard/admin/invitations/`): the page is a server component that calls `requireSchoolRole()` (`src/lib/session.ts`) and reads through `src/lib/data/<area>.ts` (server-only, takes `db`, holds the business rules). Writes are server actions in `actions.ts` returning `ActionResult` (`src/lib/action-result.ts`), then `revalidatePath`. Client components only for interactions.
+- Data tests use `testDb()` (`src/lib/data/test-db.ts`, in-memory with the real migrations). `bun run test` passes `--conditions react-server` so `server-only` modules load.
+- Legacy pages still fetch in `useEffect` + setState; they are listed in `eslint.config.mjs` as warnings. Every other file gets those React Compiler rules as errors. Remove a file from the list when you rebuild it.
 - `@radix-ui/react-slot` is pinned to ^1.5 through `overrides`: older copies render nothing for lazy server children inside `asChild`.
 - Public routes live in `src/lib/public-routes.ts`. Every page under `src/app/(auth)` must be listed there; the test reads that folder. Every other route needs a session.
 - Select teachers with `activeTeacher()` (`src/lib/teacher-scope.ts`), never `eq(users.role, 'teacher')`: it also excludes soft-deleted accounts. A test fails on the bare form.

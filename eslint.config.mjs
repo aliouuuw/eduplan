@@ -22,8 +22,35 @@ const eslintConfig = defineConfig([
       "react-hooks/exhaustive-deps": "off",
       "prefer-const": "off",
       "react/no-unescaped-entities": "off",
-      // ponytail: the legacy admin pages fetch in useEffect + setState (28 hits). They are rebuilt as
-      // server components in MVP steps 2 and 9; these go back to "error" once that lands. New code must not use the pattern.
+    },
+  },
+  {
+    // ponytail: legacy pages that still fetch in useEffect + setState. New files get these rules as errors.
+    // Remove a file from this list when its page is rebuilt on the data pattern (src/lib/data + actions).
+    files: [
+      "src/app/dashboard/admin/class-groups/\\[groupId\\]/page.tsx",
+      "src/app/dashboard/admin/class-groups/page.tsx",
+      "src/app/dashboard/admin/classes/\\[classId\\]/page.tsx",
+      "src/app/dashboard/admin/classes/page.tsx",
+      "src/app/dashboard/admin/scheduling/templates/page.tsx",
+      "src/app/dashboard/admin/scheduling/time-slots/page.tsx",
+      "src/app/dashboard/admin/scheduling/timetables/page.tsx",
+      "src/app/dashboard/admin/subjects/\\[subjectId\\]/page.tsx",
+      "src/app/dashboard/admin/subjects/page.tsx",
+      "src/app/dashboard/admin/teachers/\\[teacherId\\]/availability/page.tsx",
+      "src/app/dashboard/admin/teachers/\\[teacherId\\]/page.tsx",
+      "src/app/dashboard/admin/teachers/availability/page.tsx",
+      "src/app/dashboard/admin/teachers/page.tsx",
+      "src/app/dashboard/admin/users/page.tsx",
+      "src/app/dashboard/superadmin/password-resets/page.tsx",
+      "src/app/dashboard/superadmin/schools/page.tsx",
+      "src/app/dashboard/superadmin/users/page.tsx",
+      "src/app/dashboard/teacher/availability/page.tsx",
+      "src/components/calendar/drag/calendar-drag-manager.tsx",
+      "src/components/class-timetable-tab.tsx",
+      "src/components/forms/time-slot-form.tsx",
+    ],
+    rules: {
       "react-hooks/set-state-in-effect": "warn",
       "react-hooks/immutability": "warn",
       "react-hooks/refs": "warn",
