@@ -118,7 +118,7 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {statCards.map((stat, index) => (
               <Link key={stat.title} href={stat.href} className="group block h-full">
-                <article className={`flex h-full flex-col justify-between soft-raised rounded-2xl p-5 transition-[filter] group-hover:brightness-[0.98] ${['bg-[#e8e5ff]', 'bg-[#fff9e6]', 'bg-[#ffe8e8]', 'bg-[#e8f5ed]'][index % 4]}`}>
+                <article className={`flex h-full flex-col justify-between shadow-lift rounded-xl p-5 transition-[filter] group-hover:brightness-[0.98] ${['bg-[#e8e5ff]', 'bg-[#fff9e6]', 'bg-[#ffe8e8]', 'bg-[#e8f5ed]'][index % 4]}`}>
                   <div className="space-y-3">
                     <p className="text-sm font-semibold text-[#1a1a2e]">{stat.title}</p>
                     <div className="text-3xl font-bold text-[#111827]">
@@ -144,7 +144,7 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {quickActions.map((action) => (
               <Link key={action.title} href={action.href} className="group block h-full">
-                <article className="flex h-full flex-col soft-raised rounded-2xl bg-white p-5 transition-colors group-hover:bg-[#fbfaff]">
+                <article className="flex h-full flex-col shadow-lift rounded-xl bg-white p-5 transition-colors group-hover:bg-[#fbfaff]">
                   <h3 className="text-base font-semibold text-[#111827]">{action.title}</h3>
                   <p className="mt-2 text-sm text-[#7b7590]">{action.description}</p>
                 </article>

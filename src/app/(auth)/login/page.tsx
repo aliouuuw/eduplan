@@ -58,7 +58,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen bg-white">
-      <div className="grain relative hidden w-1/2 flex-col justify-between overflow-hidden bg-[linear-gradient(135deg,#6b7cf7_0%,#8b9af0_100%)] p-12 lg:flex">
+      <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-[linear-gradient(135deg,#6b7cf7_0%,#8b9af0_100%)] p-12 lg:flex">
         <div className="relative z-10 flex items-center gap-3">
           <span className="text-xl font-bold tracking-tight text-white">EduPlan</span>
         </div>
@@ -72,7 +72,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <div className="soft-wash flex flex-1 flex-col items-center justify-center p-6 sm:p-10 lg:p-16">
+      <div className="flex flex-1 flex-col items-center justify-center p-6 sm:p-10 lg:p-16">
         <div className="mb-8 self-start lg:hidden">
           <span className="text-lg font-bold text-[#111827]">EduPlan</span>
         </div>

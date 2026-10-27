@@ -669,7 +669,7 @@ export default function AdminSubjectsPage() {
                 placeholder="Search subjects..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="soft-inset h-11 w-full rounded-xl bg-[#f5f4fa] px-3 py-2 outline-none focus-visible:bg-white focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                className="h-11 w-full rounded-full bg-muted px-4 shadow-[inset_0_0_0_1px_var(--input)] outline-none focus-visible:bg-card focus-visible:ring-[3px] focus-visible:ring-ring/50"
               />
             </div>
           </div>

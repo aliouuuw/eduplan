@@ -302,7 +302,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
           group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-colors
           ${isChild ? 'pl-2' : ''}
           ${isActive
-            ? 'soft-raised bg-white font-semibold text-[#2b2a3d]'
+            ? 'shadow-tab bg-card font-medium text-foreground'
             : 'text-[#6e6e7e] hover:bg-white/50 hover:text-[#2b2a3d]'
           }
         `}
@@ -328,7 +328,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
 
       {/* Sidebar */}
       <aside className={`
-        glass fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col rounded-r-[22px] lg:inset-y-3 lg:left-3 lg:rounded-[22px]
+        bg-card shadow-lift fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col rounded-r-[22px] lg:inset-y-3 lg:left-3 lg:rounded-[22px]
         transform transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
@@ -356,7 +356,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
           <button
             type="button"
             onClick={handleSignOut}
-            className="soft-raised flex w-full items-center gap-2 rounded-[14px] bg-white/80 px-2 py-2 text-left transition-colors hover:bg-white"
+            className="shadow-lift flex w-full items-center gap-2 rounded-[14px] bg-card px-2 py-2 text-left transition-colors hover:bg-white"
           >
             <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#e8e5ff] text-xs font-bold text-[#4a57c9]">
               {user.name?.[0]?.toUpperCase() || 'U'}

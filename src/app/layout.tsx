@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import AuthSessionProvider from "@/components/providers/session-provider";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/toaster";
 
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
-  subsets: ["latin"],
+// Self-hosted (ITF Free Font License). The file is gitignored and fetched by `bun run fonts`.
+const ranade = localFont({
+  src: "./fonts/ranade-variable.woff2",
+  variable: "--font-ranade",
+  weight: "100 700",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "EduPlan - School Management System",
-  description: "Multi-tenant school management system for Senegalese schools",
+  title: "EduPlan",
+  description: "La plateforme de l'enseignement et de l'apprentissage de l'école.",
 };
 
 export default function RootLayout({
@@ -20,13 +23,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${jakarta.variable} antialiased`}
-      >
+    <html lang="fr" className={ranade.variable}>
+      <body>
         <AuthSessionProvider>
           {children}
-          <Toaster position="top-right" />
+          <Toaster />
         </AuthSessionProvider>
       </body>
     </html>

@@ -15,7 +15,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
   }
 
   return (
-    <div className="soft-wash min-h-screen">
+    <div className="min-h-screen">
       <DashboardSidebar user={session.user} />
 
       <div className="lg:pl-[284px]">
