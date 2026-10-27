@@ -14,7 +14,9 @@
     "seed:superadmin": "bun run scripts/seed-superadmin.ts",
     "seed:timetable": "bun run scripts/seed-timetable-data.ts",
     "migrate:templates": "bun run scripts/migrate-time-slot-templates.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "check": "bunx tsc --noEmit && bun run lint && bun test",
+    "check:changed": "sh scripts/check-changed.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
