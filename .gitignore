@@ -42,3 +42,8 @@ local.db-*
 *.tsbuildinfo
 next-env.d.ts
 
+# Local design experiments and editor plans. Not app code.
+.taste-skill/
+prototype/
+.cursor/plans/
+
