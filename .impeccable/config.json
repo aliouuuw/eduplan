@@ -4,24 +4,6 @@
     "ignoreFiles": [],
     "ignoreValues": [
       {
-        "rule": "cramped-padding",
-        "value": "*",
-        "files": [
-          ".impeccable/mocks/decision/assigned.html"
-        ],
-        "createdAt": "2026-10-22T02:00:35.320Z",
-        "reason": "agent: top bar is 58px with children vertically centered (12px inset around the 34px search); detector reads missing padding, not flush text"
-      },
-      {
-        "rule": "cream-palette",
-        "value": "*",
-        "files": [
-          ".impeccable/mocks/decision/challenger-lexicon.html"
-        ],
-        "createdAt": "2026-10-22T02:00:35.338Z",
-        "reason": "agent: cream ground is the dealt challenger's own catalog palette (rw-lexicon-shoulder-and-plate); risk named on its card"
-      },
-      {
         "rule": "dark-glow",
         "value": "*",
         "files": [
@@ -29,33 +11,6 @@
         ],
         "createdAt": "2026-10-22T09:03:58.336Z",
         "reason": "agent: ink-tinted shadows on .tabs and .popover have a y-offset (1px and 6px); elevation, not a zero-offset glow"
-      },
-      {
-        "rule": "overused-font",
-        "value": "roboto",
-        "files": [
-          ".impeccable/mocks/decision/v3-canon.html"
-        ],
-        "createdAt": "2026-10-25T18:06:09.690Z",
-        "reason": "agent: canon card deliberately reproduces the Google Classroom standard (Roboto) as the category baseline; rejected mock, not shipped"
-      },
-      {
-        "rule": "nested-cards",
-        "value": "*",
-        "files": [
-          ".impeccable/mocks/teacher-home/studio-desktop.html"
-        ],
-        "createdAt": "2026-10-26T01:37:59.273Z",
-        "reason": "agent: the flagged element is the chart's floating tooltip (.tip), a popover with a small shadow, not a nested card; verified by removing its shadow, which clears the finding"
-      },
-      {
-        "rule": "nested-cards",
-        "value": "*",
-        "files": [
-          ".impeccable/mocks/teacher-home/studio-neo-desktop.html"
-        ],
-        "createdAt": "2026-10-26T12:00:00.000Z",
-        "reason": "agent: direction D is neumorphism by brief; pressed wells (slots, tracks) inside raised modules are the style's defining idiom. Inner raised items, plot and list wells were already removed, leaving 2 depth levels"
       },
       {
         "rule": "flat-type-hierarchy",
@@ -73,7 +28,7 @@
           ".impeccable/mocks/teacher/classe-eleves.html"
         ],
         "createdAt": "2026-10-27T14:58:45.000Z",
-        "reason": "agent: the flagged element is the appréciation text field (.field), a form input that needs a visible boundary; a probe with the field background removed returns []"
+        "reason": "agent: the flagged element is the appr\u00e9ciation text field (.field), a form input that needs a visible boundary; a probe with the field background removed returns []"
       },
       {
         "rule": "nested-cards",

@@ -1,6 +1,8 @@
 # Studio variants: plan
 
-Status: round 1 verdict 2026-10-27 (keep A, F, G). Round 2: H Mono verre (light) and I Mono sombre (dark). Compare: `.impeccable/mocks/teacher-home/variantes-round2.html`. Decisions: D28–D31 in `DECISIONS.md`.
+> **History.** This document records the design exploration that led to A+ Plat vif (D32) and Poppins (D33). The mock files and renders it lists were removed in the cleanup of 2026-10-27; they remain in git history. Current references: `DECISIONS.md` (D32, D33), `.impeccable/mocks/teacher/` and `.impeccable/mocks/teacher-home/studio-vif-desktop.html`.
+
+Status: **closed.** Pick **A+ Plat vif** (D32). Compare pages and per-direction CSS removed 2026-10-27; see git history. Decisions: D28–D33 in `DECISIONS.md`.
 
 ## 1. Goal
 

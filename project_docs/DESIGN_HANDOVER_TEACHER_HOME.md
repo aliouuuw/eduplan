@@ -1,17 +1,19 @@
 # Design handover: teacher home
 
+> **History.** This document records the design exploration that led to A+ Plat vif (D32) and Poppins (D33). The mock files and renders it lists were removed in the cleanup of 2026-10-27; they remain in git history. Current references: `DECISIONS.md` (D32, D33), `.impeccable/mocks/teacher/` and `.impeccable/mocks/teacher-home/studio-vif-desktop.html`.
+
 Last update: 2026-10-27. For: the next agent or designer who continues EduPlan's design work. You need no other context than this file and the files it links.
 
 ## 1. Status in one minute
 
 | | |
 |---|---|
-| **Done** | The information architecture and UX of the teacher home are approved. Studio structure (D6). Round 1 verdict: keep A, F, G (D29). Round 2: **H Mono verre** (light inset) and **I Mono sombre** (dark inset, D31). Slop detector `[]` on the built directions |
-| **Live mocks** | Same DOM for variants: `.impeccable/mocks/teacher-home/variants/`. Compare round 1 in `variantes.html`, round 2 in `variantes-round2.html`. Legacy structure picks: `index.html` (studio, lagune, feuille) |
-| **Picked (2026-10-26)** | Structure 1, **Studio**. Brief: `.impeccable/surfaces/src-app-dashboard-teacher-page-tsx.md` |
-| **Teacher needs (section 7)** | Interview done 2026-10-26. Results: `MVP_REWORK_PLAN.md` sections 3, 5, 6, 9 (D6 to D14) |
-| **Next** | Pick H (light) or I (dark), or a named mix, and lock tokens in section 4. Then phone register in the winner. No new mock screens beyond variants (D26) |
-| **Not done** | No application code changed for the new design. Variant assets may still be uncommitted on the branch |
+| **Done** | Studio structure (D6). Teacher-needs interview (D7–D19). Visual language **A+ Plat vif** (D32) and **Poppins** (D33). Product open questions answered (D34–D37). Exploration mocks removed 2026-10-27; history in git |
+| **Live mocks** | Teacher home: `.impeccable/mocks/teacher-home/studio-vif-desktop.html` (build: `variants/build.ts`). Other teacher screens: `.impeccable/mocks/teacher/index.html` + `src/app.css` |
+| **Picked** | Structure **Studio**. Language **A+ Plat vif**. Brief: `.impeccable/surfaces/src-app-dashboard-teacher-page-tsx.md` |
+| **Tokens in code** | `src/app/globals.css` (header comment). Preview: `/design-system` (dev) |
+| **Next** | MVP step 2: shell and IA in code (`APP_BUILD_PLAN.md`). Match mocks above; do not reopen variant compare pages |
+| **Not done** | Most dashboard routes still use the old lilac look until step 2 |
 
 ## 2. Read first
 
@@ -45,70 +47,44 @@ Toddle in one line: "a collaborative educational workspace with a soft, editoria
 
 ## 4. The approved visual language (source of truth for code)
 
-Every live mock carries these tokens in its `:root`.
+**D32 · A+ Plat vif** on top of plat pastel (round 8). Canonical CSS: `variants/plat.css` + `variants/vif.css`. App tokens: `src/app/globals.css`.
 
 | Token | Value | Role |
 |---|---|---|
-| `--bg` | `#f6f4fc` | Page ground, "lavender mist". Navigation sits directly on it |
-| `--sheet` | `#ffffff` | Cards and modules |
+| Ground | `#f3f1fb` + soft diagonal mist gradient | Page background (not flat grey) |
+| `--sheet` / cards | `#ffffff` | Modules; inset top lip + `--lift` shadow |
 | `--ink` / `--ink-2` / `--ink-3` | `#24212f` / `#55516a` / `#6c687d` | Text. `--ink` is also the primary button |
-| `--lav` / `--lav-ink` / `--lav-t` / `--lav-tt` | `#8f7ff0` / `#5a47c7` / `#eeebfd` / `#f7f6fe` | Progress, selection, links, active navigation |
-| `--coral` / `--coral-ink` / `--coral-t` | `#f2765f` / `#b8432f` / `#fdeae6` | "Now" and attention: live course, absences, late work |
-| `--line` | `#efedf6` | Dividers inside lists only |
+| `--prog` / `--prog-ink` / `--prog-t` | `#8f7ff0` / `#5a47c7` / `#eeebfd` | Progress, selection, links, active nav |
+| `--now` / `--now-ink` / `--now-t` | `#f2765f` / `#b8432f` / `#fdeae6` | Live course, absences, late work |
+| `--line` | `#efedf6` | List dividers only |
 
-Rules:
+Rules (see also `globals.css` header):
 
-1. Font: **Ranade** (Fontshare), weights 400/500/700, everywhere. Headings 500 with -0.02em tracking. Tabular figures for numbers.
-2. Cards: white, radius 28 (blocks inside: 20), **no border, no shadow**.
-3. Controls are capsules (search, buttons, segmented controls).
-4. Primary action: ink capsule. On phones it carries the only shadow on screen (`0 10px 20px -10px rgba(36,33,47,.55)`).
-5. Text on coloured fills uses the matching `-ink` colour, never grey. Never white text on `--coral` or `--lav` (contrast fails).
-6. Work to grade: Superlist-style round checkboxes. Digital work shows previews of student answers (name + one line, 12 px minimum). Paper work shows none.
-7. Not used: icon badges in tiles, chip rows, borders around rows, gradients, 3D icons (only if an illustrator draws them later).
+1. Font: **Poppins** (D33). `font-display` for titles and big numbers (500, -0.025em). `font-sans` for everything else.
+2. Gradients only on progress fills, the live course, and the one primary action. No decorative blobs.
+3. Glows are tinted, offset shadows (`--lift`, `--shadow-glow-*`), never zero-offset halos.
+4. Controls stay capsules. One primary action per screen; on phones it is the only raised element.
+5. Text on tinted fills uses `-ink` variants. Never white on coral or lavender fills.
+6. Work to grade: round checkboxes; digital work shows a name + one line preview (12 px min).
 
-### Round 2 candidate H (Mono verre, pending final pick)
-
-Maps to [MonoCode](https://github.com/hardbeat920/monocode) `layout-inset` light: shell `#f5f5f5` class neutral HSL, panel `#fff`, strokes at 4% / 7% content mix, **system-ui** (not Ranade). EduPlan accents unchanged (D21). Source: `variants/mono.css`, mock `studio-mono-desktop.html`.
-
-| Token | Value | Role |
-|---|---|---|
-| `--shell` | `hsl(240 4% 96%)` | Outer ground (MonoCode `--inset-surface` class) |
-| `--panel` | `#ffffff` | Opaque workspace card |
-| `--stroke-inset` | `color-mix(ink 4%)` | Card edge, controls, slots |
-| `--line` | `color-mix(ink 7%)` | List dividers (MonoCode `--color-stroke`) |
-| `--now` / `--prog` | coral / teal | Same meaning as baseline |
-
-### Round 2 candidate I (Mono sombre, pending final pick)
-
-Same geometry as H. MonoCode dark defaults (`:root`, not `.theme-light`): shell `#0d0d0d`, panel `#141414`, content at 92% lightness. Accent text is light (`--now-ink`, `--prog-ink`) so it stays readable on the dark panel. Source: `variants/sombre.css`, mock `studio-sombre-desktop.html`.
+Variant exploration (A–K, MonoCode, glass fonds) is archived in git history and `STUDIO_VARIANTS_PLAN.md`. Do not rebuild compare pages unless the product reopens that question.
 
 ## 5. The live mocks
 
-All in `.impeccable/mocks/teacher-home/`. Self-contained HTML, inline CSS, no JavaScript. Screenshots: `.impeccable/review/v5/`.
+| Area | Path | Build |
+|---|---|---|
+| Teacher home (Studio + suivi modules) | `teacher-home/studio-vif-desktop.html` | `cd variants && bun build.ts` |
+| Class tabs, grading, phone register | `teacher/index.html` (gallery) | `teacher/src/build.ts` |
 
-| # | Files | Structure | Signature | Phone (appel 3ème B) |
-|---|---|---|---|---|
-| 1 | `studio-desktop.html`, `studio-phone.html` | Labelled icon dock, module dashboard: 2 stats, grade-pace chart, today's courses, live course, work to grade | Grades entered vs the pace needed before the conseil | List with P / A / R per student |
-| 2 | `lagune-desktop.html`, `lagune-phone.html` | Tree sidebar, live course first, work cards, class cards, calendar panel on the right | Seat plan (tables-bancs) in the live course card | Tap a seat to mark absent, twice for late |
-| 3 | `feuille-desktop.html`, `feuille-phone.html` | Tree sidebar, the day as accordions, side panel for grading and the conseil | Register open inside the live course | Accordions with présence switches |
-
-Demo data (illustrative, keep consistent): teacher Aïssatou Diop, Mathématiques, École Internationale de Dakar, Monday 26 October 2026, trimestre 1 week 8 of 12, conseil on 11 December. 3ème B has 31 students on every screen. Do not invent metrics or claims.
-
-Other files in that folder are history: `toddle-*` (round 3), `atelier-*`, `ephemeride-*`, `cartable-*`, `carnet-vivant-*`, `plate-*` (round 2). Do not present them.
+Demo data (keep consistent): Aïssatou Diop, Mathématiques, École Internationale de Dakar, Monday 26 October 2026, trimestre 1 week 8 of 12, conseil 11 December. 3ème B = 31 students.
 
 ### How to check a mock
 
 ```bash
-# render (desktop 1440x900, phone 390x844)
-H=~/Library/Caches/ms-playwright/chromium_headless_shell-1194/chrome-mac/headless_shell
-$H --headless --hide-scrollbars --virtual-time-budget=10000 --window-size=1440,900 \
-  --screenshot=.impeccable/review/v5/studio-desktop.png file://$PWD/.impeccable/mocks/teacher-home/studio-desktop.html
-
-# slop and accessibility detector (expect [])
-~/.claude/skills/impeccable/scripts/impeccable detect --json .impeccable/mocks/teacher-home/{studio,lagune,feuille}-{desktop,phone}.html
+cd .impeccable/mocks/teacher-home/variants && bun build.ts && ./render.sh
+# expect detector JSON: []
+# screenshot: .impeccable/review/vif.png
 ```
-
-Current state: the detector returns 0 findings on all 6 files. One recorded suppression in `.impeccable/config.json`: `nested-cards` on `studio-desktop.html` (a false positive from an earlier chart tooltip).
 
 ## 6. Lessons from 8 rounds (avoid repeating them)
 
@@ -119,23 +95,16 @@ Current state: the detector returns 0 findings on all 6 files. One recorded supp
 5. **Check the data, not only the pixels.** Earlier rounds had ticked checkboxes on unfinished work, a chart axis mixing weeks and classes, and counts that did not add up to 31.
 6. **Check by screenshot after every batch.** Text wrapping, unreadable 7.5 px previews and faint seat plans were only visible in renders.
 
-## 7. Next phase: what a teacher really needs
+## 7. Teacher needs (done)
 
-The user wants to optimise the screens for real teacher work. Not started. Before designing, answer these with the user (interview, one round):
+Interview 2026-10-26. Logged in `DECISIONS.md` (D7–D19, D34–D37) and `MVP_REWORK_PLAN.md` sections 3, 5, 6.
 
-1. **Suivi de programme (curriculum progress)**, per subject and per class: what is the unit of progress (chapter, notion, competence, page of the official programme)? Who sets the programme (ministry, school, teacher)? Should it link to the cahier de textes entries?
-2. **Suivi d'élèves (student follow-up)**: which signals matter (grades trend, absences, missing work, behaviour, remarks)? Who else sees it (professeur principal, parents, admin)? Where does an "élève à suivre" alert come from?
-3. **Other daily needs** to confirm: cahier de textes, conseil de classe preparation (appréciations), communication with families, replacements.
-4. **Where they live**: the teacher home (summaries), the class space (detail), or new pages.
+## 8. Definition of done for design step 1
 
-Output of that phase: an updated `MVP_REWORK_PLAN.md` (scope and IA), then mocks in the approved visual language.
-
-## 8. Definition of done for the current step
-
-1. The user picks a structure (1, 2, 3, or a named mix).
-2. Write a surface brief with the direction contract: `~/.claude/skills/impeccable/scripts/impeccable surface-brief write src/app/dashboard/teacher/page.tsx <body-file>`.
-3. Add one line to `MVP_REWORK_PLAN.md` section 8, step 1: chosen structure, token table location (this file, section 4), mock paths.
-4. Commit the design work on a branch (see `AGENT_WORKFLOW_PLAN.md`).
+1. Structure **Studio** and language **A+ Plat vif** recorded (D6, D32, D33).
+2. Reference mocks listed in section 5; exploration assets removed from the tree.
+3. Tokens live in `src/app/globals.css` and `/design-system`.
+4. Next work is MVP step 2 in code (`APP_BUILD_PLAN.md`).
 
 ## 9. History (short)
 

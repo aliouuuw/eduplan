@@ -165,7 +165,7 @@ Guardrails:
 
 | Step | Work | Estimate |
 |---|---|---|
-| 1 | Design pass: tokens, app shell, class space, teacher home (mock in `.impeccable/`). Teacher home: **Studio** picked 2026-10-26. Tokens: `DESIGN_HANDOVER_TEACHER_HOME.md` section 4. Mocks: `.impeccable/mocks/teacher-home/studio-{desktop,phone}.html`. Brief: `.impeccable/surfaces/src-app-dashboard-teacher-page-tsx.md`. Home with the Programme and Élèves à suivre modules: `.impeccable/mocks/teacher-home/studio-suivi-desktop.html`. Class Programme and Élèves tabs: designed in code, not mocked (D26). Visual variants of Studio: `STUDIO_VARIANTS_PLAN.md` | 1 to 2 days |
+| 1 | Design pass (mostly done): **Studio** (D6), **A+ Plat vif** + **Poppins** (D32, D33). Tokens: `src/app/globals.css` and `DESIGN_HANDOVER_TEACHER_HOME.md` §4. Mocks: `teacher-home/studio-vif-desktop.html`, gallery `.impeccable/mocks/teacher/`. Variant exploration archived (`STUDIO_VARIANTS_PLAN.md`). Remaining: phone home if not yet in gallery | ~0.5 day |
 | 2 | New shell and IA in code, routes for each role | 1 day |
 | 3 | Schema: years, terms, topics, posts, attachments, submissions, grades | 1 day |
 | 4 | Class space and post creation | 2 days |
@@ -183,4 +183,4 @@ Total: about 19 to 23 working days for one developer.
 
 ## 9. Decisions
 
-All accepted and open decisions live in `DECISIONS.md` (D1 to D28).
+All accepted decisions live in `DECISIONS.md` (D1 to D37).
