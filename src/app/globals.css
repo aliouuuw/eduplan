@@ -73,6 +73,7 @@
   --radius-xl: 1.75rem;
 
   --shadow-lift: 0 1px 2px rgb(90 71 199 / 0.05), 0 14px 28px -22px rgb(90 71 199 / 0.32);
+  --shadow-sheet: inset 0 1px 0 #fff, 0 1px 2px rgb(90 71 199 / 0.05), 0 14px 28px -22px rgb(90 71 199 / 0.32);
   --shadow-pop: 0 0 0 1px var(--border), 0 18px 34px -20px rgb(90 71 199 / 0.4), 0 2px 6px -2px rgb(36 33 47 / 0.08);
   --shadow-tab: 0 1px 1px rgb(90 71 199 / 0.06), 0 8px 16px -10px rgb(117 99 230 / 0.55);
   --shadow-glow-primary: inset 0 1px 0 rgb(255 255 255 / 0.14), 0 12px 22px -12px rgb(214 90 64 / 0.55), 0 4px 10px -6px rgb(36 33 47 / 0.5);
@@ -205,6 +206,9 @@
 /* The live course: warm light at the top of its sheet. */
 @utility wash-now {
   background-image: linear-gradient(170deg, #fff3ef 0%, #ffffff 46%);
+}
+@utility wash-slot {
+  background-image: linear-gradient(160deg, #fde2da 0%, #fdeee9 70%, #fff4f0 100%);
 }
 @utility wash-attention {
   background-image: linear-gradient(110deg, #fde6e0, #fdf0ec);
