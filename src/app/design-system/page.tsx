@@ -36,7 +36,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { classLabel, frSpaces } from "@/lib/fr"
 
 import { ToastDemo } from "./toast-demo"
-import { CalendarDays, ClipboardCheck, FileText, House, Inbox, LayoutGrid } from "lucide-react"
+import { Inbox } from "lucide-react"
 
 import { AppDock } from "@/components/layout/app-dock"
 import { PageHeader } from "@/components/layout/page-header"
@@ -345,12 +345,13 @@ export default function DesignSystemPage() {
       <Section title="Écran">
         <div className="flex gap-7 rounded-xl bg-white/40 p-6">
           <AppDock
+            className="!static !h-auto !w-[72px] !flex-col !items-center !justify-start !gap-2.5 !bg-transparent !p-0 !shadow-none"
             items={[
-              { href: "/design-system", label: "Accueil", icon: <House /> },
-              { href: "/design-system/classes", label: "Classes", icon: <LayoutGrid /> },
-              { href: "/design-system/notes", label: "Notes", icon: <FileText /> },
-              { href: "/design-system/presences", label: "Présences", icon: <ClipboardCheck /> },
-              { href: "/design-system/agenda", label: "Agenda", icon: <CalendarDays /> },
+              { href: "/design-system", label: "Accueil", icon: "home" },
+              { href: "/design-system/classes", label: "Classes", icon: "classes" },
+              { href: "/design-system/notes", label: "Notes", icon: "notes" },
+              { href: "/design-system/presences", label: "Présences", icon: "attendance" },
+              { href: "/design-system/agenda", label: "Agenda", icon: "agenda" },
             ]}
             end={<Avatar name="Aïssatou Diop" />}
           />

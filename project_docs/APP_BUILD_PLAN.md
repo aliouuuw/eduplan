@@ -19,7 +19,7 @@ Each phase ends with every check green and a screenshot of the new screen next t
 
 | # | Phase | Contents | MVP step | Estimate |
 |---|---|---|---|---|
-| 1 | Shell and routes | The A+ dock and page header as layout components; one route tree per role (IA, MVP plan section 5); French copy in the shell; empty states that name the next action | 2 | 1 day |
+| 1 ✅ | Shell and routes (done 2026-10-27, branch `feat/app-shell`) | The A+ dock and page header as layout components; one route tree per role (IA, MVP plan section 5); French copy in the shell; empty states that name the next action | 2 | 1 day |
 | 2 | Data access pattern | Server components read through `src/lib/data/<area>.ts`; writes through server actions with zod; one auth helper per role. Rebuild one admin page this way as the reference, then turn the four React Compiler rules back to "error" for new code | 2 | 1 day |
 | 3 | Schema | `academic_years`, `terms`, `topics`, `posts`, `attachments`, `submissions`, `grades`, `attendance_records`, `notifications`, then the D7 to D14 tables (`programmes`, `chapters`, `notions`, `class_chapter_plans`, `notion_coverage`, `remarks`, `student_flags`, `flag_rules`, `appreciations`, `message_threads`, `messages`). Seed script with the demo data of the mocks | 3 | 1 to 2 days |
 | 4 | Teacher home | Studio A+ with live data: today's courses, live course, copies to grade, grade pace, Programme and Élèves à suivre summaries | 7 | 1 to 2 days |
@@ -55,3 +55,4 @@ Instructions in `CLAUDE.md` can be skipped; these would be enforced by the harne
 1. Untracked folders not created by this work: `.cursor/plans/`, `.taste-skill/`, `prototype/`. Commit, ignore or delete: your call.
 2. 30 lint warnings from the legacy pages; they disappear as phases 2 and 9 rebuild those pages.
 3. The old pages still hardcode the interim lilac and greys; replace them when a phase touches the page.
+4. `admin/users` calls `/api/schools`, which is superadmin-only, so it gets a 403 on every load (found in the phase 1 check). Fix it when phase 9 rebuilds that page.
