@@ -36,10 +36,10 @@ The Google Classroom "Stream" (class news feed) is out of the MVP.
 3. **Attendance per timetable slot.** The teacher opens the register from today's slot. The teacher marks present, absent, or late. Parents can submit a justification.
 4. **Parent digest.** A weekly email for each child: missing work, upcoming due dates, new grades, absences.
 5. **Role-based home.** Each of the 5 roles gets a home that answers the question "what do I do now?" (section 5).
-6. **Suivi de programme.** The school loads the programme for each subject and level as chapitres split into notions. The teacher reorders it and sets a planned week for each chapter, per class. A cahier de textes entry suggests the notion it covers. The teacher confirms "notion faite" and "chapitre terminé". Progress = notions covered vs weeks passed in the trimestre.
-7. **Suivi d'élèves.** Per student, in the teacher's subject: grades trend, absences and retards, missing work, remarks. EduPlan flags "élève à suivre" from school rules (for example average below 10, 3 unjustified absences, 2 missing works). The teacher can add a flag with a reason, or dismiss one.
+6. **Suivi de programme.** The admin loads the programme (D35) for each subject and level as chapitres split into notions. The teacher reorders it and sets a planned week for each chapter, per class. A cahier de textes entry suggests the notion it covers. The teacher confirms "notion faite" and "chapitre terminé". Progress = notions covered vs weeks passed in the trimestre.
+7. **Suivi d'élèves.** Per student, in the teacher's subject: grades trend, absences and retards, missing work, remarks. EduPlan flags "élève à suivre" from school rules (D34 defaults: average below 10/20, 3 unjustified absences, 2 missing works, per subject and trimestre; the admin can change or switch off each rule). The teacher can add a flag with a reason, or dismiss one. Students and parents see flags only if the admin allows it (D36).
 8. **Remarques.** Short teacher notes on a student (bavardage, oubli de matériel, encouragement). Each remark is private by default (teacher, professeur principal, admin). The teacher can switch one to "visible famille" (parents and student).
-9. **Préparation du conseil.** The teacher writes one appréciation per student per trimestre, with the student's average, absences, missing work and remarks visible while writing.
+9. **Préparation du conseil.** The teacher writes one appréciation per student per trimestre, with the student's average, absences, missing work and remarks visible while writing. The professeur principal also writes the appréciation générale (D37), with every subject's appréciation in view.
 10. **Messages famille.** One thread per student between the teacher and the parents (email and in-app). Absence justifications show in the same place.
 
 The MVP also keeps the current school structure, accounts, invitations, availability, and auto-scheduler.
@@ -92,8 +92,9 @@ The MVP also keeps the current school structure, accounts, invitations, availabi
 | `notion_coverage` | Notion done for a class, with the cahier de textes post that covered it (optional) |
 | `remarks` | Student, author, subject, text, visibility (privé, visible famille) |
 | `student_flags` | Student, subject, source (règle, enseignant), reason, dismissed by and when |
-| `flag_rules` | School thresholds: average, unjustified absences, missing works |
-| `appreciations` | Student, subject, term, author, text |
+| `flag_rules` | School thresholds (D34): average, unjustified absences, missing works; each value editable and each rule on or off |
+| `school_settings` | Per-school switches, starting with flag visibility for students and for parents (D36) |
+| `appreciations` | Student, subject (empty for the appréciation générale, D37), term, author, text |
 | `message_threads`, `messages` | One thread per student and teacher with the student's parents |
 
 Also: `posts` gets an optional `notion_id`. `classes` gets `head_teacher_id` (professeur principal).
@@ -124,7 +125,7 @@ One shell for all roles: a sidebar on the left, a top bar with the school, a ter
 1. **Programme**: one bar per class, notions covered vs weeks passed. Opens the class Programme tab.
 2. **Élèves à suivre**: flagged students, with the reason. Opens the student in the class Élèves tab.
 
-The professeur principal sees all subjects for their class (signals, flags, visible remarks, appréciations). Admin / vie scolaire sees school-wide flags in Suivi. Parents and students see grades, absences, missing work and the remarks marked "visible famille".
+The professeur principal sees all subjects for their class (signals, flags, visible remarks, appréciations). Admin / vie scolaire sees school-wide flags in Suivi. Parents and students see grades, absences, missing work and the remarks marked "visible famille", and the flags if the admin allows it (D36).
 
 ## 6. Key user flows (MVP)
 
@@ -137,6 +138,7 @@ The professeur principal sees all subjects for their class (signals, flags, visi
 7. **Teacher fills the cahier de textes.** Today's course → entry (done in class, devoir) → EduPlan suggests the next notion → confirm → programme progress updates.
 8. **Teacher follows a student.** Home "Élèves à suivre" → student → signals and remarks → add a remark, dismiss the flag, or write to the parents.
 9. **Teacher prepares the conseil.** Class Élèves tab → "Appréciations" → one student at a time with average, absences, missing work, remarks → next student (one click).
+10. **Professeur principal writes the appréciations générales.** Their class → "Conseil" → one student at a time with every subject's average and appréciation → appréciation générale → next student.
 
 ## 7. Design direction: soft, approachable minimalism
 

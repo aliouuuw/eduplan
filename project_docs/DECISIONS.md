@@ -51,12 +51,11 @@ Context: `PRODUCT.md` (who and why), `MVP_REWORK_PLAN.md` (scope, IA, flows, ord
 | D31 | Round 2 second slot (replaces the Folio half of D30) | **I · Mono sombre** replaces Folio. Same inset shell as H, MonoCode dark: shell `#0d0d0d`, panel `#141414`, light ink, same two accents. Compare: `variantes-round2.html` | 10-27 |
 | D32 | Visual language (replaces D25 and D26) | **A+ · Plat vif** is the language for the app (`variants/plat.css` + `variants/vif.css`). Mock the other screens in it: class space (Programme, Élèves), grading, phone register. Shared stylesheet for new screens: `.impeccable/mocks/teacher/src/app.css`. Gallery: `.impeccable/mocks/teacher/index.html` | 10-27 |
 | D33 | Typeface (replaces Ranade in D25) | **Poppins**, picked on `/design-system` against Ranade, Chillax, Instrument Sans, PT Sans and Google Sans. One family in two roles: `font-display` (titles, big numbers, class names: 500, tracking -0.025em) and `font-sans`. Self-hosted with `next/font/google` (SIL OFL) | 10-27 |
+| D34 | "Élève à suivre" thresholds (answers open question 1) | Defaults per school, per subject and per trimestre: average below **10/20**, **3** unjustified absences or more, **2** missing works or more. The admin can change each value or switch a rule off in Réglages | 10-27 |
+| D35 | Who loads the programme (answers open question 2) | The **admin** loads it for each subject and level. No new role | 10-27 |
+| D36 | Who sees flags (answers open question 3) | Teacher, professeur principal and admin always. Students and parents only if the admin turns it on in Réglages (one switch each, off by default) | 10-27 |
+| D37 | Appréciation générale (answers open question 4) | **Yes in the MVP.** The professeur principal writes one appréciation générale per student per trimestre, next to the subject appréciations | 10-27 |
 
 ## Open
 
-Ask before building MVP steps 10 to 13.
-
-1. Default thresholds for `flag_rules`, and whether the admin can change them.
-2. Who loads the programme: the admin, or a new "coordinateur de matière" role.
-3. Does the student see the flags about them, or only the signals?
-4. Does the professeur principal write an appréciation générale in the MVP?
+None at the moment. Add questions here as they come up; answer them with a new row above.
