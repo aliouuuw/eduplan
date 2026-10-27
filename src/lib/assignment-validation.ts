@@ -1,23 +1,8 @@
 import { db } from '@/lib/db';
-import { teacherClasses, teacherSubjects, users, subjects, classes } from '@/db/schema';
+import { teacherClasses, teacherSubjects, users } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { getTeacherMetrics } from './teacher-utils';
 import { activeTeacher } from '@/lib/teacher-scope';
-
-export interface TeacherWorkload {
-  teacherId: string;
-  teacherName: string;
-  totalWeeklyHours: number;
-  assignmentCount: number;
-  classCount: number;
-  assignments: Array<{
-    classId: string;
-    className: string;
-    subjectId: string;
-    subjectName: string;
-    weeklyHours: number;
-  }>;
-}
 
 export interface ValidationWarning {
   type: 'error' | 'warning' | 'info';
@@ -27,59 +12,6 @@ export interface ValidationWarning {
 
 const MAX_WEEKLY_HOURS = 30;
 const WARNING_THRESHOLD = 25;
-
-/**
- * Calculate a teacher's total workload across all classes
- */
-export async function calculateTeacherWorkload(teacherId: string, schoolId: string): Promise<TeacherWorkload> {
-  // Get teacher info
-  const teacher = await db
-    .select({ id: users.id, name: users.name })
-    .from(users)
-    .where(and(eq(users.id, teacherId), eq(users.schoolId, schoolId)))
-    .limit(1);
-
-  if (teacher.length === 0) {
-    throw new Error('Teacher not found');
-  }
-
-  // Get all class assignments
-  const assignments = await db
-    .select({
-      classId: classes.id,
-      className: classes.name,
-      subjectId: subjects.id,
-      subjectName: subjects.name,
-      weeklyHours: teacherClasses.weeklyHours,
-    })
-    .from(teacherClasses)
-    .innerJoin(classes, eq(teacherClasses.classId, classes.id))
-    .innerJoin(subjects, eq(teacherClasses.subjectId, subjects.id))
-    .where(
-      and(
-        eq(teacherClasses.teacherId, teacherId),
-        eq(teacherClasses.schoolId, schoolId)
-      )
-    );
-
-  const totalWeeklyHours = assignments.reduce((sum, a) => sum + (a.weeklyHours || 0), 0);
-  const uniqueClasses = new Set(assignments.map(a => a.classId)).size;
-
-  return {
-    teacherId: teacher[0].id,
-    teacherName: teacher[0].name,
-    totalWeeklyHours,
-    assignmentCount: assignments.length,
-    classCount: uniqueClasses,
-    assignments: assignments.map(a => ({
-      classId: a.classId,
-      className: a.className,
-      subjectId: a.subjectId,
-      subjectName: a.subjectName,
-      weeklyHours: a.weeklyHours || 0,
-    })),
-  };
-}
 
 /**
  * Check if a teacher is qualified to teach a subject

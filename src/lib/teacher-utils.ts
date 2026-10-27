@@ -241,7 +241,7 @@ export async function hasAvailabilityConflict(
 
 /**
  * Weekly hours and assignment count per teacher, in one query.
- * Same rule as getTeacherMetrics and calculateTeacherWorkload: only assignments whose class and
+ * Same rule as getTeacherMetrics: only assignments whose class and
  * subject still exist count (teacher_classes has no foreign keys, so orphaned rows can remain).
  */
 export async function getWorkloadByTeacher(

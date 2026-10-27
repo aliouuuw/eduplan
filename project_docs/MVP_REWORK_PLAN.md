@@ -59,7 +59,7 @@ The MVP also keeps the current school structure, accounts, invitations, availabi
 
 - Auth, invitations, password resets (`src/lib/auth.ts`, `invitations.ts`, `password-resets.ts`)
 - The 16 tables in `src/db/schema.ts`: schools, users, levels, classes, subjects, teacher links, availability, enrolments, parent links, time slots, timetables
-- Auto-scheduler and availability logic (`auto-scheduler.ts`, `availability-utils.ts`, `teacher-calculations.ts`)
+- Auto-scheduler and availability logic (`auto-scheduler.ts`, `availability-utils.ts`; teacher hours: `teacher-utils.ts`)
 - Radix-based UI primitives in `src/components/ui/` (they are restyled, not replaced)
 
 ### Change
