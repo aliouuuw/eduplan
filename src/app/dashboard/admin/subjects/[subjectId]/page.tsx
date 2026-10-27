@@ -92,28 +92,7 @@ export default function AdminSubjectDetailPage() {
       const response = await fetch(`/api/subjects/${subjectId}/qualified-teachers`);
       if (response.ok) {
         const data = await response.json();
-        
-        // Fetch workload for each teacher
-        const teachersWithWorkload = await Promise.all(
-          data.qualifiedTeachers.map(async (teacher: any) => {
-            try {
-              const workloadResponse = await fetch(`/api/teachers/${teacher.id}/workload`);
-              if (workloadResponse.ok) {
-                const workloadData = await workloadResponse.json();
-                return {
-                  ...teacher,
-                  workload: workloadData.totalWeeklyHours,
-                  assignmentCount: workloadData.assignmentCount,
-                };
-              }
-            } catch (e) {
-              // Ignore errors
-            }
-            return teacher;
-          })
-        );
-        
-        setQualifiedTeachers(teachersWithWorkload);
+        setQualifiedTeachers(data.qualifiedTeachers || []);
       }
     } catch (error) {
       console.error('Error fetching qualified teachers:', error);

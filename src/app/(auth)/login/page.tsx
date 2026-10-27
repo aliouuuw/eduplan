@@ -57,17 +57,30 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">EduPlan</h1>
-          <p className="mt-2 text-sm text-gray-600">School Management System</p>
+    <div className="flex min-h-screen bg-white">
+      <div className="grain relative hidden w-1/2 flex-col justify-between overflow-hidden bg-[linear-gradient(135deg,#6b7cf7_0%,#8b9af0_100%)] p-12 lg:flex">
+        <div className="relative z-10 flex items-center gap-3">
+          <span className="text-xl font-bold tracking-tight text-white">EduPlan</span>
         </div>
+        <div className="relative z-10 max-w-md">
+          <h1 className="text-[40px] font-semibold leading-[1.1] tracking-tight text-white">
+            School management, simplified.
+          </h1>
+          <p className="mt-4 text-lg font-medium leading-relaxed text-white/80">
+            Timetables, classes, and staff in one place for your school.
+          </p>
+        </div>
+      </div>
 
+      <div className="soft-wash flex flex-1 flex-col items-center justify-center p-6 sm:p-10 lg:p-16">
+        <div className="mb-8 self-start lg:hidden">
+          <span className="text-lg font-bold text-[#111827]">EduPlan</span>
+        </div>
+        <div className="w-full max-w-md">
         <Card>
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Sign in</CardTitle>
-            <CardDescription className="text-center">
+            <CardTitle className="text-2xl font-bold tracking-tight text-[#111827]">Sign in</CardTitle>
+            <CardDescription className="text-[#7b7590]">
               Enter your email and password to access your account
             </CardDescription>
           </CardHeader>
@@ -112,7 +125,7 @@ export default function LoginPage() {
                 />
                 
                 {error && (
-                  <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                  <div className="rounded-xl bg-[rgba(229,62,62,0.08)] p-3 text-sm text-[#e53e3e]">
                     {error}
                   </div>
                 )}
@@ -123,16 +136,17 @@ export default function LoginPage() {
               </form>
             </Form>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+            <div className="mt-6">
+              <p className="text-sm text-[#7b7590]">
                 Forgot your password?{' '}
-                <Link href="/forgot-password" className="text-blue-600 hover:text-blue-500 font-medium">
+                <Link href="/forgot-password" className="font-semibold text-[#6b7cf7]">
                   Request a reset link
                 </Link>
               </p>
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

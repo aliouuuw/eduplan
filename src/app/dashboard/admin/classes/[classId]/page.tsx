@@ -220,58 +220,38 @@ export default function AdminClassDetailPage() {
   };
 
   const fetchAvailableTeachers = async (subjectId?: string) => {
+    if (!session?.user?.schoolId) return;
     try {
-      // Fetch all teachers
-      const teachersResponse = await fetch(`/api/users?schoolId=${session?.user?.schoolId}&role=teacher`);
-      if (!teachersResponse.ok) return;
-      
-      const teachersData = await teachersResponse.json();
-      const allTeachers = teachersData.users || [];
+      const [statsResponse, qualifiedResponse] = await Promise.all([
+        fetch(`/api/teachers/stats?schoolId=${session.user.schoolId}`),
+        subjectId
+          ? fetch(`/api/subjects/${subjectId}/qualified-teachers`)
+          : Promise.resolve(null),
+      ]);
+      if (!statsResponse.ok) return;
 
-      // If a subject is selected, fetch qualified teachers
-      let qualifiedTeacherIds = new Set<string>();
-      if (subjectId) {
-        const qualifiedResponse = await fetch(`/api/subjects/${subjectId}/qualified-teachers`);
-        if (qualifiedResponse.ok) {
-          const qualifiedData = await qualifiedResponse.json();
-          qualifiedTeacherIds = new Set(qualifiedData.qualifiedTeachers.map((t: any) => t.id));
+      const statsData = await statsResponse.json();
+      const qualifiedTeacherIds = new Set<string>();
+      if (qualifiedResponse?.ok) {
+        const qualifiedData = await qualifiedResponse.json();
+        for (const teacher of qualifiedData.qualifiedTeachers || []) {
+          qualifiedTeacherIds.add(teacher.id);
         }
       }
 
-      // Fetch comprehensive stats for each teacher (workload + availability)
-      const teachersWithDetails = await Promise.all(
-        allTeachers.map(async (teacher: any) => {
-          let workload = 0;
-          let availability = 0;
-          let capacity = 0;
-          let utilizationPercentage = 0;
-          
-          try {
-            const statsResponse = await fetch(`/api/teachers/${teacher.id}/stats`);
-            if (statsResponse.ok) {
-              const stats = await statsResponse.json();
-              workload = stats.workload.totalWeeklyHours || 0;
-              availability = stats.availability.totalWeeklyHours || 0;
-              capacity = stats.capacity.availableHours || 0;
-              utilizationPercentage = stats.capacity.utilizationPercentage || 0;
-            }
-          } catch (e) {
-            // Ignore stats errors, fall back to basic info
-          }
-
-          return {
-            ...teacher,
-            isQualified: subjectId ? qualifiedTeacherIds.has(teacher.id) : undefined,
-            workload,
-            availability,
-            capacity,
-            utilizationPercentage
-          };
-        })
-      );
+      const teachersWithDetails = (statsData.teachers || []).map((teacher: any) => ({
+        id: teacher.teacherId,
+        name: teacher.teacherName,
+        email: teacher.teacherEmail,
+        isQualified: subjectId ? qualifiedTeacherIds.has(teacher.teacherId) : undefined,
+        workload: teacher.workload?.totalWeeklyHours || 0,
+        availability: teacher.availability?.totalWeeklyHours || 0,
+        capacity: teacher.capacity?.availableHours || 0,
+        utilizationPercentage: teacher.capacity?.utilizationPercentage || 0,
+      }));
 
       // Sort: qualified first, then by available capacity (descending)
-      teachersWithDetails.sort((a, b) => {
+      teachersWithDetails.sort((a: { isQualified?: boolean; capacity?: number }, b: { isQualified?: boolean; capacity?: number }) => {
         if (a.isQualified && !b.isQualified) return -1;
         if (!a.isQualified && b.isQualified) return 1;
         // Prefer teachers with more available capacity

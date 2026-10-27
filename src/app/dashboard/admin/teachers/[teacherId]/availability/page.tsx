@@ -57,8 +57,10 @@ export default function TeacherAvailabilityPage() {
 
     setLoading(true);
     try {
-      // Fetch teacher info
-      const teacherResponse = await fetch(`/api/users/${teacherId}`);
+      const [teacherResponse, availResponse] = await Promise.all([
+        fetch(`/api/users/${teacherId}`),
+        fetch(`/api/teacher-availability?teacherId=${teacherId}`),
+      ]);
       if (teacherResponse.ok) {
         const teacherData = await teacherResponse.json();
         setTeacher({
@@ -68,8 +70,6 @@ export default function TeacherAvailabilityPage() {
         });
       }
 
-      // Fetch availability
-      const availResponse = await fetch(`/api/teacher-availability?teacherId=${teacherId}`);
       if (availResponse.ok) {
         const availData = await availResponse.json();
         setSlots(availData || []);

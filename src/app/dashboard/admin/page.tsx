@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BookOpen, GraduationCap, UserCheck, Clock, AlertCircle, Calendar, FolderTree, BookText } from 'lucide-react';
+import { Users, BookOpen, GraduationCap, UserCheck, Calendar, FolderTree, BookText } from 'lucide-react';
 import { DashboardStats } from '@/lib/types';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -19,15 +19,14 @@ export default function AdminDashboard() {
       if (!session?.user?.schoolId) return;
 
       try {
-        // Fetch school info
-        const schoolResponse = await fetch(`/api/schools/${session.user.schoolId}`);
+        const [schoolResponse, statsResponse] = await Promise.all([
+          fetch(`/api/schools/${session.user.schoolId}`),
+          fetch(`/api/dashboard/admin/stats?schoolId=${session.user.schoolId}`),
+        ]);
         if (schoolResponse.ok) {
           const schoolData = await schoolResponse.json();
           setSchoolName(schoolData.name);
         }
-
-        // Fetch stats for this school
-        const statsResponse = await fetch(`/api/dashboard/admin/stats?schoolId=${session.user.schoolId}`);
         if (statsResponse.ok) {
           const statsData = await statsResponse.json();
           setStats(statsData);
@@ -103,39 +102,34 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-12">
       <header className="space-y-2">
-        <h1 className="text-3xl font-semibold text-black">
+        <h1 className="text-[26px] font-bold tracking-tight text-[#111827]">
           {schoolName ? `${schoolName} Dashboard` : 'School Dashboard'}
         </h1>
-        <p className="max-w-2xl text-sm text-gray-600">
+        <p className="max-w-xl text-[13.5px] leading-relaxed text-[#b5aec4]">
           Monitor school performance, resolve outstanding tasks, and access the tools you need to keep operations running smoothly.
         </p>
       </header>
 
       <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Overview</h2>
-            <span className="text-xs text-gray-400">Updated moments ago</span>
+            <h2 className="text-sm font-bold text-[#111827]">Overview</h2>
+            <span className="text-xs text-[#b5aec4]">Updated moments ago</span>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {statCards.map((stat) => (
+            {statCards.map((stat, index) => (
               <Link key={stat.title} href={stat.href} className="group block h-full">
-                <article className="flex h-full flex-col justify-between rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-3">
-                      <p className="text-xs font-medium uppercase tracking-wider text-gray-500">{stat.title}</p>
-                      <div className="text-3xl font-semibold text-black">
-                        {loading ? (
-                          <div className="h-8 w-16 animate-pulse rounded bg-gray-200" />
-                        ) : (
-                          stat.value.toLocaleString()
-                        )}
-                      </div>
+                <article className={`flex h-full flex-col justify-between soft-raised rounded-2xl p-5 transition-[filter] group-hover:brightness-[0.98] ${['bg-[#e8e5ff]', 'bg-[#fff9e6]', 'bg-[#ffe8e8]', 'bg-[#e8f5ed]'][index % 4]}`}>
+                  <div className="space-y-3">
+                    <p className="text-sm font-semibold text-[#1a1a2e]">{stat.title}</p>
+                    <div className="text-3xl font-bold text-[#111827]">
+                      {loading ? (
+                        <div className="h-8 w-16 animate-pulse rounded bg-white/70" />
+                      ) : (
+                        stat.value.toLocaleString()
+                      )}
                     </div>
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-600">
-                      {stat.icon}
-                    </span>
                   </div>
-                  <p className="mt-4 text-xs text-gray-500">{stat.description}</p>
+                  <p className="mt-4 text-xs text-[#7b7590]">{stat.description}</p>
                 </article>
               </Link>
             ))}
@@ -144,18 +138,15 @@ export default function AdminDashboard() {
 
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500">Quick actions</h2>
-            <span className="text-xs text-gray-400">Jump straight into the workflows you manage most</span>
+            <h2 className="text-sm font-bold text-[#111827]">Quick actions</h2>
+            <span className="text-xs text-[#b5aec4]">Jump into the workflows you manage most</span>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {quickActions.map((action) => (
               <Link key={action.title} href={action.href} className="group block h-full">
-                <article className="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-black hover:shadow-md">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-black text-white transition group-hover:scale-105">
-                    {action.icon}
-                  </span>
-                  <h3 className="mt-4 text-base font-semibold text-black">{action.title}</h3>
-                  <p className="mt-2 text-sm text-gray-600">{action.description}</p>
+                <article className="flex h-full flex-col soft-raised rounded-2xl bg-white p-5 transition-colors group-hover:bg-[#fbfaff]">
+                  <h3 className="text-base font-semibold text-[#111827]">{action.title}</h3>
+                  <p className="mt-2 text-sm text-[#7b7590]">{action.description}</p>
                 </article>
               </Link>
             ))}
@@ -163,13 +154,12 @@ export default function AdminDashboard() {
         </section>
 
         <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <Card className="h-full rounded-2xl border border-gray-200 shadow-sm">
+          <Card className="h-full">
             <CardHeader className="space-y-1">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold text-black">
-                <AlertCircle className="h-5 w-5 text-gray-600" />
+              <CardTitle className="text-base font-bold text-[#111827]">
                 Pending actions
               </CardTitle>
-              <CardDescription className="text-sm text-gray-600">
+              <CardDescription className="text-sm text-[#7b7590]">
                 Stay ahead by resolving the most time-sensitive items
               </CardDescription>
             </CardHeader>
@@ -188,39 +178,30 @@ export default function AdminDashboard() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
-                    <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
-                      <Users className="h-5 w-5" />
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-black">3 pending user registrations</p>
-                      <p className="text-xs text-gray-500">Awaiting your review and role assignment</p>
+                  <div className="flex items-center gap-3 rounded-2xl bg-[#f5f2f9] p-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-[#111827]">3 pending user registrations</p>
+                      <p className="text-xs text-[#7b7590]">Awaiting your review and role assignment</p>
                     </div>
-                    <Button variant="outline" size="sm" asChild className="border-gray-300">
+                    <Button variant="outline" size="sm" asChild>
                       <Link href="/dashboard/admin/users?tab=pending">Review</Link>
                     </Button>
                   </div>
-                  <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
-                    <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
-                      <BookOpen className="h-5 w-5" />
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-black">Timetable conflicts detected</p>
-                      <p className="text-xs text-gray-500">Two overlapping class assignments</p>
+                  <div className="flex items-center gap-3 rounded-2xl bg-[#fff9e6] p-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-[#111827]">Timetable conflicts detected</p>
+                      <p className="text-xs text-[#7b7590]">Two overlapping class assignments</p>
                     </div>
-                    <Button variant="outline" size="sm" asChild className="border-gray-300">
+                    <Button variant="outline" size="sm" asChild>
                       <Link href="/dashboard/admin/scheduling/timetables">Fix</Link>
                     </Button>
                   </div>
-                  <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
-                    <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
-                      <GraduationCap className="h-5 w-5" />
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-black">Academic year setup</p>
-                      <p className="text-xs text-gray-500">Prepare structure for 2025-2026</p>
+                  <div className="flex items-center gap-3 rounded-2xl bg-[#e8f5ed] p-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-[#111827]">Academic year setup</p>
+                      <p className="text-xs text-[#7b7590]">Prepare structure for 2025-2026</p>
                     </div>
-                    <Button variant="outline" size="sm" asChild className="border-gray-300">
+                    <Button variant="outline" size="sm" asChild>
                       <Link href="/dashboard/admin/class-groups">Setup</Link>
                     </Button>
                   </div>
@@ -229,10 +210,10 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="h-full rounded-2xl border border-gray-200 shadow-sm">
+          <Card className="h-full">
             <CardHeader className="space-y-1">
-              <CardTitle className="text-base font-semibold text-black">Recent activity</CardTitle>
-              <CardDescription className="text-sm text-gray-600">
+              <CardTitle className="text-base font-bold text-[#111827]">Recent activity</CardTitle>
+              <CardDescription className="text-sm text-[#7b7590]">
                 Highlights from the past few days across your school
               </CardDescription>
             </CardHeader>
@@ -251,42 +232,17 @@ export default function AdminDashboard() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
-                    <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
-                      <Users className="h-5 w-5" />
-                    </span>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-black">New teacher approved and assigned</p>
-                      <p className="text-xs text-gray-500">2 hours ago</p>
+                  {[
+                    ['New teacher approved and assigned', '2 hours ago'],
+                    ['New class CM2 A created', '1 day ago'],
+                    ['Mathematics subject updated', '2 days ago'],
+                    ['Timetable published for next week', '3 days ago'],
+                  ].map(([title, when]) => (
+                    <div key={title} className="rounded-2xl bg-[#f5f2f9] p-4">
+                      <p className="text-sm font-semibold text-[#111827]">{title}</p>
+                      <p className="text-xs text-[#7b7590]">{when}</p>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
-                    <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
-                      <BookOpen className="h-5 w-5" />
-                    </span>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-black">New class “CM2 A” created</p>
-                      <p className="text-xs text-gray-500">1 day ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
-                    <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
-                      <GraduationCap className="h-5 w-5" />
-                    </span>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-black">Mathematics subject updated</p>
-                      <p className="text-xs text-gray-500">2 days ago</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4">
-                    <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600">
-                      <Clock className="h-5 w-5" />
-                    </span>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-black">Timetable published for next week</p>
-                      <p className="text-xs text-gray-500">3 days ago</p>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               )}
             </CardContent>

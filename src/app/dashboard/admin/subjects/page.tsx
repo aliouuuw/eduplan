@@ -7,13 +7,12 @@ import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, BookOpen, Hash, FileText, ArrowRight, Clock, Users, AlertCircle, ChevronDown, ChevronRight, User, AlertTriangle } from 'lucide-react';
+import { Plus, BookOpen, Hash, FileText, ArrowRight, Clock, Users, ChevronDown, ChevronRight, User } from 'lucide-react';
 import { SubjectForm } from '@/components/forms/subject-form';
 import type { Subject } from '@/lib/db';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Class } from '@/lib/db'; // Assuming Class type is available or define a minimal interface
 import Link from 'next/link';
-import { XCircle, CheckCircle2 } from 'lucide-react';
 import { Breadcrumbs, createBreadcrumbs } from '@/components/layout/breadcrumbs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -55,55 +54,20 @@ export default function AdminSubjectsPage() {
         const data = await response.json();
         const fetchedSubjects = data.subjects || [];
 
-        // Fetch both availability AND class details for each subject
-        const subjectsWithDetails = await Promise.all(
-          fetchedSubjects.map(async (subject: SubjectWithUsage) => {
-            try {
-              // Get available teachers count
-              const availResponse = await fetch(`/api/subjects/${subject.id}/available-teachers`);
-              let availableCount = 0;
-              if (availResponse.ok) {
-                const availData = await availResponse.json();
-                availableCount = availData.availableTeachers.filter(
-                  (t: any) => t.capacity.availableHours > 0
-                ).length;
-              }
-
-              // Get class-level details
-              const classesResponse = await fetch(`/api/subjects/${subject.id}/classes`);
-              let classDetails = [];
-              if (classesResponse.ok) {
-                const classesData = await classesResponse.json();
-                classDetails = classesData.classes.map((c: any) => ({
-                  classId: c.classId,
-                  className: c.className,
-                  teacherId: c.teacherId,
-                  teacherName: c.teacherName,
-                  weeklyHours: c.weeklyHours,
-                  hasTeacher: !!c.teacherId,
-                }));
-              }
-
-              return {
-                ...subject,
-                availableTeachers: availableCount,
-                classDetails
-              };
-            } catch (e) {
-              return subject;
-            }
-          })
-        );
-
-        // Calculate coverage percentage for each subject
-        const subjectsWithCoverage = subjectsWithDetails.map(subject => ({
+        const subjectsWithCoverage = fetchedSubjects.map((subject: SubjectWithUsage) => ({
           ...subject,
           coverage: subject.classCount > 0
             ? Math.round(((subject.assignedClasses || 0) / subject.classCount) * 100)
             : 0
         }));
 
-        setSubjects(subjectsWithCoverage);
+        setSubjects((current) => {
+          const detailsById = new Map(current.map((subject) => [subject.id, subject.classDetails]));
+          return subjectsWithCoverage.map((subject: SubjectWithUsage) => ({
+            ...subject,
+            classDetails: detailsById.get(subject.id),
+          }));
+        });
       }
     } catch (error) {
       console.error('Error fetching subjects:', error);
@@ -117,7 +81,31 @@ export default function AdminSubjectsPage() {
     }
   };
 
+  const loadClassDetails = async (subjectId: string) => {
+    try {
+      const classesResponse = await fetch(`/api/subjects/${subjectId}/classes`);
+      if (!classesResponse.ok) return;
+      const classesData = await classesResponse.json();
+      const classDetails = (classesData.classes || []).map((classRow: any) => ({
+        classId: classRow.classId,
+        className: classRow.className,
+        teacherId: classRow.teacherId,
+        teacherName: classRow.teacherName,
+        weeklyHours: classRow.weeklyHours,
+        hasTeacher: !!classRow.teacherId,
+      }));
+      setSubjects((current) =>
+        current.map((subject) =>
+          subject.id === subjectId ? { ...subject, classDetails } : subject
+        )
+      );
+    } catch (error) {
+      console.error('Error fetching class details:', error);
+    }
+  };
+
   const toggleRow = (subjectId: string) => {
+    const opening = !expandedRows.has(subjectId);
     setExpandedRows(prev => {
       const next = new Set(prev);
       if (next.has(subjectId)) {
@@ -127,6 +115,11 @@ export default function AdminSubjectsPage() {
       }
       return next;
     });
+    if (!opening) return;
+    const subject = subjects.find((item) => item.id === subjectId);
+    if (subject && !subject.classDetails) {
+      void loadClassDetails(subjectId);
+    }
   };
 
   useEffect(() => {
@@ -496,16 +489,14 @@ export default function AdminSubjectsPage() {
       <header className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <h1 className="text-3xl font-semibold text-black flex items-center gap-3">
-              <BookOpen className="h-8 w-8 text-gray-600" />
+            <h1 className="text-[26px] font-bold tracking-tight text-[#111827]">
               Subjects
             </h1>
-            <p className="max-w-2xl text-sm text-gray-600">
+            <p className="max-w-xl text-[13.5px] leading-relaxed text-[#b5aec4]">
               Create and manage academic subjects taught in your school. Subjects can be assigned to specific classes.
             </p>
           </div>
-          <Button 
-            className="bg-black hover:bg-gray-800"
+          <Button
             onClick={() => setShowForm(true)}
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -521,14 +512,11 @@ export default function AdminSubjectsPage() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Card className="rounded-2xl border-2 border-red-200 shadow-sm cursor-help">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-xs font-semibold uppercase tracking-wider text-red-600">
-                        Critical Issues
+                  <Card className="cursor-help bg-[#ffe8e8]">
+                    <CardHeader className="space-y-0 pb-2">
+                      <CardTitle className="text-sm font-semibold text-[#1a1a2e]">
+                        Critical issues
                       </CardTitle>
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-100">
-                        <AlertTriangle className="h-4 w-4 text-red-600" />
-                      </div>
                     </CardHeader>
                     <CardContent>
                       <p className="text-3xl font-semibold text-red-600">{stats.criticalIssues}</p>
@@ -549,14 +537,11 @@ export default function AdminSubjectsPage() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Card className="rounded-2xl border border-yellow-200 shadow-sm cursor-help">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-xs font-semibold uppercase tracking-wider text-yellow-600">
-                        Needs Attention
+                  <Card className="cursor-help bg-[#fff9e6]">
+                    <CardHeader className="space-y-0 pb-2">
+                      <CardTitle className="text-sm font-semibold text-[#1a1a2e]">
+                        Needs attention
                       </CardTitle>
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-yellow-100">
-                        <AlertCircle className="h-4 w-4 text-yellow-600" />
-                      </div>
                     </CardHeader>
                     <CardContent>
                       <p className="text-3xl font-semibold text-yellow-600">{stats.partiallyStaffed}</p>
@@ -577,14 +562,11 @@ export default function AdminSubjectsPage() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Card className="rounded-2xl border border-green-200 shadow-sm cursor-help">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-xs font-semibold uppercase tracking-wider text-green-600">
-                        Fully Staffed
+                  <Card className="cursor-help bg-[#e8f5ed]">
+                    <CardHeader className="space-y-0 pb-2">
+                      <CardTitle className="text-sm font-semibold text-[#1a1a2e]">
+                        Fully staffed
                       </CardTitle>
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      </div>
                     </CardHeader>
                     <CardContent>
                       <p className="text-3xl font-semibold text-green-600">{stats.fullyStaffed}</p>
@@ -605,14 +587,11 @@ export default function AdminSubjectsPage() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Card className="rounded-2xl border border-gray-200 shadow-sm cursor-help">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-xs font-semibold uppercase tracking-wider text-gray-600">
-                        Active Subjects
+                  <Card className="cursor-help">
+                    <CardHeader className="space-y-0 pb-2">
+                      <CardTitle className="text-sm font-semibold text-[#1a1a2e]">
+                        Active subjects
                       </CardTitle>
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100">
-                        <BookOpen className="h-4 w-4 text-gray-600" />
-                      </div>
                     </CardHeader>
                     <CardContent>
                       <p className="text-3xl font-semibold text-black">
@@ -635,14 +614,11 @@ export default function AdminSubjectsPage() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Card className="rounded-2xl border border-gray-200 shadow-sm cursor-help">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-xs font-semibold uppercase tracking-wider text-gray-600">
-                        Teacher Capacity
+                  <Card className="cursor-help">
+                    <CardHeader className="space-y-0 pb-2">
+                      <CardTitle className="text-sm font-semibold text-[#1a1a2e]">
+                        Teacher capacity
                       </CardTitle>
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100">
-                        <Users className="h-4 w-4 text-gray-600" />
-                      </div>
                     </CardHeader>
                     <CardContent>
                       <p className="text-3xl font-semibold text-black">{stats.teacherUtilization}%</p>
@@ -662,7 +638,7 @@ export default function AdminSubjectsPage() {
       </section>
 
       {loading ? (
-        <Card className="rounded-xl border border-gray-200 shadow-sm">
+        <Card className="rounded-2xl">
           <CardContent className="p-8">
             <div className="space-y-4">
               <div className="h-6 w-48 animate-pulse rounded bg-gray-200" />
@@ -672,7 +648,7 @@ export default function AdminSubjectsPage() {
           </CardContent>
         </Card>
       ) : subjects.length === 0 ? (
-        <Card className="rounded-xl border border-gray-200 shadow-sm">
+        <Card className="rounded-2xl">
           <CardContent className="p-8 text-center">
             <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No subjects yet</h3>
@@ -693,16 +669,16 @@ export default function AdminSubjectsPage() {
                 placeholder="Search subjects..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-3 pr-10 py-2 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                className="soft-inset h-11 w-full rounded-xl bg-[#f5f4fa] px-3 py-2 outline-none focus-visible:bg-white focus-visible:ring-[3px] focus-visible:ring-ring/50"
               />
             </div>
           </div>
 
           {/* Custom table with expandable rows */}
-          <Card className="rounded-xl border border-gray-200 shadow-sm">
+          <Card className="rounded-2xl">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="border-b border-gray-200 bg-gray-50">
+                  <thead className="border-b border-[#efedf5] bg-[#f7f6fb]">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Subject Name
@@ -755,14 +731,16 @@ export default function AdminSubjectsPage() {
                         </tr>
 
                         {/* Expanded row */}
-                        {expandedRows.has(subject.id) && subject.classDetails && (
+                        {expandedRows.has(subject.id) && (
                           <tr className="bg-gray-50">
                             <td colSpan={6} className="px-4 py-4">
                               <div className="ml-8 space-y-2">
                                 <h4 className="text-sm font-semibold text-gray-700 mb-3">
                                   Classes using {subject.name}:
                                 </h4>
-                                {subject.classDetails.length === 0 ? (
+                                {!subject.classDetails ? (
+                                  <p className="text-sm text-gray-500">Loading classes...</p>
+                                ) : subject.classDetails.length === 0 ? (
                                   <p className="text-sm text-gray-500">No classes assigned</p>
                                 ) : (
                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

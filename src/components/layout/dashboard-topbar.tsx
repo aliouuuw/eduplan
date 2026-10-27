@@ -10,8 +10,8 @@ interface DashboardTopBarProps {
 
 export function DashboardTopBar({ user }: DashboardTopBarProps) {
   return (
-    <header className="sticky top-0 z-30 h-16 border-b border-gray-200 bg-white">
-      <div className="flex h-full items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 border-b border-white/50 bg-white/45 backdrop-blur-xl">
+      <div className="flex h-14 items-center justify-between px-6 sm:px-8">
         {/* Mobile menu button - Only visible on mobile */}
         <Button
           variant="ghost"

@@ -258,7 +258,7 @@ export default function AdminClassesPage() {
       <section className="space-y-4">
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Card className="rounded-2xl border border-gray-200 shadow-sm">
+            <Card className="rounded-2xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-xs font-semibold uppercase tracking-wider text-gray-500">Total Classes</CardTitle>
                 <div className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-600">
@@ -270,7 +270,7 @@ export default function AdminClassesPage() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border border-gray-200 shadow-sm">
+            <Card className="rounded-2xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-xs font-semibold uppercase tracking-wider text-gray-500">Total Capacity</CardTitle>
                 <div className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-600">
@@ -283,7 +283,7 @@ export default function AdminClassesPage() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border border-gray-200 shadow-sm">
+            <Card className="rounded-2xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-xs font-semibold uppercase tracking-wider text-gray-500">Academic Levels</CardTitle>
                 <div className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-600">
@@ -296,7 +296,7 @@ export default function AdminClassesPage() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border border-gray-200 shadow-sm">
+            <Card className="rounded-2xl">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-xs font-semibold uppercase tracking-wider text-gray-500">Current Year</CardTitle>
                 <div className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-600">
@@ -313,7 +313,7 @@ export default function AdminClassesPage() {
       {loading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, index) => (
-            <Card key={index} className="rounded-xl border border-gray-200 shadow-sm">
+            <Card key={index} className="rounded-2xl">
               <CardHeader>
                 <div className="h-6 w-32 animate-pulse rounded bg-gray-200" />
                 <div className="h-4 w-48 animate-pulse rounded bg-gray-200" />
@@ -325,7 +325,7 @@ export default function AdminClassesPage() {
           ))}
         </div>
       ) : classes.length === 0 ? (
-        <Card className="rounded-xl border border-gray-200 shadow-sm">
+        <Card className="rounded-2xl">
           <CardContent className="p-8 text-center">
             <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No classes yet</h3>
@@ -339,7 +339,7 @@ export default function AdminClassesPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {classes.map((classItem) => (
-            <Card key={classItem.id} className="rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <Card key={classItem.id} className="rounded-2xl transition-colors hover:bg-[#fbfaff]">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-semibold text-black">
                   <Link

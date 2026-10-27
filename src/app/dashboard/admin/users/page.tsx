@@ -34,19 +34,25 @@ export default function AdminUsersPage() {
 
   const fetchUsers = async () => {
     try {
-      // Fetch schools for the user form
-      const schoolsResponse = await fetch('/api/schools');
+      const schoolsPromise = fetch('/api/schools');
+      if (!session?.user?.schoolId) {
+        const schoolsResponse = await schoolsPromise;
+        if (schoolsResponse.ok) {
+          const schoolsData = await schoolsResponse.json();
+          setSchools(schoolsData.schools || []);
+        }
+        return;
+      }
+
+      const [schoolsResponse, activeResponse, pendingResponse] = await Promise.all([
+        schoolsPromise,
+        fetch(`/api/users?schoolId=${session.user.schoolId}`),
+        fetch(`/api/users?pending=true`)
+      ]);
       if (schoolsResponse.ok) {
         const schoolsData = await schoolsResponse.json();
         setSchools(schoolsData.schools || []);
       }
-
-      if (!session?.user?.schoolId) return;
-
-      const [activeResponse, pendingResponse] = await Promise.all([
-        fetch(`/api/users?schoolId=${session.user.schoolId}`),
-        fetch(`/api/users?pending=true`)
-      ]);
 
       if (activeResponse.ok) {
         const activeData = await activeResponse.json();

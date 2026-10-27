@@ -266,22 +266,14 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
           <button
             onClick={() => toggleSection(item.label)}
             className={`
-              group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
+              group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-colors
               ${isSectionActive(item)
-                ? 'bg-gray-100 text-black' 
-                : 'text-gray-700 hover:bg-gray-100 hover:text-black'
+                ? 'text-[#2b2a3d]'
+                : 'text-[#6e6e7e] hover:bg-white/50 hover:text-[#2b2a3d]'
               }
             `}
           >
-            <span
-              className={`
-                flex h-9 w-9 items-center justify-center rounded-md border
-                ${isSectionActive(item)
-                  ? 'border-black/10 bg-gray-200 text-gray-800' 
-                  : 'border-transparent bg-gray-100 text-gray-600 group-hover:border-black/10 group-hover:bg-black group-hover:text-white'
-                }
-              `}
-            >
+            <span className={isSectionActive(item) ? 'text-[#6b7cf7]' : 'text-[#b5aec4] group-hover:text-[#6e6e7e]'}>
               {item.icon}
             </span>
             <span className="flex-1 truncate text-left">{item.label}</span>
@@ -293,7 +285,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
           </button>
           
           {isSectionOpen && item.children && (
-            <div className="ml-3 space-y-1 border-l-2 border-gray-200 pl-3">
+            <div className="ml-4 space-y-1 pl-2">
               {item.children.map(child => renderNavItem(child, true))}
             </div>
           )}
@@ -307,24 +299,16 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
         key={item.href}
         href={item.href!}
         className={`
-          group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
+          group flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-colors
           ${isChild ? 'pl-2' : ''}
-          ${isActive 
-            ? 'bg-black text-white' 
-            : 'text-gray-700 hover:bg-gray-100 hover:text-black'
+          ${isActive
+            ? 'soft-raised bg-white font-semibold text-[#2b2a3d]'
+            : 'text-[#6e6e7e] hover:bg-white/50 hover:text-[#2b2a3d]'
           }
         `}
         onClick={() => setSidebarOpen(false)}
       >
-        <span
-          className={`
-            flex h-9 w-9 items-center justify-center rounded-md border
-            ${isActive 
-              ? 'border-white/20 bg-black text-white' 
-              : 'border-transparent bg-gray-100 text-gray-600 group-hover:border-black/10 group-hover:bg-black group-hover:text-white'
-            }
-          `}
-        >
+        <span className={isActive ? 'text-[#6b7cf7]' : 'text-[#b5aec4] group-hover:text-[#6e6e7e]'}>
           {item.icon}
         </span>
         <span className="truncate">{item.label}</span>
@@ -337,22 +321,22 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-[#2d2d3a]/25 backdrop-blur-sm lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-white border-r border-gray-200
+        glass fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col rounded-r-[22px] lg:inset-y-3 lg:left-3 lg:rounded-[22px]
         transform transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
       `}>
-        {/* Header */}
-        <div className="flex h-16 items-center justify-between border-b border-gray-200 px-6">
-          <Link href="/dashboard" className="text-xl font-bold text-black">
-            EduPlan
+        <div className="flex items-center justify-between px-5 pb-6 pt-7">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <GraduationCap className="h-6 w-6 text-[#6b7cf7]" strokeWidth={2.25} />
+            <span className="text-lg font-bold tracking-tight text-[#111827]">EduPlan</span>
           </Link>
           <Button
             variant="ghost"
@@ -364,38 +348,32 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
           </Button>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
           {allowedNavItems.map(item => renderNavItem(item))}
         </nav>
 
-        {/* User section */}
-        <div className="border-t border-gray-200 p-4">
-          <div className="mb-3 flex items-center px-2">
-            <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-lg bg-black text-sm font-semibold text-white">
-              {user.name?.[0]?.toUpperCase() || 'U'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="truncate text-sm font-medium text-black">{user.name}</p>
-              <p className="text-xs capitalize text-gray-500">{user.role}</p>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
+        <div className="px-3 pb-3 pt-3">
+          <button
+            type="button"
             onClick={handleSignOut}
-            className="w-full justify-center gap-2 border-gray-300 hover:bg-gray-100"
+            className="soft-raised flex w-full items-center gap-2 rounded-[14px] bg-white/80 px-2 py-2 text-left transition-colors hover:bg-white"
           >
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </Button>
+            <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#e8e5ff] text-xs font-bold text-[#4a57c9]">
+              {user.name?.[0]?.toUpperCase() || 'U'}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[12px] font-bold leading-tight text-[#111827]">{user.name}</span>
+              <span className="block truncate text-[11px] font-medium capitalize leading-tight text-[#7b7590]">{user.role}</span>
+            </span>
+            <LogOut className="h-3.5 w-3.5 flex-shrink-0 text-[#7b7590]" aria-label="Sign out" />
+          </button>
         </div>
       </aside>
 
       {/* Mobile menu button - exported for use in topbar */}
       <button
         onClick={() => setSidebarOpen(true)}
-        className="fixed bottom-4 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-black text-white shadow-lg lg:hidden"
+        className="fixed bottom-4 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#6b7cf7] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.28),0_2px_6px_rgba(74,88,220,0.35)] lg:hidden"
         aria-label="Open menu"
       >
         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -2,7 +2,6 @@ import { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { DashboardSidebar } from '@/components/layout/dashboard-sidebar';
-import { DashboardTopBar } from '@/components/layout/dashboard-topbar';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -16,17 +15,12 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar */}
+    <div className="soft-wash min-h-screen">
       <DashboardSidebar user={session.user} />
 
-      {/* Main content area with top bar */}
-      <div className="lg:pl-64">
-        <DashboardTopBar user={session.user} />
-        
-        {/* Page content */}
-        <main className="min-h-[calc(100vh-4rem)]">
-          <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="lg:pl-[284px]">
+        <main className="min-h-screen">
+          <div className="mx-auto max-w-7xl px-6 py-8 pb-10 sm:px-8">
             {children}
           </div>
         </main>
