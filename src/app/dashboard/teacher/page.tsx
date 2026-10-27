@@ -11,6 +11,7 @@ import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Progress } from '@/components/ui/progress';
 import { Stat, MeterDots, MeterSplit } from '@/components/ui/stat';
+import { classSpaceHref } from '@/lib/data/teacher-classes';
 import { getTeacherHome, type HomeSlot } from '@/lib/data/teacher-home';
 import { db } from '@/lib/db';
 import { classLabel, formatDay, frSpaces } from '@/lib/fr';
@@ -320,9 +321,11 @@ export default async function TeacherHomePage() {
                         ? `${-ahead} notion${ahead < -1 ? 's' : ''} de retard`
                         : 'Au rythme';
                   return (
-                    <div key={row.classId} className="border-t border-border py-3.5 first:border-t-0">
+                    <div key={`${row.classId}:${row.subjectId}`} className="border-t border-border py-3.5 first:border-t-0">
                       <div className="flex items-baseline justify-between gap-3">
-                        <b className="font-medium">{classLabel(row.className)}</b>
+                        <Link href={classSpaceHref(row.classId, row.subjectId)} className="font-medium hover:text-progress-ink">
+                          {classLabel(row.className)}
+                        </Link>
                         <span className={cn('text-[13.5px] font-medium', ahead < 0 ? 'text-now-ink' : 'text-progress-ink')}>
                           {pace}
                         </span>

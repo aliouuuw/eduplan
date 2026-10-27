@@ -55,6 +55,7 @@ Context: `PRODUCT.md` (who and why), `MVP_REWORK_PLAN.md` (scope, IA, flows, ord
 | D35 | Who loads the programme (answers open question 2) | The **admin** loads it for each subject and level. No new role | 10-27 |
 | D36 | Who sees flags (answers open question 3) | Teacher, professeur principal and admin always. Students and parents only if the admin turns it on in Réglages (one switch each, off by default) | 10-27 |
 | D37 | Appréciation générale (answers open question 4) | **Yes in the MVP.** The professeur principal writes one appréciation générale per student per trimestre, next to the subject appréciations | 10-27 |
+| D38 | Class space identity | The class space is **class + subject** (`/dashboard/teacher/classes/[classId]/[subjectId]/…`). Programme plans, coverage, and timetable room/topic belong to that pair. Clock time uses `schools.time_zone` (default `Africa/Dakar`) | 10-27 |
 
 ## Open
 

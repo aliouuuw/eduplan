@@ -16,6 +16,7 @@ const TABS = [
 
 export function ClassShell({
   classId,
+  subjectId,
   className,
   subjectName,
   studentCount,
@@ -27,6 +28,7 @@ export function ClassShell({
   children,
 }: {
   classId: string;
+  subjectId: string;
   className: string;
   subjectName: string;
   studentCount: number;
@@ -55,7 +57,8 @@ export function ClassShell({
       <nav className="flex w-max max-w-full gap-1 overflow-x-auto rounded-[26px] bg-card/55 p-1" aria-label="Espace de la classe">
         {TABS.map((tab) => {
           const on = tab.slug === active;
-          const href = tab.soon ? '#' : `/dashboard/teacher/classes/${classId}/${tab.slug}`;
+          const soon = 'soon' in tab && tab.soon;
+          const href = soon ? '#' : `/dashboard/teacher/classes/${classId}/${subjectId}/${tab.slug}`;
           return (
             <Link
               key={tab.slug}
@@ -64,7 +67,7 @@ export function ClassShell({
               className={cn(
                 'flex h-10 shrink-0 items-center gap-2 rounded-[20px] px-[18px] text-[14.5px] font-medium transition-colors',
                 on ? 'bg-card text-foreground shadow-tab' : 'text-ink-2 hover:bg-card/70 hover:text-foreground',
-                tab.soon && !on && 'pointer-events-none opacity-50',
+                soon && !on && 'pointer-events-none opacity-50',
               )}
             >
               {tab.label}

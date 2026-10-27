@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, primaryKey } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, primaryKey, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import { relations } from 'drizzle-orm';
 
 // Users table with role hierarchy: superadmin > admin > teacher/parent > student
@@ -24,6 +24,7 @@ export const schools = sqliteTable('schools', {
   phone: text('phone'),
   email: text('email'),
   logo: text('logo'), // URL to logo image
+  timeZone: text('time_zone').notNull().default('Africa/Dakar'),
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
@@ -120,7 +121,9 @@ export const teacherClasses = sqliteTable('teacher_classes', {
   schoolId: text('school_id').notNull(),
   weeklyHours: integer('weekly_hours').default(0), // Hours per week for this specific class-subject assignment
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
-});
+}, (table) => ({
+  uniq: uniqueIndex('teacher_classes_uniq').on(table.schoolId, table.teacherId, table.classId, table.subjectId),
+}));
 
 // Teacher availability (when teachers are available to teach)
 export const teacherAvailability = sqliteTable('teacher_availability', {
@@ -195,10 +198,14 @@ export const timetables = sqliteTable('timetables', {
   teacherId: text('teacher_id'),
   timeSlotId: text('time_slot_id').notNull(),
   academicYear: text('academic_year').notNull(),
+  room: text('room'),
+  topic: text('topic'),
   status: text('status', { enum: ['draft', 'active'] }).default('draft'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
-});
+}, (table) => ({
+  uniq: uniqueIndex('timetables_slot_uniq').on(table.schoolId, table.classId, table.timeSlotId, table.academicYear),
+}));
 
 // Teaching loop (MVP_REWORK_PLAN.md §4). Rubrics stay out (D5).
 // No SQL foreign keys: same pattern as teacher_classes (orphans must not count).
@@ -328,7 +335,9 @@ export const programmes = sqliteTable('programmes', {
   name: text('name').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
-});
+}, (table) => ({
+  uniq: uniqueIndex('programmes_uniq').on(table.schoolId, table.subjectId, table.levelId),
+}));
 
 export const chapters = sqliteTable('chapters', {
   id: text('id').primaryKey(),
@@ -354,6 +363,7 @@ export const classChapterPlans = sqliteTable('class_chapter_plans', {
   id: text('id').primaryKey(),
   schoolId: text('school_id').notNull(),
   classId: text('class_id').notNull(),
+  subjectId: text('subject_id').notNull(),
   chapterId: text('chapter_id').notNull(),
   position: integer('position').notNull(),
   plannedWeek: integer('planned_week'),
@@ -362,16 +372,21 @@ export const classChapterPlans = sqliteTable('class_chapter_plans', {
   status: text('status', { enum: ['upcoming', 'current', 'done'] }).notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
-});
+}, (table) => ({
+  uniq: uniqueIndex('class_chapter_plans_uniq').on(table.schoolId, table.classId, table.subjectId, table.chapterId),
+}));
 
 export const notionCoverage = sqliteTable('notion_coverage', {
   id: text('id').primaryKey(),
   schoolId: text('school_id').notNull(),
   classId: text('class_id').notNull(),
+  subjectId: text('subject_id').notNull(),
   notionId: text('notion_id').notNull(),
   postId: text('post_id'),
   coveredAt: integer('covered_at', { mode: 'timestamp' }).notNull(),
-});
+}, (table) => ({
+  uniq: uniqueIndex('notion_coverage_uniq').on(table.schoolId, table.classId, table.subjectId, table.notionId),
+}));
 
 export const remarks = sqliteTable('remarks', {
   id: text('id').primaryKey(),
@@ -392,7 +407,9 @@ export const teacherTermGradeTargets = sqliteTable('teacher_term_grade_targets',
   expectedEntries: integer('expected_entries').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
-});
+}, (table) => ({
+  uniq: uniqueIndex('teacher_term_grade_targets_uniq').on(table.schoolId, table.teacherId, table.termId),
+}));
 
 export const studentFlags = sqliteTable('student_flags', {
   id: text('id').primaryKey(),

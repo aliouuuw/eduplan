@@ -10,6 +10,7 @@ import {
   notionCoverage,
   notions,
   posts,
+  schools,
   studentEnrollments,
   studentFlags,
   submissions,
@@ -24,9 +25,13 @@ import {
 import type { Database } from '@/lib/db';
 
 import {
+  DEFAULT_SCHOOL_TIME_ZONE,
   cumulativeGradesByWeek,
   expectedGradeEntriesAtWeek,
   expectedNotionsAtWeek,
+  schoolClockHm,
+  schoolDate,
+  schoolWeekday,
   termWeekCount,
 } from './teacher-home-math';
 
@@ -39,6 +44,7 @@ export function termWeek(now: Date, startsOn: string, weeks: number): number {
 
 export type HomeProgramme = {
   classId: string;
+  subjectId: string;
   className: string;
   chapter: string;
   covered: number;
@@ -95,13 +101,7 @@ export type TeacherHome = {
   corrections: HomeCorrection[];
 };
 
-export function schoolWeekday(now: Date): number {
-  const day = now.getUTCDay();
-  return day === 0 ? 7 : day;
-}
-
-function slotState(now: Date, start: string, end: string): HomeSlot['state'] {
-  const hm = now.toISOString().slice(11, 16);
+function slotState(hm: string, start: string, end: string): HomeSlot['state'] {
   if (hm >= end) return 'done';
   if (hm >= start) return 'live';
   return 'later';
@@ -119,22 +119,34 @@ export async function getTeacherHome(
   schoolId: string,
   now = new Date(),
 ): Promise<TeacherHome> {
-  const links = await db
-    .select()
-    .from(teacherClasses)
-    .where(and(eq(teacherClasses.teacherId, teacherId), eq(teacherClasses.schoolId, schoolId)));
-  const classIds = links.map((row) => row.classId);
-  const subjectIds = [...new Set(links.map((row) => row.subjectId))];
+  const [school] = await db.select({ timeZone: schools.timeZone }).from(schools).where(eq(schools.id, schoolId)).limit(1);
+  const timeZone = school?.timeZone || DEFAULT_SCHOOL_TIME_ZONE;
 
   const [year] = await db
     .select()
     .from(academicYears)
     .where(and(eq(academicYears.schoolId, schoolId), eq(academicYears.isCurrent, true)))
     .limit(1);
+  const links = await db
+    .select()
+    .from(teacherClasses)
+    .innerJoin(classes, eq(teacherClasses.classId, classes.id))
+    .where(
+      and(
+        eq(teacherClasses.teacherId, teacherId),
+        eq(teacherClasses.schoolId, schoolId),
+        ...(year ? [eq(classes.academicYear, year.name)] : []),
+      ),
+    );
+  const assignments = links.map((row) => row.teacher_classes);
+  const classIds = [...new Set(assignments.map((row) => row.classId))];
+  const subjectIds = [...new Set(assignments.map((row) => row.subjectId))];
+  const taught = new Set(assignments.map((row) => `${row.classId}:${row.subjectId}`));
+
   const termRows = year
     ? await db.select().from(terms).where(and(eq(terms.schoolId, schoolId), eq(terms.academicYearId, year.id)))
     : [];
-  const day = now.toISOString().slice(0, 10);
+  const day = schoolDate(now, timeZone);
   const term = termRows.find((row) => row.startsOn <= day && row.endsOn >= day);
   const weeks = term ? termWeekCount(term.startsOn, term.endsOn) : 12;
   const week = term ? termWeek(now, term.startsOn, weeks) : null;
@@ -177,25 +189,34 @@ export async function getTeacherHome(
 
   const classRows = await db.select().from(classes).where(inArray(classes.id, classIds));
   const className = new Map(classRows.map((row) => [row.id, row.name]));
-  const plans = await db
+  const plans = (await db
     .select()
     .from(classChapterPlans)
-    .where(and(inArray(classChapterPlans.classId, classIds), eq(classChapterPlans.status, 'current')));
+    .where(
+      and(
+        eq(classChapterPlans.schoolId, schoolId),
+        inArray(classChapterPlans.classId, classIds),
+        eq(classChapterPlans.status, 'current'),
+      ),
+    )).filter((plan) => taught.has(`${plan.classId}:${plan.subjectId}`));
+  const chapterIds = plans.map((plan) => plan.chapterId);
+  const chapterRows = chapterIds.length ? await db.select().from(chapters).where(inArray(chapters.id, chapterIds)) : [];
+  const chapterTitle = new Map(chapterRows.map((row) => [row.id, row.title]));
+  const notionRows = chapterIds.length ? await db.select().from(notions).where(inArray(notions.chapterId, chapterIds)) : [];
+  const coveredRows = await db
+    .select()
+    .from(notionCoverage)
+    .where(and(eq(notionCoverage.schoolId, schoolId), inArray(notionCoverage.classId, classIds)));
   const programme: HomeProgramme[] = [];
   for (const plan of plans) {
-    const [chapter] = await db.select().from(chapters).where(eq(chapters.id, plan.chapterId));
-    const notionRows = await db.select().from(notions).where(eq(notions.chapterId, plan.chapterId));
-    const coveredRows = await db
-      .select()
-      .from(notionCoverage)
-      .where(and(eq(notionCoverage.classId, plan.classId), eq(notionCoverage.schoolId, schoolId)));
-    const ids = new Set(notionRows.map((row) => row.id));
-    const total = notionRows.length;
+    const ids = new Set(notionRows.filter((row) => row.chapterId === plan.chapterId).map((row) => row.id));
+    const total = ids.size;
     programme.push({
       classId: plan.classId,
+      subjectId: plan.subjectId,
       className: className.get(plan.classId) ?? plan.classId,
-      chapter: chapter?.title ?? '',
-      covered: coveredRows.filter((row) => ids.has(row.notionId)).length,
+      chapter: chapterTitle.get(plan.chapterId) ?? '',
+      covered: coveredRows.filter((row) => row.subjectId === plan.subjectId && row.classId === plan.classId && ids.has(row.notionId)).length,
       total,
       expected: week
         ? expectedNotionsAtWeek(week, total, plan.plannedWeekStart, plan.plannedWeekEnd, weeks)
@@ -258,8 +279,9 @@ export async function getTeacherHome(
     });
   }
 
-  const weekday = schoolWeekday(now);
-  const date = now.toISOString().slice(0, 10);
+  const weekday = schoolWeekday(now, timeZone);
+  const date = day;
+  const hm = schoolClockHm(now, timeZone);
   const todaySlots = await db
     .select()
     .from(timeSlots)
@@ -279,8 +301,8 @@ export async function getTeacherHome(
       .select()
       .from(attendanceRecords)
       .where(and(eq(attendanceRecords.timetableId, entry.id), eq(attendanceRecords.date, date), eq(attendanceRecords.status, 'absent')));
-    const room = slot.room ?? '';
-    const topic = slot.topic ?? '';
+    const room = entry.room ?? '';
+    const topic = entry.topic ?? '';
     slots.push({
       id: entry.id,
       start: slot.startTime,
@@ -289,7 +311,7 @@ export async function getTeacherHome(
       room,
       topic,
       placeLabel: slotPlaceLabel(room, topic, slot.name),
-      state: slotState(now, slot.startTime, slot.endTime),
+      state: slotState(hm, slot.startTime, slot.endTime),
       absents: absents.length,
     });
   }

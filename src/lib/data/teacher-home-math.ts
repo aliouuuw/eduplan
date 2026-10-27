@@ -1,5 +1,29 @@
 /** Term calendar helpers shared by teacher-home and tests. */
 
+export const DEFAULT_SCHOOL_TIME_ZONE = 'Africa/Dakar';
+
+export function schoolDate(now: Date, timeZone = DEFAULT_SCHOOL_TIME_ZONE): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+}
+
+export function schoolWeekday(now: Date, timeZone = DEFAULT_SCHOOL_TIME_ZONE): number {
+  const weekday = new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short' }).format(now);
+  const days: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 };
+  return days[weekday] ?? 1;
+}
+
+export function schoolClockHm(now: Date, timeZone = DEFAULT_SCHOOL_TIME_ZONE): string {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(now);
+  const hour = parts.find((part) => part.type === 'hour')?.value ?? '00';
+  const minute = parts.find((part) => part.type === 'minute')?.value ?? '00';
+  return `${hour}:${minute}`;
+}
+
 export function termWeekCount(startsOn: string, endsOn: string): number {
   const start = Date.parse(`${startsOn}T00:00:00Z`);
   const end = Date.parse(`${endsOn}T00:00:00Z`);

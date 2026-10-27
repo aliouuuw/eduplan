@@ -71,6 +71,13 @@
       "when": 1793125178892,
       "tag": "0009_teacher_home_data",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1793125997567,
+      "tag": "0010_school_class_subject_identity",
+      "breakpoints": true
     }
   ]
 }

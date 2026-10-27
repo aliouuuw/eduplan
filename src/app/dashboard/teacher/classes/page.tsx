@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/layout/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ListRow, ListRows } from '@/components/ui/list-row';
-import { listTeacherClasses } from '@/lib/data/teacher-classes';
+import { classSpaceHref, listTeacherClasses } from '@/lib/data/teacher-classes';
 import { db } from '@/lib/db';
 import { classLabel } from '@/lib/fr';
 import { requireSchoolRole } from '@/lib/session';
@@ -26,10 +26,10 @@ export default async function TeacherClassesPage() {
             <ListRows>
               {rows.map((row) => (
                 <ListRow
-                  key={row.classId}
+                  key={`${row.classId}:${row.subjectId}`}
                   title={classLabel(row.className)}
                   meta={`${row.subjectName} · ${row.studentCount} élèves`}
-                  trailing={<Link href={`/dashboard/teacher/classes/${row.classId}/programme`} className="text-sm font-medium text-progress-ink">Programme</Link>}
+                  trailing={<Link href={classSpaceHref(row.classId, row.subjectId)} className="text-sm font-medium text-progress-ink">Programme</Link>}
                 />
               ))}
             </ListRows>

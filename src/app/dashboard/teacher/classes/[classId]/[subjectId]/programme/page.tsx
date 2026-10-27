@@ -9,16 +9,19 @@ import { classLabel } from '@/lib/fr';
 import { requireSchoolRole } from '@/lib/session';
 import { cn } from '@/lib/utils';
 
-export async function generateMetadata({ params }: { params: Promise<{ classId: string }> }) {
-  const { classId } = await params;
-  return { title: `Programme · ${classId} · EduPlan` };
+export async function generateMetadata({ params }: { params: Promise<{ classId: string; subjectId: string }> }) {
+  const { classId, subjectId } = await params;
+  const viewer = await requireSchoolRole('teacher');
+  const programme = await getClassProgramme(db, viewer.userId, viewer.schoolId, classId, subjectId);
+  if (!programme) return { title: 'Programme · EduPlan' };
+  return { title: `Programme · ${classLabel(programme.className)} · ${programme.subjectName}` };
 }
 
-export default async function ClassProgrammePage({ params }: { params: Promise<{ classId: string }> }) {
-  const { classId } = await params;
+export default async function ClassProgrammePage({ params }: { params: Promise<{ classId: string; subjectId: string }> }) {
+  const { classId, subjectId } = await params;
   const viewer = await requireSchoolRole('teacher');
   const now = new Date();
-  const programme = await getClassProgramme(db, viewer.userId, viewer.schoolId, classId, now);
+  const programme = await getClassProgramme(db, viewer.userId, viewer.schoolId, classId, subjectId, now);
   if (!programme) notFound();
 
   const current = programme.chapters.find((chapter) => chapter.status === 'current');
@@ -26,6 +29,7 @@ export default async function ClassProgrammePage({ params }: { params: Promise<{
   return (
     <ClassShell
       classId={classId}
+      subjectId={subjectId}
       className={programme.className}
       subjectName={programme.subjectName}
       studentCount={programme.studentCount}
