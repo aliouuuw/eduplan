@@ -1,27 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Turbopack configuration for development
+  // Memoizes client components. Cuts repeat renders on the dashboard screens.
+  reactCompiler: true,
   experimental: {
-    turbo: {
-      rules: {
-        // Handle LICENSE files and other non-JS files
-        "*.{txt,md,LICENSE}": {
-          loaders: ["raw-loader"],
-          as: "*.js",
-        },
-      },
-    },
-  },
-  // Keep webpack config for production builds
-  webpack: (config, { isServer }) => {
-    // Ignore LICENSE files and other non-JS files that might be imported
-    config.module.rules.push({
-      test: /\.(txt|md|LICENSE)$/,
-      type: "asset/source",
-    });
-    
-    return config;
+    // framer-motion is only used by the calendar. Keep the rest of the app off that barrel.
+    optimizePackageImports: ["framer-motion"],
   },
 };
 

@@ -4,10 +4,12 @@ import * as schema from '../db/schema';
 import { generateId } from './utils';
 
 // Create the Turso client
-const client = createClient({
-  url: process.env.TURSO_DATABASE_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN!,
-});
+const authToken = process.env.TURSO_AUTH_TOKEN;
+const client = createClient(
+  authToken
+    ? { url: process.env.TURSO_DATABASE_URL!, authToken }
+    : { url: process.env.TURSO_DATABASE_URL! }
+);
 
 // Create the Drizzle database instance
 export const db = drizzle(client, { schema });
