@@ -43,6 +43,30 @@ export default async function TeacherHomePage() {
             </div>
             <Card>
               <CardHeader>
+                <CardTitle>Cours d'aujourd'hui</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {home.slots.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Aucun cours ce jour.</p>
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    {home.slots.map((slot) => (
+                      <div key={slot.id} className={slot.state === 'live' ? 'rounded-lg bg-now-soft p-3 text-now-ink' : 'rounded-lg bg-progress-faint p-3'}>
+                        <p className="text-sm text-muted-foreground">{slot.start} · {slot.end}</p>
+                        <p className="font-display text-lg">{classLabel(slot.className)}</p>
+                        <p className="text-sm">{slot.room}</p>
+                        {slot.state === 'done' && slot.absents > 0 && (
+                          <p className="mt-1 text-sm">Appel fait · {slot.absents} absent{slot.absents > 1 ? 's' : ''}</p>
+                        )}
+                        {slot.state === 'live' && <p className="mt-1 text-sm font-medium">En cours</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
                 <CardTitle>Programme</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">

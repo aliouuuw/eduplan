@@ -15,7 +15,10 @@ import {
   submissions,
   teacherClasses,
   terms,
+  timeSlots,
+  timetables,
   users,
+  attendanceRecords,
 } from '@/db/schema';
 import type { Database } from '@/lib/db';
 
@@ -45,6 +48,16 @@ export type HomeFlag = {
   source: 'rule' | 'teacher';
 };
 
+export type HomeSlot = {
+  id: string;
+  start: string;
+  end: string;
+  className: string;
+  room: string;
+  state: 'done' | 'live' | 'later';
+  absents: number;
+};
+
 export type TeacherHome = {
   week: number | null;
   weeks: number;
@@ -52,7 +65,20 @@ export type TeacherHome = {
   gradesEntered: number;
   programme: HomeProgramme[];
   flags: HomeFlag[];
+  slots: HomeSlot[];
 };
+
+export function schoolWeekday(now: Date): number {
+  const day = now.getUTCDay();
+  return day === 0 ? 7 : day;
+}
+
+function slotState(now: Date, start: string, end: string): HomeSlot['state'] {
+  const hm = now.toISOString().slice(11, 16);
+  if (hm >= end) return 'done';
+  if (hm >= start) return 'live';
+  return 'later';
+}
 
 export async function getTeacherHome(
   db: Database,
@@ -78,7 +104,7 @@ export async function getTeacherHome(
   const day = now.toISOString().slice(0, 10);
   const term = termRows.find((row) => row.startsOn <= day && row.endsOn >= day);
   const week = term ? termWeek(now, term.startsOn) : null;
-  const empty = { week, weeks: TERM_WEEKS, copiesToGrade: 0, gradesEntered: 0, programme: [], flags: [] };
+  const empty = { week, weeks: TERM_WEEKS, copiesToGrade: 0, gradesEntered: 0, programme: [], flags: [], slots: [] as HomeSlot[] };
   if (classIds.length === 0) return empty;
 
   const classRows = await db.select().from(classes).where(inArray(classes.id, classIds));
@@ -140,6 +166,39 @@ export async function getTeacherHome(
     });
   }
 
+  const weekday = schoolWeekday(now);
+  const date = now.toISOString().slice(0, 10);
+  const todaySlots = await db
+    .select()
+    .from(timeSlots)
+    .where(and(eq(timeSlots.schoolId, schoolId), eq(timeSlots.dayOfWeek, weekday)));
+  const slotIds = todaySlots.map((row) => row.id);
+  const entries = slotIds.length
+    ? await db
+        .select()
+        .from(timetables)
+        .where(and(eq(timetables.teacherId, teacherId), eq(timetables.schoolId, schoolId), inArray(timetables.timeSlotId, slotIds)))
+    : [];
+  const slots: HomeSlot[] = [];
+  for (const entry of entries) {
+    const slot = todaySlots.find((row) => row.id === entry.timeSlotId);
+    if (!slot?.startTime || !slot.endTime) continue;
+    const absents = await db
+      .select()
+      .from(attendanceRecords)
+      .where(and(eq(attendanceRecords.timetableId, entry.id), eq(attendanceRecords.date, date), eq(attendanceRecords.status, 'absent')));
+    slots.push({
+      id: entry.id,
+      start: slot.startTime,
+      end: slot.endTime,
+      className: className.get(entry.classId) ?? entry.classId,
+      room: slot.name ?? '',
+      state: slotState(now, slot.startTime, slot.endTime),
+      absents: absents.length,
+    });
+  }
+  slots.sort((a, b) => a.start.localeCompare(b.start));
+
   return {
     week,
     weeks: TERM_WEEKS,
@@ -147,5 +206,6 @@ export async function getTeacherHome(
     gradesEntered: gradeRows.length,
     programme,
     flags,
+    slots,
   };
 }

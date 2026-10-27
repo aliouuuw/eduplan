@@ -27,6 +27,8 @@ import {
   studentEnrollments,
   studentFlags,
   subjects,
+  timeSlots,
+  timetables,
   submissions,
   teacherClasses,
   teacherSubjects,
@@ -50,6 +52,7 @@ async function clear(db: Database) {
   const schoolId = DEMO_SCHOOL_ID;
   for (const table of [
     messages, messageThreads, appreciations, schoolSettings, flagRules, studentFlags, remarks,
+    attendanceRecords, timetables, timeSlots,
     notionCoverage, classChapterPlans, notions, chapters, programmes, notifications,
     attendanceRecords, grades, attachments, submissions, posts, topics, terms, academicYears,
     studentEnrollments, teacherClasses, teacherSubjects,
@@ -314,6 +317,49 @@ export async function seedDemo(db: Database) {
     createdAt: NOW,
     updatedAt: NOW,
   });
+
+  const daySlots = [
+    { id: 'slot-0800', start: '08:00', end: '09:00', classId: 'demo-4a', room: 'Salle 12', topic: 'Pythagore' },
+    { id: 'slot-1000', start: '10:00', end: '11:00', classId: 'demo-3b', room: 'Salle 7', topic: 'Correction DM' },
+    { id: 'slot-1400', start: '14:00', end: '15:00', classId: 'demo-4b', room: 'Salle 12', topic: 'Thalès' },
+    { id: 'slot-1600', start: '16:00', end: '17:00', classId: 'demo-6a', room: 'Salle 3', topic: 'Calcul' },
+  ];
+  for (const slot of daySlots) {
+    await db.insert(timeSlots).values({
+      id: slot.id,
+      schoolId: DEMO_SCHOOL_ID,
+      dayOfWeek: 2,
+      startTime: slot.start,
+      endTime: slot.end,
+      name: `${slot.room} · ${slot.topic}`,
+      isBreak: false,
+      createdAt: NOW,
+    });
+    await db.insert(timetables).values({
+      id: `tt-${slot.id}`,
+      schoolId: DEMO_SCHOOL_ID,
+      classId: slot.classId,
+      subjectId: 'demo-math',
+      teacherId: 'demo-aissatou',
+      timeSlotId: slot.id,
+      academicYear: '2025-2026',
+      status: 'active',
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+  }
+  for (const studentId of ['stu-demo-4a-2', 'stu-demo-4a-3']) {
+    await db.insert(attendanceRecords).values({
+      id: `abs-${studentId}`,
+      schoolId: DEMO_SCHOOL_ID,
+      studentId,
+      timetableId: 'tt-slot-0800',
+      date: '2026-10-27',
+      status: 'absent',
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+  }
 
   const gradeStudents = ['stu-khady', 'stu-khady', ...students.filter((s) => s.id !== 'stu-khady').slice(0, 7).map((s) => s.id)];
   for (let i = 0; i < gradeStudents.length; i++) {
