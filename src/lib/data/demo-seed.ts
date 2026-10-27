@@ -216,8 +216,11 @@ export async function seedDemo(db: Database) {
     updatedAt: NOW,
   });
   await db.insert(chapters).values([
+    { id: 'demo-ch1', schoolId: DEMO_SCHOOL_ID, programmeId: 'demo-prog', title: 'Nombres entiers et rationnels', position: 1, createdAt: NOW, updatedAt: NOW },
+    { id: 'demo-ch2', schoolId: DEMO_SCHOOL_ID, programmeId: 'demo-prog', title: 'Calcul littéral', position: 2, createdAt: NOW, updatedAt: NOW },
     { id: 'demo-ch3', schoolId: DEMO_SCHOOL_ID, programmeId: 'demo-prog', title: 'Théorème de Pythagore', position: 3, createdAt: NOW, updatedAt: NOW },
     { id: 'demo-ch4', schoolId: DEMO_SCHOOL_ID, programmeId: 'demo-prog', title: 'Théorème de Thalès', position: 4, createdAt: NOW, updatedAt: NOW },
+    { id: 'demo-ch5', schoolId: DEMO_SCHOOL_ID, programmeId: 'demo-prog', title: 'Racines carrées', position: 5, createdAt: NOW, updatedAt: NOW },
   ]);
   const notionIds: Record<string, string[]> = { 'demo-ch3': [], 'demo-ch4': [] };
   for (const [chapterId, count] of [['demo-ch3', 18], ['demo-ch4', 20]] as const) {
@@ -240,7 +243,29 @@ export async function seedDemo(db: Database) {
     { classId: 'demo-4b', chapterId: 'demo-ch3', n: 10, status: 'current' as const },
     { classId: 'demo-3b', chapterId: 'demo-ch4', n: 11, status: 'current' as const },
   ];
-  for (const row of covered) {
+  const plans3b = [
+    { id: 'plan-3b-ch1', chapterId: 'demo-ch1', position: 1, start: 1, end: 2, status: 'done' as const },
+    { id: 'plan-3b-ch2', chapterId: 'demo-ch2', position: 2, start: 3, end: 4, status: 'done' as const },
+    { id: 'plan-3b-ch3', chapterId: 'demo-ch3', position: 3, start: 5, end: 6, status: 'done' as const },
+    { id: 'plan-3b-ch4', chapterId: 'demo-ch4', position: 4, start: 7, end: 9, status: 'current' as const },
+    { id: 'plan-3b-ch5', chapterId: 'demo-ch5', position: 5, start: 10, end: 12, status: 'upcoming' as const },
+  ];
+  for (const row of plans3b) {
+    await db.insert(classChapterPlans).values({
+      id: row.id,
+      schoolId: DEMO_SCHOOL_ID,
+      classId: 'demo-3b',
+      chapterId: row.chapterId,
+      position: row.position,
+      plannedWeek: 8,
+      plannedWeekStart: row.start,
+      plannedWeekEnd: row.end,
+      status: row.status,
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+  }
+  for (const row of covered.filter((entry) => entry.classId !== 'demo-3b')) {
     await db.insert(classChapterPlans).values({
       id: `plan-${row.classId}`,
       schoolId: DEMO_SCHOOL_ID,
@@ -254,9 +279,11 @@ export async function seedDemo(db: Database) {
       createdAt: NOW,
       updatedAt: NOW,
     });
+  }
+  for (const row of covered) {
     for (let i = 0; i < row.n; i++) {
       await db.insert(notionCoverage).values({
-        id: `cov-${row.classId}-${i}`,
+        id: `cov-${row.classId}-${row.chapterId}-${i}`,
         schoolId: DEMO_SCHOOL_ID,
         classId: row.classId,
         notionId: notionIds[row.chapterId][i],

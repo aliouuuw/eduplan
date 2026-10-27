@@ -177,7 +177,10 @@ export async function getTeacherHome(
 
   const classRows = await db.select().from(classes).where(inArray(classes.id, classIds));
   const className = new Map(classRows.map((row) => [row.id, row.name]));
-  const plans = await db.select().from(classChapterPlans).where(inArray(classChapterPlans.classId, classIds));
+  const plans = await db
+    .select()
+    .from(classChapterPlans)
+    .where(and(inArray(classChapterPlans.classId, classIds), eq(classChapterPlans.status, 'current')));
   const programme: HomeProgramme[] = [];
   for (const plan of plans) {
     const [chapter] = await db.select().from(chapters).where(eq(chapters.id, plan.chapterId));
