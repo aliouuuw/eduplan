@@ -4,21 +4,20 @@ import * as React from "react"
 
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
-// Candidate type pairings for validation. The faces load from the Fontshare API (allowed by the
-// ITF Free Font License, §14); the picked one is then self-hosted like Ranade.
+// Candidate type families for validation. Fontshare faces load from its API (ITF Free Font License, §14);
+// Google families load from Google Fonts (SIL Open Font License). The pick is then self-hosted.
 const OPTIONS = [
-  { id: "ranade", label: "Ranade", note: "actuel · une seule voix", sans: "", display: "", weight: "500", tracking: "-0.02em" },
+  { id: "ranade", label: "Ranade", note: "actuel · Fontshare", sans: "", display: "", weight: "500", tracking: "-0.02em" },
   { id: "doux", label: "Doux", note: "Chillax · arrondie, comme les capsules", sans: "'Chillax'", display: "'Chillax'", weight: "500", tracking: "-0.02em" },
-  { id: "lettre", label: "Lettre", note: "Gambarino + Synonym · une main d'enseignant", sans: "'Synonym'", display: "'Gambarino'", weight: "400", tracking: "-0.005em" },
-  { id: "atelier", label: "Atelier", note: "Rowan + Supreme · l'institution, précise", sans: "'Supreme'", display: "'Rowan'", weight: "500", tracking: "-0.015em" },
+  { id: "instrument", label: "Instrument", note: "Instrument Sans · nette, un peu étroite", sans: "'Instrument Sans'", display: "'Instrument Sans'", weight: "500", tracking: "-0.025em" },
+  { id: "pt", label: "PT Sans", note: "PT Sans · humaniste, très lisible · 400 et 700 seulement", sans: "'PT Sans'", display: "'PT Sans'", weight: "700", tracking: "-0.01em" },
+  { id: "poppins", label: "Poppins", note: "Poppins · géométrique, ronde", sans: "'Poppins'", display: "'Poppins'", weight: "500", tracking: "-0.025em" },
+  { id: "google", label: "Google Sans", note: "Google Sans · ouverte, amicale", sans: "'Google Sans'", display: "'Google Sans'", weight: "500", tracking: "-0.02em" },
 ] as const
 
 const FONT_CSS = [
   "https://api.fontshare.com/v2/css?f[]=chillax@400,500,600&display=swap",
-  "https://api.fontshare.com/v2/css?f[]=gambarino@400&display=swap",
-  "https://api.fontshare.com/v2/css?f[]=synonym@400,500,600&display=swap",
-  "https://api.fontshare.com/v2/css?f[]=rowan@400,500,600&display=swap",
-  "https://api.fontshare.com/v2/css?f[]=supreme@400,500,700&display=swap",
+  "https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=PT+Sans:wght@400;700&family=Poppins:wght@400;500;600;700&family=Google+Sans:wght@400;500;600;700&display=swap",
 ]
 
 function vars(id: string): React.CSSProperties {
