@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { users } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { activeTeacher } from '@/lib/teacher-scope';
+import { schoolScopeFor } from '@/lib/school-scope';
 
 /**
  * GET /api/teachers/stats?schoolId=xxx
@@ -24,10 +25,11 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const schoolId = searchParams.get('schoolId') || session.user.schoolId;
+    // A school admin can only read their own school; only a superadmin may pass ?schoolId.
+    const schoolId = schoolScopeFor(session.user, searchParams.get('schoolId'));
 
     if (!schoolId) {
-      return NextResponse.json({ error: 'School ID required' }, { status: 400 });
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Get all teachers for the school

@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { users, teacherAvailability } from '@/db/schema';
 import { eq, and, count } from 'drizzle-orm';
 import { activeTeacher } from '@/lib/teacher-scope';
+import { schoolScopeFor } from '@/lib/school-scope';
 
 /**
  * GET /api/teachers
@@ -22,12 +23,11 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const includeAvailability = searchParams.get('includeAvailability') === 'true';
-    const requestedSchoolId = searchParams.get('schoolId');
-
-    const schoolId = requestedSchoolId || session.user.schoolId;
+    // A school admin can only read their own school; only a superadmin may pass ?schoolId.
+    const schoolId = schoolScopeFor(session.user, searchParams.get('schoolId'));
 
     if (!schoolId) {
-      return NextResponse.json({ error: 'School ID required' }, { status: 400 });
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Only admins and superadmins can access this endpoint
