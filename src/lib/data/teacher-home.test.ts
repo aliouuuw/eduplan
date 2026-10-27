@@ -15,7 +15,9 @@ test('Aïssatou home matches the mock counts', async () => {
   await seedDemo(db);
   const home = await getTeacherHome(db, 'demo-aissatou', 'demo-dakar', NOW);
   expect(home.week).toBe(8);
-  expect(home.copiesToGrade).toBe(22);
+  expect(home.copiesToGrade).toBe(53);
+  expect(home.gradesTarget).toBe(15);
+  expect(home.gradesExpected).toBe(10);
   expect(home.gradesEntered).toBe(9);
   expect(home.flags).toHaveLength(4);
   const byClass = Object.fromEntries(home.programme.map((row) => [row.className, row]));

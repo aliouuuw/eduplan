@@ -58,15 +58,31 @@ export type HomeSlot = {
   absents: number;
 };
 
+export type HomeCorrection = {
+  id: string;
+  title: string;
+  className: string;
+  graded: number;
+  total: number;
+  late: number;
+};
+
 export type TeacherHome = {
   week: number | null;
   weeks: number;
   copiesToGrade: number;
+  copiesSubmitted: number;
+  copiesLate: number;
   gradesEntered: number;
+  gradesTarget: number;
+  gradesExpected: number;
   programme: HomeProgramme[];
   flags: HomeFlag[];
   slots: HomeSlot[];
+  corrections: HomeCorrection[];
 };
+
+const GRADES_TARGET = 15;
 
 export function schoolWeekday(now: Date): number {
   const day = now.getUTCDay();
@@ -104,7 +120,21 @@ export async function getTeacherHome(
   const day = now.toISOString().slice(0, 10);
   const term = termRows.find((row) => row.startsOn <= day && row.endsOn >= day);
   const week = term ? termWeek(now, term.startsOn) : null;
-  const empty = { week, weeks: TERM_WEEKS, copiesToGrade: 0, gradesEntered: 0, programme: [], flags: [], slots: [] as HomeSlot[] };
+  const gradesExpected = week ? Math.round((GRADES_TARGET * week) / TERM_WEEKS) : 0;
+  const empty = {
+    week,
+    weeks: TERM_WEEKS,
+    copiesToGrade: 0,
+    copiesSubmitted: 0,
+    copiesLate: 0,
+    gradesEntered: 0,
+    gradesTarget: GRADES_TARGET,
+    gradesExpected,
+    programme: [],
+    flags: [],
+    slots: [] as HomeSlot[],
+    corrections: [],
+  };
   if (classIds.length === 0) return empty;
 
   const classRows = await db.select().from(classes).where(inArray(classes.id, classIds));
@@ -136,6 +166,20 @@ export async function getTeacherHome(
     .where(and(eq(posts.authorId, teacherId), eq(posts.schoolId, schoolId), eq(posts.type, 'assignment')));
   const postIds = myPosts.map((row) => row.id);
   const copies = postIds.length ? await db.select().from(submissions).where(inArray(submissions.postId, postIds)) : [];
+  const corrections: HomeCorrection[] = [];
+  for (const post of myPosts) {
+    const rows = copies.filter((row) => row.postId === post.id);
+    const waiting = rows.filter((row) => row.status === 'submitted' || row.status === 'late');
+    if (waiting.length === 0) continue;
+    corrections.push({
+      id: post.id,
+      title: post.title,
+      className: className.get(post.classId) ?? post.classId,
+      graded: rows.length - waiting.length,
+      total: rows.length,
+      late: rows.filter((row) => row.status === 'late').length,
+    });
+  }
 
   const gradeRows = term
     ? await db
@@ -199,13 +243,19 @@ export async function getTeacherHome(
   }
   slots.sort((a, b) => a.start.localeCompare(b.start));
 
+  const toGrade = copies.filter((row) => row.status === 'submitted' || row.status === 'late');
   return {
     week,
     weeks: TERM_WEEKS,
-    copiesToGrade: copies.filter((row) => row.status === 'submitted' || row.status === 'late').length,
+    copiesToGrade: toGrade.length,
+    copiesSubmitted: copies.filter((row) => row.status === 'submitted').length,
+    copiesLate: copies.filter((row) => row.status === 'late').length,
     gradesEntered: gradeRows.length,
+    gradesTarget: GRADES_TARGET,
+    gradesExpected,
     programme,
     flags,
     slots,
+    corrections,
   };
 }

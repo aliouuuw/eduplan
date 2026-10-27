@@ -317,6 +317,19 @@ export async function seedDemo(db: Database) {
     createdAt: NOW,
     updatedAt: NOW,
   });
+  const class3b = students.filter((s) => s.classId === 'demo-3b');
+  for (let i = 0; i < class3b.length; i++) {
+    await db.insert(submissions).values({
+      id: `sub-pyth-${i}`,
+      schoolId: DEMO_SCHOOL_ID,
+      postId: 'demo-pyth',
+      studentId: class3b[i].id,
+      status: 'submitted',
+      submittedAt: NOW,
+      createdAt: NOW,
+      updatedAt: NOW,
+    });
+  }
 
   const daySlots = [
     { id: 'slot-0800', start: '08:00', end: '09:00', classId: 'demo-4a', room: 'Salle 12', topic: 'Pythagore' },
