@@ -1,0 +1,71 @@
+/* F · Verre dépoli. Frosted panels over a painted field (deep teal at the top, warm sand at the
+   bottom) with fine grain. The glass has something real to blur. No blobs, no blue-purple. */
+:root{--bg:#24484e;--glass:rgba(255,255,255,.72);--glass-2:rgba(255,255,255,.5);
+--ink:#11252a;--ink-2:#2f4449;--ink-3:#40565b;--line:rgba(17,37,42,.1);
+--now:#e2593f;--now-ink:#9c2f1b;--now-t:rgba(255,214,200,.75);
+--prog:#1f716b;--prog-ink:#135652;--prog-t:rgba(31,113,107,.16);
+--on-field:#f4f8f7;--on-field-2:rgba(244,248,247,.8)}
+::selection{background:#bfe3dc}
+.backdrop{display:block;position:absolute;inset:0;z-index:0;overflow:hidden;
+background:linear-gradient(168deg,#1d3d43 0%,#2e5a5e 26%,#5f8580 48%,#b89c84 74%,#e6bfa0 100%)}
+.backdrop::after{content:"";position:absolute;inset:0;opacity:.5;mix-blend-mode:soft-light;
+background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.brand{border-radius:14px;background:var(--glass);color:var(--ink);backdrop-filter:blur(16px)}
+.nav-item{color:var(--on-field-2)}
+.nav-ic{border-radius:14px}
+.nav-item.is-active{color:var(--on-field);font-weight:500}
+.nav-item.is-active .nav-ic{background:rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 0 0 1px rgba(255,255,255,.22);backdrop-filter:blur(12px)}
+.dock-end{color:var(--on-field-2)}
+.avatar{background:var(--glass);color:var(--now-ink)}
+.top h1{color:var(--on-field)}
+.top p{color:var(--on-field-2)}
+.search,.btn-new{background:rgba(255,255,255,.18);color:var(--on-field);backdrop-filter:blur(14px) saturate(1.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 0 0 1px rgba(255,255,255,.22)}
+.search{border-radius:23px}
+.btn{border-radius:23px}
+.btn-primary{background:var(--ink);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 6px 14px -8px rgba(17,37,42,.7)}
+.mod{border-radius:26px;background:var(--glass);backdrop-filter:blur(26px) saturate(1.35);
+box-shadow:inset 0 1px 0 rgba(255,255,255,.85),inset 0 0 0 1px rgba(255,255,255,.45),0 10px 24px -16px rgba(12,30,34,.55)}
+.mod-head .more{color:var(--prog-ink)}
+.mod-head .sub,.mod-head .count{color:var(--ink-3)}
+.stat-label{color:var(--ink-2)}
+.stat-value span,.stat-cap{color:var(--ink-3)}
+.meter i{background:var(--prog-t)}
+.meter i.on{background:var(--prog)}
+.meter i.alt{background:var(--now-t)}
+.legend{color:var(--ink-3)}
+.kpi{color:var(--ink-3)}
+.kpi b{color:var(--now-ink)}
+.c-area{fill:var(--prog-t)}
+.c-expected{stroke:var(--ink-3)}
+.c-actual{stroke:var(--prog)}
+.c-point{stroke:var(--prog);fill:#fff}
+.axis{color:var(--ink-3)}
+.axis b{color:var(--ink)}
+.slot{border-radius:18px;background:var(--glass-2)}
+.slot time,.slot-st{color:var(--ink-3)}
+.slot p{color:var(--ink-2)}
+.slot.is-live{background:var(--now-t)}
+.slot.is-live time,.slot.is-live .slot-st,.slot.is-live p{color:var(--now-ink)}
+.kid+.kid,.task+.task,.cls+.cls,.seq li+li{border-top:1px solid var(--line)}
+.kid-class,.kid-src{color:var(--ink-3)}
+.kid-why{color:var(--ink-2)}
+.kid-why b{color:var(--ink)}
+.live-tag{color:var(--now-ink)}
+.live-tag i{background:var(--now)}
+.live-meta,.seq li span+span,.track{color:var(--ink-3)}
+.track-bar{background:var(--now-t)}
+.track-bar i{background:var(--now)}
+.check{border:1.7px solid rgba(17,37,42,.35)}
+.task-m,.task-n small,.thumbs-more{color:var(--ink-3)}
+.task-n small.late{color:var(--now-ink)}
+.thumb{border-radius:10px;background:var(--glass-2);color:var(--ink-2)}
+.thumb b{color:var(--ink)}
+.alert{background:var(--now-t);border-radius:18px}
+.alert-m,.alert a{color:var(--now-ink)}
+.cls-row .ahead{color:var(--prog-ink)}
+.cls-row .late{color:var(--now-ink)}
+.bar{background:var(--prog-t)}
+.bar i{background:var(--prog)}
+.bar u,.prog-foot u{background:var(--ink)}
+.cls-m,.prog-foot{color:var(--ink-3)}
+html{background:#e6bfa0}

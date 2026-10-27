@@ -1,0 +1,51 @@
+/* Verre vivant: the glass recipe for the scene tests, layered on verre.css.
+   Panels: a light tint (not 90% white), backdrop brightness for real contrast, a specular sheen,
+   a light-catching edge, a tight tinted shadow. Inner blocks are frosted, not opaque.
+   Scene vars per test: --scene-img, --scene-h, --scene-mask, --scene-base, --scene-deep. */
+:root{--ink-3:#283c40;--ink-2:#22363a;--now-ink:#842510;--line:rgba(17,37,42,.09)}
+html{background:var(--scene-deep)}
+body{background:var(--scene-base);min-height:100vh}
+.backdrop{background:linear-gradient(180deg,var(--scene-base) 0%,var(--scene-deep) 100%)}
+.backdrop::before{content:"";position:absolute;inset:0 0 auto 0;height:var(--scene-h,100%);
+  background:linear-gradient(180deg,rgba(6,18,20,.5) 0,rgba(6,18,20,.18) 150px,rgba(6,18,20,0) 300px),var(--scene-img) top center/cover no-repeat;
+  -webkit-mask-image:var(--scene-mask,none);mask-image:var(--scene-mask,none)}
+.backdrop::after{opacity:.1}
+
+/* the scene owns the top of the page */
+.top{min-height:196px;padding-bottom:4px}
+.top h1{font-size:46px;letter-spacing:-.03em;text-shadow:0 1px 20px rgba(4,14,16,.35)}
+.top p{font-size:16px;margin-top:10px;color:rgba(255,255,255,.88);text-shadow:0 1px 12px rgba(4,14,16,.4)}
+
+/* floating glass dock */
+.dock{align-self:flex-start;padding:16px 0;border-radius:32px;margin-top:4px;
+  background:rgba(10,24,26,.34);backdrop-filter:blur(22px) saturate(1.4);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 0 0 1px rgba(255,255,255,.14),0 14px 30px -22px rgba(0,0,0,.7)}
+.brand{margin-bottom:18px;background:rgba(255,255,255,.92)}
+.nav-item{color:rgba(255,255,255,.82)}
+.nav-item.is-active{color:#fff}
+.nav-item.is-active .nav-ic{background:rgba(255,255,255,.92);color:var(--ink);box-shadow:inset 0 1px 0 #fff,0 6px 14px -10px rgba(0,0,0,.6);backdrop-filter:none}
+.dock-end{margin-top:26px;color:rgba(255,255,255,.82)}
+
+/* the panels */
+.mod{position:relative;isolation:isolate;
+  background:linear-gradient(158deg,rgba(255,255,255,.82) 0%,rgba(255,255,255,.68) 42%,rgba(255,255,255,.74) 100%);
+  backdrop-filter:blur(34px) saturate(1.7) brightness(1.14);-webkit-backdrop-filter:blur(34px) saturate(1.7) brightness(1.14);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(255,255,255,.3),0 1px 2px rgba(8,22,24,.08),0 20px 34px -26px rgba(8,22,24,.6)}
+.mod::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(160deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,.2) 38%,rgba(255,255,255,.08) 62%,rgba(255,255,255,.55) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.m-live{background:linear-gradient(158deg,rgba(255,232,224,.88) 0%,rgba(255,214,200,.7) 55%,rgba(255,222,210,.78) 100%)}
+
+/* frosted inner blocks */
+.slot{background:rgba(255,255,255,.42)}
+.slot.is-live{background:rgba(255,204,188,.62)}
+.thumb{background:rgba(255,255,255,.5)}
+.alert{background:rgba(255,208,192,.58)}
+.meter i,.bar{background:rgba(17,37,42,.08)}
+.meter i.on,.bar i{background:var(--prog)}
+.meter i.alt{background:rgba(226,89,63,.22)}
+.c-area{fill:rgba(31,113,107,.12)}
+
+/* glass capsules on the scene */
+.search,.btn-new{background:rgba(10,24,26,.3);backdrop-filter:blur(18px) saturate(1.4);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 0 0 1px rgba(255,255,255,.2)}

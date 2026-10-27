@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<title>EduPlan · Studio · K · Verre sur dunes</title>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=ranade@400,500,700&display=swap">
+
+<style>
+/* Shared reset and layout. No colour, no depth: each direction adds those. */
+*{box-sizing:border-box;margin:0;padding:0}
+a{color:inherit;text-decoration:none}
+ol{list-style:none}
+body{width:1440px;min-height:900px;background:var(--bg);color:var(--ink);font:var(--fs,15px)/1.5 var(--font,"Ranade"),system-ui,sans-serif;display:flex;gap:var(--gap,24px);padding:28px 32px 28px 20px;font-variant-numeric:tabular-nums;position:relative}
+svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:var(--stroke,1.7);stroke-linecap:round;stroke-linejoin:round;flex:none}
+.backdrop{display:none}
+
+.dock{width:72px;display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;z-index:1}
+.brand{width:40px;height:40px;display:grid;place-items:center;font-weight:700;font-size:18px;margin-bottom:24px}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11.5px;margin-bottom:6px}
+.nav-ic{width:48px;height:40px;display:grid;place-items:center}
+.dock-end{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:14px}
+.avatar{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px}
+
+.page{flex:1;display:flex;flex-direction:column;gap:var(--gap,24px);min-width:0;position:relative;z-index:1}
+.top{display:flex;align-items:flex-end;gap:12px}
+.greet{flex:1}
+.top h1{font-size:34px;font-weight:500;letter-spacing:-.02em;line-height:1.1}
+.top p{margin-top:6px}
+.search{width:300px;height:46px;display:flex;align-items:center;gap:10px;padding:0 18px}
+.btn{height:46px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 20px;font-weight:500}
+.btn svg{width:18px;height:18px}
+
+.grid{display:grid;grid-template-columns:1fr 392px;gap:var(--gap,24px)}
+.col{display:flex;flex-direction:column;gap:var(--gap,24px)}
+.col>.mod:last-child{flex:1}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap,24px)}
+.mod{padding:var(--pad,24px 28px);display:flex;flex-direction:column}
+
+.mod-head{display:flex;align-items:center;gap:12px}
+.mod-head h2{font-size:17px;font-weight:500}
+.mod-head .more{margin-left:auto;font-weight:500;font-size:14px;display:flex;align-items:center;gap:4px}
+.mod-head .more svg{width:16px;height:16px}
+.mod-head .sub,.mod-head .count{font-size:14px}
+
+.stat-label{font-size:inherit;font-weight:400}
+.stat-value{display:flex;align-items:baseline;gap:8px;margin-top:14px}
+.stat-value b{font-size:42px;font-weight:500;letter-spacing:-.02em;line-height:1}
+.meter{display:flex;gap:4px;margin-top:16px}
+.meter i{flex:1;height:6px;border-radius:3px}
+.stat-cap{font-size:14px;margin-top:10px}
+
+.legend{display:flex;gap:18px;margin-left:auto;font-size:13px}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend svg.lg{width:14px;height:3px;stroke-linecap:butt}
+.legend .c-expected{stroke-dasharray:4 3;stroke-width:2}
+.legend .c-actual{stroke-width:3}
+.kpi{margin-top:8px;font-size:14px}
+.kpi b{font-weight:500}
+.plot{margin-top:14px}
+.plot svg{width:100%;height:auto;aspect-ratio:800/112}
+.c-area{stroke:none;fill:none}
+.c-expected{stroke-width:1.6;stroke-dasharray:5 6}
+.c-actual{stroke-width:2.6}
+.c-point{stroke-width:2.6}
+.axis{display:flex;justify-content:space-between;font-size:12.5px;margin-top:6px}
+.axis b{font-weight:500}
+
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px;min-height:150px}
+.slot{padding:16px;display:flex;flex-direction:column;gap:2px}
+.slot time{font-size:13px}
+.slot h3{font-size:20px;font-weight:500;margin-top:6px}
+.slot p{font-size:13.5px}
+.slot-st{margin-top:auto;font-size:13px;display:flex;align-items:center;gap:6px}
+.slot-st svg{width:15px;height:15px}
+
+.kid{display:grid;grid-template-columns:200px 1fr auto;gap:20px;align-items:baseline;padding:14px 0}
+.mod-head+.kid{margin-top:6px}
+.kid-name{font-weight:500}
+.kid-class{font-size:13.5px}
+.kid-why b{font-weight:500}
+.kid-src{font-size:13px;text-align:right;white-space:nowrap}
+
+.live-tag{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500}
+.live-tag i{width:8px;height:8px;border-radius:50%}
+.m-live h2{font-size:30px;font-weight:500;letter-spacing:-.02em;margin-top:12px;line-height:1.15}
+.live-meta{margin-top:4px}
+.seq{margin-top:18px}
+.seq li{display:flex;justify-content:space-between;padding:9px 0;font-size:14.5px}
+.track{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:12.5px}
+.track-bar{flex:1;height:4px;border-radius:2px}
+.track-bar i{display:block;width:40%;height:100%;border-radius:2px}
+.m-live .btn{margin-top:20px}
+
+.task{display:grid;grid-template-columns:22px 1fr auto;gap:14px;align-items:start;padding:13px 0}
+.check{width:20px;height:20px;border-radius:50%;margin-top:2px}
+.task-t{font-weight:500}
+.task-m{font-size:13.5px}
+.task-n{text-align:right;font-weight:500}
+.task-n small{display:block;font-size:12.5px;font-weight:400}
+.thumbs{display:flex;align-items:center;gap:6px;margin-top:2px;grid-column:2/-1}
+.thumb{width:92px;padding:6px 8px;display:flex;flex-direction:column;font-size:12px;line-height:1.35;white-space:nowrap;overflow:hidden}
+.thumb b{font-weight:500}
+.thumbs-more{font-size:12.5px;margin-left:2px;white-space:nowrap}
+.alert{margin-top:8px;padding:14px 18px;display:flex;align-items:center;gap:12px}
+.alert-t{font-weight:500}
+.alert-m{font-size:13.5px}
+.alert a{margin-left:auto;font-weight:500;font-size:14px}
+
+.mod-head+.cls{margin-top:4px}
+.cls{padding:14px 0}
+.cls-row{display:flex;align-items:baseline;justify-content:space-between}
+.cls-row b{font-weight:500}
+.cls-row span{font-size:13.5px;font-weight:500}
+.bar{position:relative;height:8px;border-radius:4px;margin:10px 0 8px}
+.bar i{position:absolute;inset:0 auto 0 0;border-radius:4px}
+.bar u{position:absolute;top:-4px;width:2px;height:16px;border-radius:1px;margin-left:-1px}
+.cls-m{font-size:13.5px}
+.prog-foot{margin-top:auto;padding-top:10px;display:flex;align-items:center;gap:8px;font-size:13px}
+.prog-foot u{width:2px;height:14px;border-radius:1px}
+
+/* K · Verre sur dunes */
+/* F · Verre dépoli. Frosted panels over a painted field (deep teal at the top, warm sand at the
+   bottom) with fine grain. The glass has something real to blur. No blobs, no blue-purple. */
+:root{--bg:#24484e;--glass:rgba(255,255,255,.72);--glass-2:rgba(255,255,255,.5);
+--ink:#11252a;--ink-2:#2f4449;--ink-3:#40565b;--line:rgba(17,37,42,.1);
+--now:#e2593f;--now-ink:#9c2f1b;--now-t:rgba(255,214,200,.75);
+--prog:#1f716b;--prog-ink:#135652;--prog-t:rgba(31,113,107,.16);
+--on-field:#f4f8f7;--on-field-2:rgba(244,248,247,.8)}
+::selection{background:#bfe3dc}
+.backdrop{display:block;position:absolute;inset:0;z-index:0;overflow:hidden;
+background:linear-gradient(168deg,#1d3d43 0%,#2e5a5e 26%,#5f8580 48%,#b89c84 74%,#e6bfa0 100%)}
+.backdrop::after{content:"";position:absolute;inset:0;opacity:.5;mix-blend-mode:soft-light;
+background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.brand{border-radius:14px;background:var(--glass);color:var(--ink);backdrop-filter:blur(16px)}
+.nav-item{color:var(--on-field-2)}
+.nav-ic{border-radius:14px}
+.nav-item.is-active{color:var(--on-field);font-weight:500}
+.nav-item.is-active .nav-ic{background:rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 0 0 1px rgba(255,255,255,.22);backdrop-filter:blur(12px)}
+.dock-end{color:var(--on-field-2)}
+.avatar{background:var(--glass);color:var(--now-ink)}
+.top h1{color:var(--on-field)}
+.top p{color:var(--on-field-2)}
+.search,.btn-new{background:rgba(255,255,255,.18);color:var(--on-field);backdrop-filter:blur(14px) saturate(1.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 0 0 1px rgba(255,255,255,.22)}
+.search{border-radius:23px}
+.btn{border-radius:23px}
+.btn-primary{background:var(--ink);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 6px 14px -8px rgba(17,37,42,.7)}
+.mod{border-radius:26px;background:var(--glass);backdrop-filter:blur(26px) saturate(1.35);
+box-shadow:inset 0 1px 0 rgba(255,255,255,.85),inset 0 0 0 1px rgba(255,255,255,.45),0 10px 24px -16px rgba(12,30,34,.55)}
+.mod-head .more{color:var(--prog-ink)}
+.mod-head .sub,.mod-head .count{color:var(--ink-3)}
+.stat-label{color:var(--ink-2)}
+.stat-value span,.stat-cap{color:var(--ink-3)}
+.meter i{background:var(--prog-t)}
+.meter i.on{background:var(--prog)}
+.meter i.alt{background:var(--now-t)}
+.legend{color:var(--ink-3)}
+.kpi{color:var(--ink-3)}
+.kpi b{color:var(--now-ink)}
+.c-area{fill:var(--prog-t)}
+.c-expected{stroke:var(--ink-3)}
+.c-actual{stroke:var(--prog)}
+.c-point{stroke:var(--prog);fill:#fff}
+.axis{color:var(--ink-3)}
+.axis b{color:var(--ink)}
+.slot{border-radius:18px;background:var(--glass-2)}
+.slot time,.slot-st{color:var(--ink-3)}
+.slot p{color:var(--ink-2)}
+.slot.is-live{background:var(--now-t)}
+.slot.is-live time,.slot.is-live .slot-st,.slot.is-live p{color:var(--now-ink)}
+.kid+.kid,.task+.task,.cls+.cls,.seq li+li{border-top:1px solid var(--line)}
+.kid-class,.kid-src{color:var(--ink-3)}
+.kid-why{color:var(--ink-2)}
+.kid-why b{color:var(--ink)}
+.live-tag{color:var(--now-ink)}
+.live-tag i{background:var(--now)}
+.live-meta,.seq li span+span,.track{color:var(--ink-3)}
+.track-bar{background:var(--now-t)}
+.track-bar i{background:var(--now)}
+.check{border:1.7px solid rgba(17,37,42,.35)}
+.task-m,.task-n small,.thumbs-more{color:var(--ink-3)}
+.task-n small.late{color:var(--now-ink)}
+.thumb{border-radius:10px;background:var(--glass-2);color:var(--ink-2)}
+.thumb b{color:var(--ink)}
+.alert{background:var(--now-t);border-radius:18px}
+.alert-m,.alert a{color:var(--now-ink)}
+.cls-row .ahead{color:var(--prog-ink)}
+.cls-row .late{color:var(--now-ink)}
+.bar{background:var(--prog-t)}
+.bar i{background:var(--prog)}
+.bar u,.prog-foot u{background:var(--ink)}
+.cls-m,.prog-foot{color:var(--ink-3)}
+html{background:#e6bfa0}
+
+/* Verre vivant: the glass recipe for the scene tests, layered on verre.css.
+   Panels: a light tint (not 90% white), backdrop brightness for real contrast, a specular sheen,
+   a light-catching edge, a tight tinted shadow. Inner blocks are frosted, not opaque.
+   Scene vars per test: --scene-img, --scene-h, --scene-mask, --scene-base, --scene-deep. */
+:root{--ink-3:#283c40;--ink-2:#22363a;--now-ink:#842510;--line:rgba(17,37,42,.09)}
+html{background:var(--scene-deep)}
+body{background:var(--scene-base);min-height:100vh}
+.backdrop{background:linear-gradient(180deg,var(--scene-base) 0%,var(--scene-deep) 100%)}
+.backdrop::before{content:"";position:absolute;inset:0 0 auto 0;height:var(--scene-h,100%);
+  background:linear-gradient(180deg,rgba(6,18,20,.5) 0,rgba(6,18,20,.18) 150px,rgba(6,18,20,0) 300px),var(--scene-img) top center/cover no-repeat;
+  -webkit-mask-image:var(--scene-mask,none);mask-image:var(--scene-mask,none)}
+.backdrop::after{opacity:.1}
+
+/* the scene owns the top of the page */
+.top{min-height:196px;padding-bottom:4px}
+.top h1{font-size:46px;letter-spacing:-.03em;text-shadow:0 1px 20px rgba(4,14,16,.35)}
+.top p{font-size:16px;margin-top:10px;color:rgba(255,255,255,.88);text-shadow:0 1px 12px rgba(4,14,16,.4)}
+
+/* floating glass dock */
+.dock{align-self:flex-start;padding:16px 0;border-radius:32px;margin-top:4px;
+  background:rgba(10,24,26,.34);backdrop-filter:blur(22px) saturate(1.4);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 0 0 1px rgba(255,255,255,.14),0 14px 30px -22px rgba(0,0,0,.7)}
+.brand{margin-bottom:18px;background:rgba(255,255,255,.92)}
+.nav-item{color:rgba(255,255,255,.82)}
+.nav-item.is-active{color:#fff}
+.nav-item.is-active .nav-ic{background:rgba(255,255,255,.92);color:var(--ink);box-shadow:inset 0 1px 0 #fff,0 6px 14px -10px rgba(0,0,0,.6);backdrop-filter:none}
+.dock-end{margin-top:26px;color:rgba(255,255,255,.82)}
+
+/* the panels */
+.mod{position:relative;isolation:isolate;
+  background:linear-gradient(158deg,rgba(255,255,255,.82) 0%,rgba(255,255,255,.68) 42%,rgba(255,255,255,.74) 100%);
+  backdrop-filter:blur(34px) saturate(1.7) brightness(1.14);-webkit-backdrop-filter:blur(34px) saturate(1.7) brightness(1.14);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(255,255,255,.3),0 1px 2px rgba(8,22,24,.08),0 20px 34px -26px rgba(8,22,24,.6)}
+.mod::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(160deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,.2) 38%,rgba(255,255,255,.08) 62%,rgba(255,255,255,.55) 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.m-live{background:linear-gradient(158deg,rgba(255,232,224,.88) 0%,rgba(255,214,200,.7) 55%,rgba(255,222,210,.78) 100%)}
+
+/* frosted inner blocks */
+.slot{background:rgba(255,255,255,.42)}
+.slot.is-live{background:rgba(255,204,188,.62)}
+.thumb{background:rgba(255,255,255,.5)}
+.alert{background:rgba(255,208,192,.58)}
+.meter i,.bar{background:rgba(17,37,42,.08)}
+.meter i.on,.bar i{background:var(--prog)}
+.meter i.alt{background:rgba(226,89,63,.22)}
+.c-area{fill:rgba(31,113,107,.12)}
+
+/* glass capsules on the scene */
+.search,.btn-new{background:rgba(10,24,26,.3);backdrop-filter:blur(18px) saturate(1.4);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 0 0 1px rgba(255,255,255,.2)}
+
+/* scene */
+:root{--scene-img:url("backgrounds/dunes.jpg");--scene-h:1600px;--scene-base:#7a432e;--scene-deep:#5a3123}
+
+</style></head><body>
+<div class="backdrop" aria-hidden="true"></div>
+<nav class="dock" aria-label="Navigation">
+  <div class="brand">e</div>
+  <a class="nav-item is-active" href="#" aria-current="page"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg></span><span class="nav-label">Accueil</span></a>
+  <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="3"/><path d="M8 9.5h8M8 13.5h5"/></svg></span><span class="nav-label">Classes</span></a>
+  <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M7 3.5h7.5L19 8v12.5H7z"/><path d="M10 13h6M10 16.5h4"/></svg></span><span class="nav-label">Notes</span></a>
+  <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.6 3.4-5.5 6.5-5.5 1.6 0 3 .5 4.1 1.4M15 18l2 2 4-4.5"/></svg></span><span class="nav-label">Présences</span></a>
+  <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg></span><span class="nav-label">Agenda</span></a>
+  <div class="dock-end"><span class="bell" aria-label="Notifications"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5h4"/></svg></span><span class="avatar">AD</span></div>
+</nav>
+<main class="page">
+  <header class="top">
+    <div class="greet"><h1>Bonjour, Aïssatou</h1><p>Lundi 26 octobre · trimestre 1, semaine 8 sur 12</p></div>
+    <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>Rechercher</label>
+    <a class="btn btn-new" href="#"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nouveau</a>
+  </header>
+  <div class="grid">
+    <div class="col col-main">
+      <div class="stats">
+        <section class="mod stat m-grades">
+          <h2 class="stat-label">Notes saisies pour le conseil</h2>
+          <p class="stat-value"><b>9</b><span>sur 15</span></p>
+          <div class="meter meter-dots" role="img" aria-label="9 notes sur 15"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <p class="stat-cap">6 notes à prévoir d'ici le 11 décembre</p>
+        </section>
+        <section class="mod stat m-copies">
+          <h2 class="stat-label">Copies à corriger</h2>
+          <p class="stat-value"><b>53</b><span>copies</span></p>
+          <div class="meter meter-split" role="img" aria-label="22 devoirs maison, 31 contrôles papier"><i class="on" style="flex:22"></i><i class="alt" style="flex:31"></i></div>
+          <p class="stat-cap">22 devoirs maison · 31 contrôles papier</p>
+        </section>
+      </div>
+      <section class="mod m-pace">
+        <div class="mod-head"><h2>Rythme des notes jusqu'au conseil</h2><div class="legend"><span><svg class="lg" viewBox="0 0 14 3"><path class="c-actual" d="M0 1.5h14"/></svg>Saisies</span><span><svg class="lg" viewBox="0 0 14 3"><path class="c-expected" d="M0 1.5h14"/></svg>Rythme attendu</span></div></div>
+        <p class="kpi">9 notes saisies, 10 attendues à ce jour <b>· 1 de retard</b></p>
+        <div class="plot">
+          <svg viewBox="0 0 800 112" preserveAspectRatio="none" aria-label="Notes saisies par semaine, comparées au rythme attendu">
+            <path class="c-area" d="M0 108C40 104 50 102 72.7 101.5S120 96 145.5 94.7 200 89 218.2 88.2 270 83 290.9 81.6 340 70 363.6 68 410 63 436.4 61.4 490 52 509.1 48.3V112H0z"/>
+            <path class="c-expected" d="M0 108 800 6" vector-effect="non-scaling-stroke"/>
+            <path class="c-actual" d="M0 108C40 104 50 102 72.7 101.5S120 96 145.5 94.7 200 89 218.2 88.2 270 83 290.9 81.6 340 70 363.6 68 410 63 436.4 61.4 490 52 509.1 48.3" vector-effect="non-scaling-stroke"/>
+            <circle class="c-point" cx="509.1" cy="48.3" r="5.5" vector-effect="non-scaling-stroke"/>
+          </svg>
+          <div class="axis"><span>S1</span><span>S2</span><span>S3</span><span>S4</span><span>S5</span><span>S6</span><span>S7</span><b>S8</b><span>S9</span><span>S10</span><span>S11</span><b>Conseil</b></div>
+        </div>
+      </section>
+      <section class="mod m-today">
+        <div class="mod-head"><h2>Cours d'aujourd'hui</h2><a class="more" href="#">Emploi du temps<svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg></a></div>
+        <div class="slots">
+          <div class="slot is-done"><time>08:00 · 09:00</time><h3>4ème A</h3><p>Salle 12 · Pythagore</p><span class="slot-st"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Appel fait · 2 absents</span></div>
+          <div class="slot is-live"><time>10:00 · 11:00</time><h3>3ème B</h3><p>Salle 7 · Correction DM</p><span class="slot-st"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg>En cours</span></div>
+          <div class="slot"><time>14:00 · 15:00</time><h3>4ème B</h3><p>Salle 12 · Contrôle n°2</p><span class="slot-st">27 élèves</span></div>
+          <div class="slot"><time>16:00 · 17:00</time><h3>6ème A</h3><p>Salle 3 · Soutien</p><span class="slot-st">12 élèves</span></div>
+        </div>
+      </section>
+      <section class="mod m-follow">
+        <div class="mod-head"><h2>Élèves à suivre</h2><span class="count">4</span><a class="more" href="#">Tout voir</a></div>
+        <div class="kid"><div><div class="kid-name">Moussa Ndiaye</div><div class="kid-class">4ème A</div></div><div class="kid-why"><b>3 absences</b> sans justificatif ce trimestre</div><div class="kid-src">Règle de l'école</div></div>
+        <div class="kid"><div><div class="kid-name">Khady Fall</div><div class="kid-class">3ème B</div></div><div class="kid-why">Moyenne <b>8,5 / 20</b>, contre 11,0 en septembre</div><div class="kid-src">Règle de l'école</div></div>
+        <div class="kid"><div><div class="kid-name">Ibrahima Sow</div><div class="kid-class">4ème B</div></div><div class="kid-why"><b>2 devoirs</b> non rendus depuis le 12 octobre</div><div class="kid-src">Règle de l'école</div></div>
+        <div class="kid"><div><div class="kid-name">Fatou Sarr</div><div class="kid-class">4ème A</div></div><div class="kid-why">Ne participe plus depuis 2 semaines</div><div class="kid-src">Ajouté par vous</div></div>
+      </section>
+    </div>
+    <div class="col col-side">
+      <section class="mod m-live">
+        <span class="live-tag"><i></i>En cours depuis 10:00</span>
+        <h2>3ème B, salle 7</h2>
+        <p class="live-meta">Mathématiques · 31 élèves · 1 excusé</p>
+        <ol class="seq"><li><span>Correction du DM n°2</span><span>25 min</span></li><li><span>Exercices p. 86</span><span>30 min</span></li></ol>
+        <div class="track"><span>10:00</span><div class="track-bar"><i></i></div><span>11:00</span></div>
+        <a class="btn btn-primary" href="#"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Faire l'appel</a>
+      </section>
+      <section class="mod m-grade">
+        <div class="mod-head"><h2>À corriger</h2><a class="more" href="#">Tout voir</a></div>
+        <div class="task"><span class="check"></span><div><div class="task-t">Devoir maison n°3</div><div class="task-m">4ème A · coef. 1</div></div><div class="task-n">22/28<small class="late">6 en retard</small></div><div class="thumbs"><span class="thumb"><b>Awa D.</b>BC = 4 cm</span><span class="thumb"><b>Lamine C.</b>AC = 5 cm</span><span class="thumbs-more">+ 20 copies</span></div></div>
+        <div class="task"><span class="check"></span><div><div class="task-t">Contrôle Pythagore</div><div class="task-m">3ème B · copies papier · coef. 2</div></div><div class="task-n">31<small>à saisir</small></div></div>
+        <div class="alert"><div><div class="alert-t">2 absences sans justificatif</div><div class="alert-m">M. Ndiaye, F. Sarr · 4ème A</div></div><a href="#">Relancer</a></div>
+      </section>
+      <section class="mod m-prog">
+        <div class="mod-head"><h2>Programme</h2><span class="sub">Trimestre 1</span><a class="more" href="#">Détail</a></div>
+        <div class="cls"><div class="cls-row"><b>4ème A</b><span class="ahead">1 notion d'avance</span></div><div class="bar"><i style="width:72.2%"></i><u style="left:66.7%"></u></div><div class="cls-m">Ch. 3 Théorème de Pythagore · 13 sur 18</div></div>
+        <div class="cls"><div class="cls-row"><b>4ème B</b><span class="late">2 notions de retard</span></div><div class="bar"><i style="width:55.6%"></i><u style="left:66.7%"></u></div><div class="cls-m">Ch. 3 Théorème de Pythagore · 10 sur 18</div></div>
+        <div class="cls"><div class="cls-row"><b>3ème B</b><span class="late">2 notions de retard</span></div><div class="bar"><i style="width:55%"></i><u style="left:66.7%"></u></div><div class="cls-m">Ch. 4 Théorème de Thalès · 11 sur 20</div></div>
+        <div class="prog-foot"><u></u>Notions attendues à la semaine 8 sur 12</div>
+      </section>
+    </div>
+  </div>
+</main>
+</body></html>

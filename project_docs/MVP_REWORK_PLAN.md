@@ -163,7 +163,7 @@ Guardrails:
 
 | Step | Work | Estimate |
 |---|---|---|
-| 1 | Design pass: tokens, app shell, class space, teacher home (mock in `.impeccable/`). Teacher home: **Studio** picked 2026-10-26. Tokens: `DESIGN_HANDOVER_TEACHER_HOME.md` section 4. Mocks: `.impeccable/mocks/teacher-home/studio-{desktop,phone}.html`. Brief: `.impeccable/surfaces/src-app-dashboard-teacher-page-tsx.md`. Home with the Programme and Élèves à suivre modules: `.impeccable/mocks/teacher-home/studio-suivi-desktop.html`. Still to mock: class Programme and Élèves tabs | 1 to 2 days |
+| 1 | Design pass: tokens, app shell, class space, teacher home (mock in `.impeccable/`). Teacher home: **Studio** picked 2026-10-26. Tokens: `DESIGN_HANDOVER_TEACHER_HOME.md` section 4. Mocks: `.impeccable/mocks/teacher-home/studio-{desktop,phone}.html`. Brief: `.impeccable/surfaces/src-app-dashboard-teacher-page-tsx.md`. Home with the Programme and Élèves à suivre modules: `.impeccable/mocks/teacher-home/studio-suivi-desktop.html`. Class Programme and Élèves tabs: designed in code, not mocked (D26). Visual variants of Studio: `STUDIO_VARIANTS_PLAN.md` | 1 to 2 days |
 | 2 | New shell and IA in code, routes for each role | 1 day |
 | 3 | Schema: years, terms, topics, posts, attachments, submissions, grades | 1 day |
 | 4 | Class space and post creation | 2 days |
@@ -181,33 +181,4 @@ Total: about 19 to 23 working days for one developer.
 
 ## 9. Decisions
 
-Accepted 2026-10-25.
-
-| ID | Decision | Accepted |
-|---|---|---|
-| D1 | Grade scale | /20 with coefficients and trimestres (French system) |
-| D2 | Digest channel | Email first, WhatsApp later |
-| D3 | File storage for submissions | S3-compatible storage (Cloudflare R2) |
-| D4 | Database at scale | Keep libSQL and host it on Turso, or move to Postgres before the first school goes live |
-| D5 | Rubrics in the MVP, or /20 only | /20 only in the MVP. Rubrics come first after the MVP |
-
-Accepted 2026-10-26 (teacher-needs interview).
-
-| ID | Decision | Accepted |
-|---|---|---|
-| D6 | Teacher home structure | Studio (structure 1) |
-| D7 | Unit of programme progress | Chapitre split into notions |
-| D8 | Who sets the programme | The school loads it; the teacher reorders and plans weeks per class |
-| D9 | Programme and cahier de textes | The entry suggests the notion; the teacher confirms |
-| D10 | Student signals | Grades trend, absences and retards, missing work, remarks |
-| D11 | "Élève à suivre" source | School rules first; the teacher can add or dismiss a flag |
-| D12 | Remark visibility | Private by default; teacher switches one to "visible famille" |
-| D13 | Programme pace display | Bar on the home (notions vs weeks), planned weeks in the class Programme tab |
-| D14 | Family contact | Thread per student, teacher and parents. Remplacements out of MVP |
-
-Open (ask before building steps 10 to 13):
-
-1. Default thresholds for `flag_rules`, and whether the admin can change them.
-2. Who loads the programme: the admin, or a new "coordinateur de matière" role.
-3. Does the student see flags about them, or only the signals?
-4. Does the professeur principal write an appréciation générale in the MVP?
+All accepted and open decisions live in `DECISIONS.md` (D1 to D28).

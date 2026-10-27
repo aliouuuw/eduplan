@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<title>EduPlan · 3ème B · Programme</title>
+{{HEAD}}
+<style>
+.grid{display:grid;grid-template-columns:1fr 372px;gap:24px;align-items:start}
+.side{display:flex;flex-direction:column;gap:24px}
+
+/* the term frise: weeks across, chapters as planned spans, done filled, today marked */
+.frise{margin-top:20px;position:relative}
+.weeks{display:grid;grid-template-columns:180px repeat(12,1fr);font-size:12.5px;color:var(--ink-3);padding-bottom:8px}
+.weeks b{font-weight:500;color:var(--now-ink)}
+.lane{display:grid;grid-template-columns:180px repeat(12,1fr);align-items:center;min-height:56px;padding:8px 0}
+.lane+.lane{border-top:1px solid var(--line)}
+.lane .name{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px}
+.lane .name small{display:block;font-size:12.5px;font-weight:400;color:var(--ink-3)}
+.span{height:12px;border-radius:6px;background:var(--prog-t);position:relative;overflow:hidden;margin:0 2px}
+.span i{position:absolute;inset:0 auto 0 0;border-radius:6px;background:linear-gradient(90deg,#b2a6f8,var(--prog-2));animation:grow 1.1s var(--ease)}
+.span.late{background:var(--now-t)}
+.span.late i{background:linear-gradient(90deg,#b2a6f8,var(--prog-2))}
+.today{position:absolute;top:22px;bottom:-4px;width:2px;border-radius:1px;background:var(--now);box-shadow:0 0 0 3px rgba(255,255,255,.9)}
+.frise-foot{display:flex;gap:20px;margin-top:14px;font-size:13px;color:var(--ink-3)}
+.frise-foot span{display:flex;align-items:center;gap:7px}
+.frise-foot i{width:16px;height:8px;border-radius:4px;background:linear-gradient(90deg,#b2a6f8,var(--prog-2))}
+.frise-foot i.plan{background:var(--prog-t)}
+.frise-foot i.lag{background:var(--now-t)}
+.frise-foot i.day{width:2px;height:14px;border-radius:1px;background:var(--now)}
+
+/* chapters */
+.chap{padding:16px 0}
+.chap-row{display:flex;align-items:baseline;gap:14px}
+.chap-row .n{font-size:13px;color:var(--ink-3);width:44px;flex:none}
+.chap-row h3{font-size:16px;font-weight:500;flex:1}
+.chap-row .when{font-size:13.5px;color:var(--ink-3)}
+.chap-row .state{font-size:13.5px;font-weight:500;width:160px;text-align:right;white-space:nowrap}
+.notions{margin:12px 0 0 58px;display:flex;flex-direction:column}
+.notion{display:grid;grid-template-columns:20px 1fr auto;gap:14px;align-items:center;padding:9px 0}
+.notion+.notion{border-top:1px solid var(--line)}
+.notion .src{font-size:13px;color:var(--ink-3)}
+.notion.pending .src{color:var(--now-ink);font-weight:500}
+.notion.pending .check{border-color:var(--now);border-style:dashed}
+.chap.current{background:linear-gradient(180deg,var(--prog-tt),rgba(247,246,254,0));margin:0 -28px;padding:18px 28px 8px;border-radius:0}
+
+/* side: suggestion from the cahier de textes */
+.suggest{background:linear-gradient(170deg,#fff3ef 0%,#fff 52%)}
+.suggest .tag{display:flex;align-items:center;gap:8px;color:var(--now-ink);font-weight:500;font-size:14px}
+.suggest .tag i{width:8px;height:8px;border-radius:50%;background:var(--now);box-shadow:0 2px 6px rgba(242,118,95,.55)}
+.suggest h2{font-size:24px;font-weight:500;letter-spacing:-.02em;margin-top:12px;line-height:1.2}
+.suggest .entry{margin-top:14px;font-size:14px;color:var(--ink-2)}
+.suggest .entry b{display:block;font-weight:500;color:var(--ink);margin-bottom:2px;font-size:13px}
+.suggest .acts{display:flex;align-items:center;gap:16px;margin-top:18px}
+.pace .big{display:flex;align-items:baseline;gap:8px;margin-top:14px}
+.pace .big b{font-size:52px;font-weight:500;letter-spacing:-.035em;line-height:1}
+.pace .bar{margin:18px 0 10px}
+.pace p{font-size:14px;color:var(--ink-3)}
+.pace .rows{margin-top:16px}
+.pace .rows div{display:flex;justify-content:space-between;padding:10px 0;font-size:14px}
+.pace .rows div span:first-child{color:var(--ink-2)}
+.pace .rows b{font-weight:500}
+</style></head><body>
+{{DOCK:classes}}
+<main class="page">
+  <div>
+    <a class="crumb" href="#"><svg viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6"/></svg>Mes classes</a>
+    <div class="top" style="margin-top:10px">
+      <div class="grow"><h1>3ème B · Mathématiques</h1><p>31 élèves · salle 7 · trimestre 1, semaine 8 sur 12</p></div>
+      <a class="btn btn-quiet" href="#"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nouveau</a>
+    </div>
+  </div>
+  <nav class="tabs" aria-label="Espace de la classe">
+    <a class="tab" href="#">Travail</a>
+    <a class="tab is-active" href="#" aria-current="page">Programme</a>
+    <a class="tab" href="#">Élèves <small>31</small></a>
+    <a class="tab" href="#">Notes</a>
+    <a class="tab" href="#">Présences</a>
+    <a class="tab" href="#">Emploi du temps</a>
+  </nav>
+  <div class="grid">
+    <div class="side" style="gap:24px">
+      <section class="card">
+        <div class="card-head"><h2>Progression du trimestre 1</h2><span class="sub">prévu et fait, par semaine</span><a class="link end" href="#">Modifier les semaines prévues</a></div>
+        <div class="frise">
+          <div class="weeks"><span></span><span>S1</span><span>S2</span><span>S3</span><span>S4</span><span>S5</span><span>S6</span><span>S7</span><b>S8</b><span>S9</span><span>S10</span><span>S11</span><span>S12</span></div>
+          <div class="lane"><span class="name">Ch. 1 Nombres<small>4 sur 4</small></span><span class="span" style="grid-column:2/4"><i style="width:100%"></i></span></div>
+          <div class="lane"><span class="name">Ch. 2 Calcul littéral<small>4 sur 4</small></span><span class="span" style="grid-column:4/6"><i style="width:100%"></i></span></div>
+          <div class="lane"><span class="name">Ch. 3 Pythagore<small>3 sur 3</small></span><span class="span" style="grid-column:6/8"><i style="width:100%"></i></span></div>
+          <div class="lane"><span class="name">Ch. 4 Thalès<small>0 sur 4</small></span><span class="span late" style="grid-column:8/11"><i style="width:0"></i></span></div>
+          <div class="lane"><span class="name">Ch. 5 Racines carrées<small>0 sur 5</small></span><span class="span" style="grid-column:11/14"><i style="width:0"></i></span></div>
+          <span class="today" style="left:calc(180px + (100% - 180px) * 7.08 / 12)"></span>
+        </div>
+        <div class="frise-foot"><span><i></i>Notions faites</span><span><i class="plan"></i>Semaines prévues</span><span><i class="lag"></i>Chapitre en retard</span><span><i class="day"></i>Aujourd'hui</span></div>
+      </section>
+      <section class="card">
+        <div class="card-head"><h2>Chapitres et notions</h2><span class="sub">programme de l'école, ordre de la classe</span></div>
+        <div class="rows" style="margin-top:8px">
+          <div class="chap"><div class="chap-row"><span class="n">Ch. 1</span><h3>Nombres entiers et rationnels</h3><span class="when">S1 à S2</span><span class="state ahead">Terminé</span></div></div>
+          <div class="chap"><div class="chap-row"><span class="n">Ch. 2</span><h3>Calcul littéral</h3><span class="when">S3 à S4</span><span class="state ahead">Terminé</span></div></div>
+          <div class="chap"><div class="chap-row"><span class="n">Ch. 3</span><h3>Théorème de Pythagore et réciproque</h3><span class="when">S5 à S6</span><span class="state ahead">Terminé</span></div></div>
+          <div class="chap current">
+            <div class="chap-row"><span class="n">Ch. 4</span><h3>Théorème de Thalès</h3><span class="when">S7 à S9</span><span class="state late">2 de retard</span></div>
+            <div class="notions">
+              <div class="notion pending"><span class="check"></span><span>Configuration triangle</span><span class="src">Suggérée par le cours de 10:00</span></div>
+              <div class="notion"><span class="check"></span><span>Configuration papillon</span><span class="src">Prévue S8</span></div>
+              <div class="notion"><span class="check"></span><span>Réciproque de Thalès</span><span class="src">Prévue S9</span></div>
+              <div class="notion"><span class="check"></span><span>Agrandissement et réduction</span><span class="src">Prévue S9</span></div>
+            </div>
+          </div>
+          <div class="chap"><div class="chap-row"><span class="n">Ch. 5</span><h3>Racines carrées</h3><span class="when">S10 à S12</span><span class="state muted">À venir · 5 notions</span></div></div>
+        </div>
+      </section>
+    </div>
+    <div class="side">
+      <section class="card suggest">
+        <span class="tag"><i></i>Cahier de textes · aujourd'hui 10:00</span>
+        <h2>Configuration triangle, Thalès</h2>
+        <div class="entry"><b>Ce que vous avez écrit</b>Correction du DM n°2. Exercices p. 86 : droites parallèles dans un triangle, calcul de longueurs.</div>
+        <div class="acts"><a class="btn btn-primary btn-sm" href="#"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Notion faite</a><a class="link" href="#">Autre notion</a></div>
+      </section>
+      <section class="card pace">
+        <div class="card-head"><h2>Rythme</h2><span class="sub">à la semaine 8</span></div>
+        <div class="big"><b>11</b><span class="muted">sur 20 notions</span></div>
+        <div class="bar"><i style="width:55%"></i><u style="left:66.7%"></u></div>
+        <p>13 notions attendues à ce jour · <span class="late">2 de retard</span></p>
+        <div class="rows">
+          <div><span>Reste à faire</span><b>9 notions</b></div>
+          <div><span>Semaines restantes</span><b>4</b></div>
+          <div><span>Pour finir à temps</span><b>2,25 par semaine</b></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+</body></html>

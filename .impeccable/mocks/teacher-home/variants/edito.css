@@ -1,0 +1,94 @@
+/* G · Éditorial doux. Paper white, almost no containers: type scale and space carry the hierarchy.
+   The live course is the one container on the page, because it is "now". Soft dividers in lists only. */
+:root{--bg:#fff;--ink:#1e1c27;--ink-2:#4a4759;--ink-3:#625f72;--line:#ecebf2;--wash:#f5f4f9;
+--now:#e86a52;--now-ink:#a9391f;--now-t:#fdeee9;--prog:#6f5fd8;--prog-ink:#4c3cb0;--prog-t:#ebe8fb;
+--gap:44px;--pad:0}
+::selection{background:var(--prog-t)}
+body{padding:36px 48px 48px 24px;gap:40px}
+.dock{border-right:0}
+.brand{border-radius:50%;background:var(--ink);color:#fff}
+.nav-item{color:var(--ink-3)}
+.nav-item.is-active{color:var(--ink);font-weight:700}
+.nav-item.is-active .nav-ic{color:var(--prog-ink)}
+.nav-item.is-active .nav-ic svg{stroke-width:2.2}
+.dock-end{color:var(--ink-3)}
+.avatar{background:var(--wash);color:var(--ink)}
+.top{padding-bottom:4px}
+.top h1{font-size:56px;letter-spacing:-.035em;line-height:1}
+.top p{color:var(--ink-3);font-size:16px;margin-top:12px}
+.search{border-radius:23px;background:var(--wash);color:var(--ink-3)}
+.btn{border-radius:23px}
+.btn-new{background:var(--wash);color:var(--ink)}
+.btn-primary{background:var(--ink);color:#fff}
+.grid{grid-template-columns:1fr 400px;column-gap:64px}
+.col{gap:48px}
+.mod{border-radius:0}
+.mod-head{padding-bottom:14px;position:relative}
+.mod-head::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;border-radius:1px;background:var(--ink)}
+.mod-head h2{font-size:22px;letter-spacing:-.015em}
+.mod-head .more{color:var(--prog-ink)}
+.mod-head .sub,.mod-head .count{color:var(--ink-3);font-size:22px;font-weight:400}
+
+/* stats: two big numerals side by side, no boxes */
+.stats{column-gap:48px}
+.stat{padding-top:2px}
+.stat-label{color:var(--ink-2);font-size:15px;font-weight:500}
+.stat-value b{font-size:72px;letter-spacing:-.045em}
+.stat-value span{color:var(--ink-3);font-size:18px}
+.stat-cap{color:var(--ink-3)}
+.meter i{background:var(--prog-t);height:5px}
+.meter i.on{background:var(--prog)}
+.meter i.alt{background:var(--now-t)}
+.legend{color:var(--ink-3);font-weight:400;font-size:13px}
+.kpi{color:var(--ink-3);margin-top:14px;font-size:15px}
+.kpi b{color:var(--now-ink)}
+.c-expected{stroke:var(--ink-3)}
+.c-actual{stroke:var(--prog)}
+.c-point{stroke:var(--prog);fill:#fff}
+.axis{color:var(--ink-3)}
+.axis b{color:var(--ink)}
+
+/* today: a timeline row, separated by space; the live slot is marked by colour only */
+.slots{gap:0;min-height:0;margin-top:20px}
+.slot{padding:0 14px 0 0}
+.slot+.slot{padding-left:16px;border-left:1px solid var(--line)}
+.slot time,.slot-st{color:var(--ink-3)}
+.slot p{color:var(--ink-2)}
+.slot h3{font-size:24px;letter-spacing:-.02em}
+.slot-st{margin-top:12px}
+.slot.is-live h3,.slot.is-live time,.slot.is-live .slot-st{color:var(--now-ink)}
+
+.kid{padding:16px 0}
+.kid+.kid,.task+.task,.cls+.cls,.seq li+li{border-top:1px solid var(--line)}
+.kid-class,.kid-src{color:var(--ink-3)}
+.kid-why{color:var(--ink-2)}
+.kid-why b{color:var(--ink)}
+
+/* the one container */
+.m-live{background:var(--now-t);border-radius:28px;padding:28px 30px}
+.live-tag{color:var(--now-ink)}
+.live-tag i{background:var(--now)}
+.m-live h2{font-size:36px;letter-spacing:-.03em}
+.live-meta,.seq li span+span,.track{color:var(--now-ink)}
+.seq li+li{border-top-color:rgba(169,57,31,.14)}
+.track-bar{background:rgba(169,57,31,.14)}
+.track-bar i{background:var(--now)}
+
+.check{border:1.7px solid #c9c5dc}
+.task-m,.task-n small,.thumbs-more{color:var(--ink-3)}
+.task-n small.late{color:var(--now-ink)}
+.thumbs{gap:4px 12px;margin-top:6px;flex-wrap:wrap}
+.thumb{width:auto;flex:none;overflow:visible;padding:0;flex-direction:row;gap:5px;color:var(--ink-2);font-size:13px}
+.thumb b{color:var(--ink)}
+.thumb b::after{content:" :"}
+.alert{background:none;padding:14px 0 0;border-top:1px solid var(--line);margin-top:0}
+.alert-t{color:var(--now-ink)}
+.alert-m{color:var(--ink-3)}
+.alert a{color:var(--now-ink)}
+.cls-row .ahead{color:var(--prog-ink)}
+.cls-row .late{color:var(--now-ink)}
+.bar{background:var(--prog-t);height:5px;border-radius:3px}
+.bar i{background:var(--prog);border-radius:3px}
+.bar u{top:-5px;height:15px}
+.bar u,.prog-foot u{background:var(--ink)}
+.cls-m,.prog-foot{color:var(--ink-3)}

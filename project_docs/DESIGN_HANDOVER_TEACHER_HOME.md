@@ -1,17 +1,17 @@
 # Design handover: teacher home
 
-Last update: 2026-10-26. For: the next agent or designer who continues EduPlan's design work. You need no other context than this file and the files it links.
+Last update: 2026-10-27. For: the next agent or designer who continues EduPlan's design work. You need no other context than this file and the files it links.
 
 ## 1. Status in one minute
 
 | | |
 |---|---|
-| **Done** | The information architecture and UX of the teacher home are approved. One visual language is approved as "solid": minimal soft UI, coral + lavender, font Ranade (section 4) |
-| **Live mocks** | 3 structures in the same visual language, desktop + phone each: `studio-*`, `lagune-*`, `feuille-*` in `.impeccable/mocks/teacher-home/`. Compare them in `index.html` there |
+| **Done** | The information architecture and UX of the teacher home are approved. Studio structure (D6). Round 1 verdict: keep A, F, G (D29). Round 2: **H Mono verre** (light inset) and **I Mono sombre** (dark inset, D31). Slop detector `[]` on the built directions |
+| **Live mocks** | Same DOM for variants: `.impeccable/mocks/teacher-home/variants/`. Compare round 1 in `variantes.html`, round 2 in `variantes-round2.html`. Legacy structure picks: `index.html` (studio, lagune, feuille) |
 | **Picked (2026-10-26)** | Structure 1, **Studio**. Brief: `.impeccable/surfaces/src-app-dashboard-teacher-page-tsx.md` |
 | **Teacher needs (section 7)** | Interview done 2026-10-26. Results: `MVP_REWORK_PLAN.md` sections 3, 5, 6, 9 (D6 to D14) |
-| **Next** | Studio with the 2 new modules: `studio-suivi-desktop.html` (render: `.impeccable/review/v6/`). Next: the class Programme and Élèves tabs, then code |
-| **Not done** | No application code changed for the new design. Nothing from the design work is committed |
+| **Next** | Pick H (light) or I (dark), or a named mix, and lock tokens in section 4. Then phone register in the winner. No new mock screens beyond variants (D26) |
+| **Not done** | No application code changed for the new design. Variant assets may still be uncommitted on the branch |
 
 ## 2. Read first
 
@@ -23,6 +23,8 @@ Last update: 2026-10-26. For: the next agent or designer who continues EduPlan's
 Do not use `src/app/globals.css` as a reference. It holds the old look (lilac `#6b7cf7`, Plus Jakarta Sans), which is being replaced.
 
 ## 3. Decisions (do not re-ask)
+
+Full log with IDs: `DECISIONS.md`. The table below is the design subset.
 
 ### Brief (the user's words, condensed)
 
@@ -63,6 +65,22 @@ Rules:
 5. Text on coloured fills uses the matching `-ink` colour, never grey. Never white text on `--coral` or `--lav` (contrast fails).
 6. Work to grade: Superlist-style round checkboxes. Digital work shows previews of student answers (name + one line, 12 px minimum). Paper work shows none.
 7. Not used: icon badges in tiles, chip rows, borders around rows, gradients, 3D icons (only if an illustrator draws them later).
+
+### Round 2 candidate H (Mono verre, pending final pick)
+
+Maps to [MonoCode](https://github.com/hardbeat920/monocode) `layout-inset` light: shell `#f5f5f5` class neutral HSL, panel `#fff`, strokes at 4% / 7% content mix, **system-ui** (not Ranade). EduPlan accents unchanged (D21). Source: `variants/mono.css`, mock `studio-mono-desktop.html`.
+
+| Token | Value | Role |
+|---|---|---|
+| `--shell` | `hsl(240 4% 96%)` | Outer ground (MonoCode `--inset-surface` class) |
+| `--panel` | `#ffffff` | Opaque workspace card |
+| `--stroke-inset` | `color-mix(ink 4%)` | Card edge, controls, slots |
+| `--line` | `color-mix(ink 7%)` | List dividers (MonoCode `--color-stroke`) |
+| `--now` / `--prog` | coral / teal | Same meaning as baseline |
+
+### Round 2 candidate I (Mono sombre, pending final pick)
+
+Same geometry as H. MonoCode dark defaults (`:root`, not `.theme-light`): shell `#0d0d0d`, panel `#141414`, content at 92% lightness. Accent text is light (`--now-ink`, `--prog-ink`) so it stays readable on the dark panel. Source: `variants/sombre.css`, mock `studio-sombre-desktop.html`.
 
 ## 5. The live mocks
 

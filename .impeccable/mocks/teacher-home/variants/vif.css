@@ -1,0 +1,79 @@
+/* A+ · Plat vif. Layered on plat.css: same world, fresher. Gradients only where they carry meaning
+   (progress = lavender, now = coral, the one primary action); glows are tinted and offset, never halos.
+   One authored motion: progress fills settle on load (final state is the default if motion never runs). */
+:root{--prog-2:#7563e6;--now-2:#f59a6a;--lift:0 1px 2px rgba(90,71,199,.05),0 14px 28px -22px rgba(90,71,199,.32);
+--ease:cubic-bezier(.16,1,.3,1)}
+::selection{background:#e3ddff;color:var(--ink)}
+:focus-visible{outline:2px solid var(--prog);outline-offset:3px;border-radius:10px}
+
+/* ground: lavender mist with one soft directional light from the top right, no blobs */
+html{background:#f3f1fb}
+body{min-height:100vh;background:linear-gradient(200deg,#fdf6f4 0%,#f8f4fb 22%,#f5f3fc 48%,#f3f1fb 100%)}
+
+/* dock */
+.nav-item{transition:color .2s}
+.nav-item:hover{color:var(--ink)}
+.nav-ic{transition:background .2s}
+.nav-item:hover .nav-ic{background:rgba(255,255,255,.6)}
+.nav-item.is-active .nav-ic{box-shadow:0 1px 1px rgba(90,71,199,.06),0 8px 16px -10px rgba(117,99,230,.55)}
+.avatar{background:linear-gradient(150deg,#fdeae6,#fbdcd2)}
+
+/* header */
+.top h1{font-size:38px;letter-spacing:-.03em}
+.search{box-shadow:var(--lift)}
+.btn-new{background:#fff;color:var(--ink);box-shadow:var(--lift)}
+.btn-new svg{color:var(--prog-ink)}
+
+/* sheets: crisp white, a top lip and a tight lavender-tinted lift */
+.mod{box-shadow:inset 0 1px 0 #fff,var(--lift)}
+.mod-head h2{font-size:18px;letter-spacing:-.01em}
+.mod-head .more svg{transition:transform .25s var(--ease)}
+.mod-head .more:hover svg{transform:translate(2px,-2px)}
+
+/* stats: bolder numerals, gradient progress */
+.stat-value b{font-size:52px;letter-spacing:-.035em}
+.meter{gap:5px}
+.meter i{height:8px;border-radius:4px}
+.meter i.on{background:linear-gradient(180deg,#a596f6,var(--prog-2))}
+.meter-split{gap:4px}
+.meter i.alt{background:linear-gradient(90deg,#fde3dc,#fdeee9)}
+.meter-dots i.on:nth-child(9){box-shadow:0 3px 8px -2px rgba(117,99,230,.55)}
+
+/* chart: a soft area under the entered line, a lit point */
+.c-area{fill:rgba(242,118,95,.09)}
+.c-actual{stroke-width:3}
+.c-point{fill:#fff;stroke-width:3}
+.plot{position:relative}
+
+/* today */
+.slot{transition:background .2s}
+.slot:not(.is-live):hover{background:var(--prog-tt)}
+.slot.is-done .slot-st svg{color:var(--prog-ink)}
+.slot.is-live{background:linear-gradient(160deg,#fde2da 0%,#fdeee9 70%,#fff4f0 100%)}
+
+/* the live course: warm light on "now" */
+.m-live{background:linear-gradient(170deg,#fff3ef 0%,#fff 46%);}
+.live-tag i{box-shadow:0 2px 6px rgba(242,118,95,.55)}
+.m-live h2{font-size:32px}
+.track-bar{height:6px;border-radius:3px}
+.track-bar i{background:linear-gradient(90deg,var(--now-2),var(--now));border-radius:3px;box-shadow:0 3px 8px -2px rgba(242,118,95,.6);animation:grow 1.1s var(--ease)}
+.btn-primary{background:linear-gradient(180deg,#3a3548 0%,var(--ink) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 12px 22px -12px rgba(214,90,64,.55),0 4px 10px -6px rgba(36,33,47,.5);transition:box-shadow .25s var(--ease)}
+.btn-primary:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 16px 26px -12px rgba(214,90,64,.65),0 4px 10px -6px rgba(36,33,47,.5)}
+
+/* to grade */
+.check{border-color:#c4bcef;transition:border-color .2s,background .2s}
+.task:hover .check{border-color:var(--prog);background:var(--prog-tt)}
+.thumb{background:linear-gradient(180deg,#faf9ff,var(--prog-tt))}
+.alert{background:linear-gradient(110deg,#fde6e0,#fdf0ec)}
+.alert a{transition:color .2s}
+.alert a:hover{color:var(--ink)}
+
+
+/* programme: gradient fills, the class ahead gets a lit end */
+.bar{height:8px}
+.bar i{background:linear-gradient(90deg,#b2a6f8,var(--prog-2));animation:grow 1.1s var(--ease)}
+.mod-head+.cls .bar i{box-shadow:0 3px 9px -2px rgba(117,99,230,.6)}
+.meter-dots i.on,.meter-split i.on{animation:grow 1.1s var(--ease)}
+
+@keyframes grow{from{clip-path:inset(0 100% 0 0 round 4px)}to{clip-path:inset(0 0 0 0 round 4px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
