@@ -14,6 +14,7 @@ School platform for francophone schools (Senegal first). Product: `PRODUCT.md`. 
 ## Design system
 
 - Visual language: A+ Plat vif (D32). Tokens and rules: `src/app/globals.css` (read its header comment). Components: `src/components/ui/`. Live preview: `/design-system` (dev only).
+- Screen pieces: `AppDock` and `PageHeader` in `src/components/layout/`; `Stat`/`MeterDots`/`MeterSplit`, `ListRow`, `Callout`, `EmptyState`, `Skeleton`, `SegmentedFilter`, `Avatar`, `Kbd`, `Progress`, `Switch` in `src/components/ui/`. Lists never render empty: use `EmptyState` with the next action. Long actions use `<Button loading>`.
 - Reference mocks to match: `.impeccable/mocks/teacher/` (gallery `index.html`) and `.impeccable/mocks/teacher-home/studio-vif-desktop.html`.
 - Use tokens (`text-now-ink`, `bg-progress-soft`, `shadow-lift`, `fill-progress`...), never raw hex in components.
 - Type: Poppins (D33), in two roles: `font-display` (page and card titles, big numbers, class names) and `font-sans` (everything else). Format class names with `classLabel()` and French punctuation with `frSpaces()` from `src/lib/fr.ts`.

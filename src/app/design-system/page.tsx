@@ -35,6 +35,20 @@ import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { classLabel, frSpaces } from "@/lib/fr"
 
+import { ToastDemo } from "./toast-demo"
+import { CalendarDays, ClipboardCheck, FileText, House, Inbox, LayoutGrid } from "lucide-react"
+
+import { AppDock } from "@/components/layout/app-dock"
+import { PageHeader } from "@/components/layout/page-header"
+import { Avatar } from "@/components/ui/avatar"
+import { Callout } from "@/components/ui/callout"
+import { EmptyState } from "@/components/ui/empty-state"
+import { Kbd } from "@/components/ui/kbd"
+import { ListRow, ListRows } from "@/components/ui/list-row"
+import { SegmentedFilter } from "@/components/ui/segmented-filter"
+import { Skeleton } from "@/components/ui/skeleton"
+import { MeterDots, MeterSplit, Stat } from "@/components/ui/stat"
+
 
 export const metadata = { title: "Système de design · EduPlan" }
 
@@ -327,6 +341,164 @@ export default function DesignSystemPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <Section title="Écran">
+        <div className="flex gap-7 rounded-xl bg-white/40 p-6">
+          <AppDock
+            items={[
+              { href: "/design-system", label: "Accueil", icon: <House /> },
+              { href: "/design-system/classes", label: "Classes", icon: <LayoutGrid /> },
+              { href: "/design-system/notes", label: "Notes", icon: <FileText /> },
+              { href: "/design-system/presences", label: "Présences", icon: <ClipboardCheck /> },
+              { href: "/design-system/agenda", label: "Agenda", icon: <CalendarDays /> },
+            ]}
+            end={<Avatar name="Aïssatou Diop" />}
+          />
+          <div className="flex min-w-0 flex-1 flex-col gap-6">
+            <PageHeader
+              crumb={{ href: "/design-system", label: "Mes classes" }}
+              title={`${classLabel("3ème B")} · Mathématiques`}
+              subtitle="31 élèves · salle 7 · trimestre 1, semaine 8 sur 12"
+              actions={
+                <Button variant="outline">
+                  <Plus />
+                  Nouveau
+                </Button>
+              }
+            />
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardContent>
+                  <Stat
+                    label="Notes saisies pour le conseil"
+                    value="9"
+                    unit="sur 15"
+                    caption="6 notes à prévoir d'ici le 11 décembre"
+                  >
+                    <MeterDots total={15} done={9} label="9 notes sur 15" />
+                  </Stat>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent>
+                  <Stat label="Copies à corriger" value="53" unit="copies" caption="22 devoirs maison · 31 contrôles papier">
+                    <MeterSplit
+                      label="22 devoirs maison, 31 contrôles papier"
+                      parts={[
+                        { value: 22, tone: "progress" },
+                        { value: 31, tone: "soft-now" },
+                      ]}
+                    />
+                  </Stat>
+                </CardContent>
+              </Card>
+            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>À corriger</CardTitle>
+                <CardAction>
+                  <Button variant="link">Tout voir</Button>
+                </CardAction>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
+                <SegmentedFilter
+                  label="Filtrer les devoirs"
+                  items={[
+                    { value: "tous", label: "Tous", count: 2 },
+                    { value: "retard", label: "En retard", count: 6 },
+                    { value: "papier", label: "Papier", count: 1 },
+                  ]}
+                />
+                <ListRows>
+                  <ListRow
+                    leading={<Checkbox aria-label="Devoir maison n°3 corrigé" />}
+                    title="Devoir maison n°3"
+                    meta={`${classLabel("4ème A")} · coef. 1`}
+                    trailing="22/28"
+                    trailingMeta="6 en retard"
+                    trailingTone="now"
+                  >
+                    <div className="flex items-center gap-1.5 text-[12.5px]">
+                      {[
+                        ["Awa D.", "BC = 4 cm"],
+                        ["Lamine C.", "AC = 5 cm"],
+                      ].map(([n, a]) => (
+                        <span key={n} className="flex w-24 flex-col rounded-[10px] bg-progress-faint px-2 py-1.5 leading-snug text-ink-2">
+                          <b className="font-medium text-foreground">{n}</b>
+                          {a}
+                        </span>
+                      ))}
+                      <span className="ml-1 text-muted-foreground">+ 20 copies</span>
+                    </div>
+                  </ListRow>
+                  <ListRow
+                    leading={<Checkbox defaultChecked aria-label="Contrôle n°1 corrigé" />}
+                    title="Contrôle n°1"
+                    meta={`${classLabel("3ème B")} · copies papier · coef. 2`}
+                    trailing="31"
+                    trailingMeta="saisies"
+                  />
+                </ListRows>
+                <Callout title="2 absences sans justificatif" action={<a href="#">Relancer</a>}>
+                  M. Ndiaye, F. Sarr · {classLabel("4ème A")}
+                </Callout>
+              </CardContent>
+            </Card>
+            <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
+              <Kbd>Entrée</Kbd> rendre et suivante <Kbd>J</Kbd>
+              <Kbd>K</Kbd> copie précédente, suivante
+            </p>
+          </div>
+        </div>
+      </Section>
+
+      <Section title="États">
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Card>
+            <CardHeader>
+              <CardTitle>Chargement</CardTitle>
+              <CardDescription>La forme du contenu à venir.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4" aria-busy>
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-12 w-24 rounded-lg" />
+              <Skeleton className="h-2 w-full rounded-full" />
+              <Skeleton className="h-4 w-56" />
+            </CardContent>
+          </Card>
+          <Card>
+            <EmptyState
+              icon={<Inbox />}
+              title="Aucune copie à corriger"
+              action={
+                <Button variant="outline" size="sm">
+                  <Plus />
+                  Nouveau devoir
+                </Button>
+              }
+            >
+              Les copies rendues par la {classLabel("3ème B")} arriveront ici.
+            </EmptyState>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Action en cours</CardTitle>
+              <CardDescription>Le bouton se bloque pendant l&apos;envoi.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col items-start gap-4">
+              <Button loading>
+                <Check />
+                Valider l&apos;appel
+              </Button>
+              <Input disabled defaultValue="Champ désactivé" />
+              <Callout tone="attention" title="L'appel n'a pas été enregistré" action={<a href="#">Réessayer</a>}>
+                La connexion a été coupée.
+              </Callout>
+            </CardContent>
+          </Card>
+        </div>
+        <ToastDemo />
+      </Section>
 
       <Section title="Superpositions">
         <div className="flex flex-wrap items-center gap-3">
