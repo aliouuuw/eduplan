@@ -2,13 +2,14 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { PageHeader } from '@/components/layout/page-header';
+import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Progress } from '@/components/ui/progress';
 import { getCorrection, type Copy } from '@/lib/data/grading';
 import { db } from '@/lib/db';
-import { classLabel, formatDay } from '@/lib/fr';
+import { classLabel, formatDay, frSpaces } from '@/lib/fr';
 import { requireSchoolRole } from '@/lib/session';
 import { cn } from '@/lib/utils';
 import { GradeForm } from './grade-form';
@@ -17,6 +18,12 @@ export const metadata = { title: 'Correction · EduPlan' };
 
 // French: 0 and 1 take the singular.
 const corrected = (n: number) => `${n} corrigée${n > 1 ? 's' : ''}`;
+const LOCK = {
+  closed: { title: (term: string) => `${term} est clôturé`, body: 'Les notes restent visibles mais ne peuvent plus changer.' },
+  past_year: { title: (_: string, year: string) => `L'année ${year} est terminée`, body: 'Les notes restent visibles mais ne peuvent plus changer.' },
+  no_term: { title: () => "Cette classe n'a pas de trimestres", body: "L'administration crée l'année et ses trimestres dans Réglages : la note pourra alors être saisie." },
+} as const;
+
 const grade = (value: number) => String(value).replace('.', ',');
 const time = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Dakar' });
 
@@ -33,7 +40,7 @@ export default async function CorrectionPage({
   const view = await getCorrection(db, viewer.userId, viewer.schoolId, postId);
   if (!view) notFound();
 
-  const { post, copies, max, editable, term } = view;
+  const { post, copies, max, editable, term, lock } = view;
   const toGrade = copies.filter((c) => c.status === 'submitted' || c.status === 'late');
   const graded = copies.filter((c) => c.status === 'returned');
   const missing = copies.filter((c) => c.status === 'assigned');
@@ -68,15 +75,22 @@ export default async function CorrectionPage({
         <p className="shrink-0 text-sm text-muted-foreground">{corrected(graded.length)} sur {copies.length}</p>
       </div>
 
-      {!editable && (
-        <Callout title={term ? `${term.name} est clôturé` : "Ce devoir n'est dans aucun trimestre"}>
-          {term ? 'Les notes restent visibles mais ne peuvent plus changer.' : 'Sa date tombe hors des trimestres de l’année : demandez à l’administration de vérifier les dates.'}
-        </Callout>
+      {lock && (
+        <Callout title={frSpaces(LOCK[lock].title(term?.name ?? '', view.yearName ?? ''))}>{frSpaces(LOCK[lock].body)}</Callout>
       )}
 
       {!current ? (
         <Card>
-          <EmptyState title="Aucune copie pour ce devoir">Les élèves inscrits dans la classe auront une copie à la publication.</EmptyState>
+          <EmptyState
+            title="Aucune copie pour ce devoir"
+            action={
+              <Button asChild variant="secondary">
+                <Link href="/dashboard/teacher/notes">Retour au carnet de notes</Link>
+              </Button>
+            }
+          >
+            Les élèves inscrits dans la classe auront une copie à la publication.
+          </EmptyState>
         </Card>
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[300px_1fr_340px]">
@@ -121,7 +135,7 @@ export default async function CorrectionPage({
               <h2 className="font-display text-2xl tracking-tight">{current.student}</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 {paper
-                  ? 'Contrôle sur papier : saisissez la note de la copie.'
+                  ? frSpaces('Contrôle sur papier : saisissez la note de la copie.')
                   : current.submittedAt
                     ? `Rendu en ligne le ${formatDay(current.submittedAt)} à ${time.format(current.submittedAt)}${current.status === 'late' ? ' · en retard' : ''}`
                     : 'Pas encore rendu.'}

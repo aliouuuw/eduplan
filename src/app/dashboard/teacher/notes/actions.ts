@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { fail, ok, type ActionResult } from '@/lib/action-result';
 import { gradeSubmission, type GradeFailure } from '@/lib/data/grading';
 import { db } from '@/lib/db';
+import { frSpaces } from '@/lib/fr';
 import { schoolViewerFor } from '@/lib/session';
 
 const input = z.object({
@@ -16,7 +17,8 @@ const input = z.object({
 
 const MESSAGE: Record<GradeFailure, string> = {
   not_found: 'Copie introuvable dans vos classes.',
-  no_term: "La date de ce devoir n'est dans aucun trimestre.",
+  no_term: "Cette classe n'a pas de trimestres : l'administration les crée dans Réglages.",
+  past_year: "Cette année scolaire est terminée : les notes ne peuvent plus changer.",
   closed: 'Ce trimestre est clôturé : les notes ne peuvent plus changer.',
   invalid_grade: 'Note invalide : un nombre entre 0 et le barème, au quart de point (ex. 11,5).',
 };
@@ -28,7 +30,7 @@ export async function gradeAction(raw: z.input<typeof input>): Promise<ActionRes
   if (!parsed.success) return fail('Saisie invalide.');
 
   const result = await gradeSubmission(db, { teacherId: viewer.userId, schoolId: viewer.schoolId, ...parsed.data });
-  if (!result.ok) return fail(MESSAGE[result.reason]);
+  if (!result.ok) return fail(frSpaces(MESSAGE[result.reason]));
   revalidatePath('/dashboard/teacher', 'layout'); // the home's "À corriger" counts change too
   return ok(undefined);
 }

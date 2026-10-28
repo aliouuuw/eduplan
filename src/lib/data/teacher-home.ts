@@ -24,6 +24,8 @@ import {
 import type { Database } from '@/lib/db';
 
 import { getAcademicContext } from './academic-context';
+import { isWaiting } from './grading';
+import { teachesCourse } from './teacher-classes';
 import {
   DEFAULT_SCHOOL_TIME_ZONE,
   expectedGradeEntriesAtWeek,
@@ -76,6 +78,8 @@ export type HomeCorrection = {
   id: string;
   title: string;
   className: string;
+  /** Handed in (on time or late), not yet graded. */
+  waiting: number;
   graded: number;
   total: number;
   late: number;
@@ -234,16 +238,10 @@ export async function getTeacherHome(
     .innerJoin(classes, and(eq(posts.classId, classes.id), eq(classes.schoolId, schoolId)))
     .innerJoin(submissions, and(eq(submissions.postId, posts.id), eq(submissions.schoolId, schoolId)))
     .where(and(
-      eq(posts.authorId, teacherId),
       eq(posts.schoolId, schoolId),
       eq(posts.type, 'assignment'),
       eq(classes.academicYearId, year.id),
-      exists(db.select({ id: teacherClasses.id }).from(teacherClasses).where(and(
-        eq(teacherClasses.schoolId, schoolId),
-        eq(teacherClasses.teacherId, teacherId),
-        eq(teacherClasses.classId, posts.classId),
-        eq(teacherClasses.subjectId, posts.subjectId),
-      ))),
+      teachesCourse(db, teacherId, schoolId, posts.classId, posts.subjectId),
     ))
     .groupBy(posts.id, submissions.status)
     .orderBy(posts.createdAt, posts.id, submissions.status);
@@ -254,13 +252,14 @@ export async function getTeacherHome(
   let copiesLate = 0;
   for (const row of copyCounts) {
     const correction = correctionMap.get(row.id) ?? {
-      id: row.id, title: row.title, className: row.className, graded: 0, total: 0, late: 0,
+      id: row.id, title: row.title, className: row.className, waiting: 0, graded: 0, total: 0, late: 0,
     };
     correction.total += row.count;
-    // Assigned work is not graded work.
+    // Same rule as the Notes list: only handed-in copies wait for grading; assigned work is neither.
+    const waiting = isWaiting(row.status);
+    if (waiting) correction.waiting += row.count;
     if (row.status === 'returned') correction.graded += row.count;
     if (row.status === 'late') correction.late += row.count;
-    const waiting = row.status === 'submitted' || row.status === 'late';
     if (row.format === 'paper') {
       if (waiting) copiesPaper += row.count;
     } else {
@@ -270,8 +269,7 @@ export async function getTeacherHome(
     }
     correctionMap.set(row.id, correction);
   }
-  const waitingPostIds = new Set(copyCounts.filter((row) => row.status === 'submitted' || row.status === 'late').map((row) => row.id));
-  const corrections = [...correctionMap.values()].filter((row) => waitingPostIds.has(row.id));
+  const corrections = [...correctionMap.values()].filter((row) => row.waiting > 0);
 
   const gradeWeek = term
     ? sql<number>`min(${weeks}, max(1, cast((${grades.createdAt} - ${Date.parse(`${term.startsOn}T00:00:00Z`) / 1000}) / 604800 as integer) + 1))`.mapWith(Number)
@@ -283,13 +281,8 @@ export async function getTeacherHome(
         .where(and(
           eq(grades.schoolId, schoolId),
           eq(grades.termId, term.id),
-          exists(db.select({ id: teacherClasses.id }).from(teacherClasses).where(and(
-            eq(teacherClasses.schoolId, schoolId),
-            eq(teacherClasses.teacherId, teacherId),
-            eq(teacherClasses.classId, grades.classId),
-            eq(teacherClasses.subjectId, grades.subjectId),
-            inArray(teacherClasses.classId, classIds),
-          ))),
+          inArray(grades.classId, classIds),
+          teachesCourse(db, teacherId, schoolId, grades.classId, grades.subjectId),
         ))
         .groupBy(gradeWeek)
     : [];
@@ -325,12 +318,7 @@ export async function getTeacherHome(
       isNull(studentFlags.dismissedAt),
       or(
         eq(classes.headTeacherId, teacherId),
-        exists(db.select({ id: teacherClasses.id }).from(teacherClasses).where(and(
-          eq(teacherClasses.schoolId, schoolId),
-          eq(teacherClasses.teacherId, teacherId),
-          eq(teacherClasses.classId, classes.id),
-          eq(teacherClasses.subjectId, studentFlags.subjectId),
-        ))),
+        teachesCourse(db, teacherId, schoolId, classes.id, studentFlags.subjectId),
       ),
     ))
     .groupBy(studentFlags.id)

@@ -43,7 +43,7 @@ export default async function TeacherNotesPage({ searchParams }: { searchParams:
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Carnet de notes"
-        subtitle={`${term.name} · ${year.name}${editable ? '' : ' · clôturé, lecture seule'}`}
+        subtitle={`${term.name} · ${year.name}${editable ? '' : year.isCurrent ? ' · clôturé, lecture seule' : ' · année terminée, lecture seule'}`}
       />
 
       {/* Links, not client state: the trimestre lives in the URL (D41). */}

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Kbd } from '@/components/ui/kbd';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { frSpaces } from '@/lib/fr';
 import { gradeAction } from '../actions';
 
 // The grading panel: one number, one comment, then straight to the next copy (mock: correction).
@@ -74,7 +75,7 @@ export function GradeForm({
         {next ? `Rendre et passer à ${next.student.split(' ')[0]}` : 'Rendre la copie'}
       </Button>
       <p className="flex items-center gap-2 text-[12.5px] text-muted-foreground">
-        <Kbd>Entrée</Kbd> dans la note : rendre{next ? ' et suivante' : ''}
+        <Kbd>Entrée</Kbd> {frSpaces(`dans la note : rendre${next ? ' et suivante' : ''}`)}
       </p>
     </form>
   );

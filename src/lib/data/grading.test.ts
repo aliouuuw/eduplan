@@ -1,10 +1,11 @@
 import { expect, test } from 'bun:test';
 import { eq } from 'drizzle-orm';
 
-import { grades, posts, submissions, teacherClasses, terms } from '@/db/schema';
+import { academicYears, grades, posts, submissions, teacherClasses, terms } from '@/db/schema';
 
 import { seedDemo } from './demo-seed';
-import { getCorrection, gradeSubmission, listTermWork, parseGrade } from './grading';
+import { getCorrection, gradeSubmission, listTermWork, parseGrade, syncWorkGrades } from './grading';
+import { getTeacherHome } from './teacher-home';
 import { testDb } from './test-db';
 
 const DAY = '2026-10-27';
@@ -63,7 +64,61 @@ test('grading refuses a closed term, an invalid grade, another course, and anoth
   expect(await gradeSubmission(db, { ...base, submissionId: 'sub-dm3-0', grade: '12' })).toEqual({ ok: false, reason: 'closed' });
   expect((await getCorrection(db, 'demo-aissatou', 'demo-dakar', 'demo-dm3'))?.editable).toBe(false);
 
-  await db.update(posts).set({ dueAt: new Date('2027-08-01T00:00:00Z') }).where(eq(posts.id, 'demo-dm3'));
-  expect(await gradeSubmission(db, { ...base, submissionId: 'sub-dm3-0', grade: '12' })).toEqual({ ok: false, reason: 'no_term' });
   expect(await db.select().from(grades).where(eq(grades.submissionId, 'sub-dm3-0'))).toHaveLength(0);
+
+  // A trimestre left open in a past year is read-only too, and says so.
+  await db.update(terms).set({ closedAt: null }).where(eq(terms.id, 'demo-t1'));
+  await db.update(academicYears).set({ isCurrent: false });
+  expect(await gradeSubmission(db, { ...base, submissionId: 'sub-dm3-0', grade: '12' })).toEqual({ ok: false, reason: 'past_year' });
+  expect((await getCorrection(db, 'demo-aissatou', 'demo-dakar', 'demo-dm3'))?.lock).toBe('past_year');
+});
+
+test('two saves of the same copy at once leave one grade', async () => {
+  const db = await testDb();
+  await seedDemo(db);
+  const results = await Promise.all(['12', '13'].map((grade) => gradeSubmission(db, { ...base, submissionId: 'sub-dm3-0', grade })));
+  expect(results).toEqual([{ ok: true }, { ok: true }]);
+  expect(await db.select().from(grades).where(eq(grades.submissionId, 'sub-dm3-0'))).toHaveLength(1);
+});
+
+test('work due in a holiday gap counts in the next trimestre, on the list and in the grade', async () => {
+  const db = await testDb();
+  await seedDemo(db);
+  const [t1] = await db.select().from(terms).where(eq(terms.id, 'demo-t1'));
+  await db.insert(terms).values({ ...t1, id: 'demo-t2', name: 'Trimestre 2', position: 2, startsOn: '2026-12-07', endsOn: '2027-03-14' });
+  await db.update(posts).set({ dueAt: new Date('2026-12-02T12:00:00Z') }).where(eq(posts.id, 'demo-dm3')); // T1 ends 29 Nov
+
+  const ids = async (termId: string) => (await listTermWork(db, 'demo-aissatou', 'demo-dakar', { day: DAY, termId })).works.map((w) => w.id);
+  expect(await ids('demo-t1')).not.toContain('demo-dm3');
+  expect(await ids('demo-t2')).toContain('demo-dm3');
+  expect(await gradeSubmission(db, { ...base, submissionId: 'sub-dm3-0', grade: '12' })).toEqual({ ok: true });
+  const [row] = await db.select().from(grades).where(eq(grades.submissionId, 'sub-dm3-0'));
+  expect(row.termId).toBe('demo-t2');
+});
+
+test('grades follow a later change of the work date or coefficient', async () => {
+  const db = await testDb();
+  await seedDemo(db);
+  const [t1] = await db.select().from(terms).where(eq(terms.id, 'demo-t1'));
+  await db.insert(terms).values({ ...t1, id: 'demo-t2', name: 'Trimestre 2', position: 2, startsOn: '2026-12-07', endsOn: '2027-03-14' });
+  await gradeSubmission(db, { ...base, submissionId: 'sub-dm3-0', grade: '12' });
+  await db.update(posts).set({ coefficient: 3, dueAt: new Date('2027-01-15T12:00:00Z') }).where(eq(posts.id, 'demo-dm3'));
+  await syncWorkGrades(db, 'demo-dakar', 'demo-dm3');
+  const [row] = await db.select().from(grades).where(eq(grades.submissionId, 'sub-dm3-0'));
+  expect(row).toMatchObject({ coefficient: 3, termId: 'demo-t2' });
+  await syncWorkGrades(db, 'other-school', 'demo-dm3'); // another school's id changes nothing
+});
+
+test('the home and the Notes list count the same copies, for every teacher of the course', async () => {
+  const db = await testDb();
+  await seedDemo(db);
+  const [assignment] = await db.select().from(teacherClasses).where(eq(teacherClasses.classId, 'demo-4a'));
+  await db.insert(teacherClasses).values({ ...assignment, id: 'co-teacher', teacherId: 'co-teacher' });
+  for (const teacher of ['demo-aissatou', 'co-teacher']) {
+    const home = await getTeacherHome(db, teacher, 'demo-dakar', new Date(`${DAY}T10:00:00Z`));
+    const { works } = await listTermWork(db, teacher, 'demo-dakar', { day: DAY });
+    const homeRow = home.corrections.find((row) => row.id === 'demo-dm3');
+    expect(homeRow?.waiting).toBe(works.find((w) => w.id === 'demo-dm3')?.toGrade);
+    expect(homeRow?.waiting).toBe(22); // 6 copies never handed in are not waiting
+  }
 });

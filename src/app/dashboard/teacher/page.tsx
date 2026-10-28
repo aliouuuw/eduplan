@@ -277,19 +277,22 @@ export default async function TeacherHomePage() {
                 <SheetHead title="À corriger" href="/dashboard/teacher/notes" linkLabel="Tout voir" />
                 <CardContent className="flex flex-col gap-0">
                   {home.corrections.map((task) => {
-                    const pending = task.total - task.graded;
                     return (
-                      <div key={task.id} className="grid grid-cols-[1.25rem_1fr_auto] items-start gap-3.5 border-t border-border py-3.5 first:border-t-0">
+                      <Link
+                        key={task.id}
+                        href={`/dashboard/teacher/notes/${task.id}`}
+                        className="-mx-3 grid grid-cols-[1.25rem_1fr_auto] items-start gap-3.5 rounded-xl border-t border-border px-3 py-3.5 transition-colors first:border-t-0 hover:bg-progress-faint"
+                      >
                         <span className="mt-0.5 size-5 rounded-full border-[1.7px] border-progress-edge" />
                         <div>
                           <p className="font-medium">{task.title}</p>
                           <p className="text-[13.5px] text-muted-foreground">{classLabel(task.className)}</p>
                         </div>
                         <div className="text-right">
-                          <p className="font-medium tabular-nums">{pending}/{task.total}</p>
+                          <p className="font-medium tabular-nums">{task.waiting}/{task.total}</p>
                           {task.late > 0 && <p className="text-[12.5px] text-now-ink">{task.late} en retard</p>}
                         </div>
-                      </div>
+                      </Link>
                     );
                   })}
                   {absenceAlert.length >= 2 && (

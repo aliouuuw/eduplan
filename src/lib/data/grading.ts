@@ -1,19 +1,24 @@
-// Correction of graded work (phase 6). A grade belongs to the trimestre that contains the work's
-// due date, else its publication date (D46). Grades are stored /20; a work marked on another
-// scale is converted.
+// Correction of graded work (phase 6). A grade belongs to the trimestre of the work's due date,
+// else its publication date (D46). Grades are stored /20; a work marked on another scale is converted.
 import 'server-only';
-import { and, asc, desc, eq, exists, gte, lt, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 
-import { classes, grades, posts, subjects, submissions, teacherClasses, terms, users } from '@/db/schema';
+import { academicYears, classes, grades, posts, subjects, submissions, terms, users } from '@/db/schema';
 import type { Database } from '@/lib/db';
 import { generateId } from '@/lib/utils';
 
 import { getAcademicContext } from './academic-context';
-import { teacherTeachesClass } from './teacher-classes';
+import { teachesCourse, teacherTeachesClass } from './teacher-classes';
+
+type Term = typeof terms.$inferSelect;
+type CopyStatus = (typeof submissions.$inferSelect)['status'];
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 export const toTwenty = (value: number, max: number) => round2((value * 20) / max);
 export const fromTwenty = (value: number, max: number) => round2((value * max) / 20);
+
+/** A handed-in copy (on time or late) that still waits for its grade. The home and the Notes list share this rule. */
+export const isWaiting = (status: CopyStatus | null) => status === 'submitted' || status === 'late';
 
 /** "11,5" or "11.5" → 11.5. Quarter points only, between 0 and `max`. */
 export function parseGrade(text: string, max: number): number | null {
@@ -23,18 +28,31 @@ export function parseGrade(text: string, max: number): number | null {
   return value <= max && Number.isInteger(value * 4) ? value : null;
 }
 
+/**
+ * D46: each trimestre owns the days after the previous one ends, up to its own end; the last one
+ * has no end. A work dated in a holiday gap therefore counts in the next trimestre, and every date
+ * of the year lands in exactly one. `rows` must be in position order.
+ */
+export function termForDay(rows: Term[], day: string): Term | null {
+  return rows.find((term) => day <= term.endsOn) ?? rows.at(-1) ?? null;
+}
+
 // ponytail: day boundaries in UTC, which is Dakar time; a school in another time zone needs schools.time_zone here.
 const dayStart = (day: string) => new Date(`${day}T00:00:00Z`);
+const nextDay = (day: string) => Math.floor(dayStart(day).getTime() / 1000) + 86_400;
 const workDay = (post: { dueAt: Date | null; createdAt: Date }) => (post.dueAt ?? post.createdAt).toISOString().slice(0, 10);
+const workDate = sql`coalesce(${posts.dueAt}, ${posts.createdAt})`;
 
-async function termOfWork(db: Database, schoolId: string, yearId: string | null, day: string) {
-  if (!yearId) return null;
-  const [term] = await db
-    .select()
-    .from(terms)
-    .where(and(eq(terms.schoolId, schoolId), eq(terms.academicYearId, yearId), sql`${terms.startsOn} <= ${day}`, sql`${terms.endsOn} >= ${day}`))
-    .limit(1);
-  return term ?? null;
+async function yearTerms(db: Database, schoolId: string, yearId: string | null) {
+  if (!yearId) return [];
+  return db.select().from(terms).where(and(eq(terms.schoolId, schoolId), eq(terms.academicYearId, yearId))).orderBy(asc(terms.position));
+}
+
+/** Writable only in an open trimestre of the current year (D41). */
+function workContext(rows: Term[], day: string, yearCurrent: boolean | null) {
+  const term = termForDay(rows, day);
+  const lock: 'no_term' | 'past_year' | 'closed' | null = !term ? 'no_term' : !yearCurrent ? 'past_year' : term.closedAt ? 'closed' : null;
+  return { term, lock };
 }
 
 export type TermWork = {
@@ -55,11 +73,14 @@ export type TermWork = {
 /** The teacher's graded work in one trimestre, with copy counts from SQL. */
 export async function listTermWork(db: Database, teacherId: string, schoolId: string, { day, termId }: { day: string; termId?: string | null }) {
   const context = await getAcademicContext(db, schoolId, { day, termId });
-  const { year, term } = context;
+  const { year, term, terms: rows } = context;
   if (!year || !term) return { context, works: [] as TermWork[] };
 
-  const end = new Date(dayStart(term.endsOn).getTime() + 86_400_000);
-  const rows = await db
+  // The same window as termForDay, in SQL.
+  const index = rows.findIndex((row) => row.id === term.id);
+  const previous = rows[index - 1];
+  const last = index === rows.length - 1;
+  const rowsSql = await db
     .select({
       id: posts.id,
       title: posts.title,
@@ -80,28 +101,22 @@ export async function listTermWork(db: Database, teacherId: string, schoolId: st
     .where(and(
       eq(posts.schoolId, schoolId),
       eq(posts.type, 'assignment'),
-      gte(sql`coalesce(${posts.dueAt}, ${posts.createdAt})`, Math.floor(dayStart(term.startsOn).getTime() / 1000)),
-      lt(sql`coalesce(${posts.dueAt}, ${posts.createdAt})`, Math.floor(end.getTime() / 1000)),
-      // The course, not the author: two teachers of the same class and subject share its work.
-      exists(db.select({ id: teacherClasses.id }).from(teacherClasses).where(and(
-        eq(teacherClasses.schoolId, schoolId),
-        eq(teacherClasses.teacherId, teacherId),
-        eq(teacherClasses.classId, posts.classId),
-        eq(teacherClasses.subjectId, posts.subjectId),
-      ))),
+      previous ? gte(workDate, nextDay(previous.endsOn)) : undefined,
+      last ? undefined : lt(workDate, nextDay(term.endsOn)),
+      teachesCourse(db, teacherId, schoolId, posts.classId, posts.subjectId),
     ))
     .groupBy(posts.id, submissions.status)
-    .orderBy(desc(sql`coalesce(${posts.dueAt}, ${posts.createdAt})`), posts.id);
+    .orderBy(desc(workDate), posts.id);
 
   const works = new Map<string, TermWork>();
-  for (const row of rows) {
+  for (const row of rowsSql) {
     const work = works.get(row.id) ?? {
       id: row.id, title: row.title, classId: row.classId, className: row.className, subjectName: row.subjectName,
       format: row.format, coefficient: row.coefficient, day: workDay(row), toGrade: 0, graded: 0, missing: 0, total: 0,
     };
     if (row.status === 'returned') work.graded += row.count;
     else if (row.status === 'assigned') work.missing += row.count;
-    else if (row.status) work.toGrade += row.count;
+    else if (isWaiting(row.status)) work.toGrade += row.count;
     work.total += row.count;
     works.set(row.id, work);
   }
@@ -111,7 +126,7 @@ export async function listTermWork(db: Database, teacherId: string, schoolId: st
 export type Copy = {
   id: string;
   student: string;
-  status: 'assigned' | 'submitted' | 'late' | 'returned';
+  status: CopyStatus;
   submittedAt: Date | null;
   body: string | null;
   /** On the work's own scale. */
@@ -119,19 +134,23 @@ export type Copy = {
   comment: string | null;
 };
 
+// The work, its class, subject, and the class's year in one query: the lock needs only isCurrent from the year.
+const workFields = {
+  post: posts, className: classes.name, subjectName: subjects.name,
+  yearId: classes.academicYearId, yearName: academicYears.name, yearCurrent: academicYears.isCurrent,
+};
+
+
 export async function getCorrection(db: Database, teacherId: string, schoolId: string, postId: string) {
-  const [row] = await db
-    .select({ post: posts, className: classes.name, yearId: classes.academicYearId, subjectName: subjects.name })
-    .from(posts)
+  const [row] = await db.select(workFields).from(posts)
     .innerJoin(classes, and(eq(classes.id, posts.classId), eq(classes.schoolId, schoolId)))
     .innerJoin(subjects, and(eq(subjects.id, posts.subjectId), eq(subjects.schoolId, schoolId)))
+    .leftJoin(academicYears, and(eq(academicYears.id, classes.academicYearId), eq(academicYears.schoolId, schoolId)))
     .where(and(eq(posts.id, postId), eq(posts.schoolId, schoolId), eq(posts.type, 'assignment')))
     .limit(1);
   if (!row || !(await teacherTeachesClass(db, teacherId, schoolId, row.post.classId, row.post.subjectId))) return null;
-
   const max = row.post.maxGrade ?? 20;
-  const term = await termOfWork(db, schoolId, row.yearId, workDay(row.post));
-  const { editable } = term ? await getAcademicContext(db, schoolId, { day: workDay(row.post), termId: term.id }) : { editable: false };
+  const { term, lock } = workContext(await yearTerms(db, schoolId, row.yearId), workDay(row.post), row.yearCurrent);
   const copyRows = await db
     .select({
       id: submissions.id,
@@ -149,10 +168,13 @@ export async function getCorrection(db: Database, teacherId: string, schoolId: s
     .orderBy(asc(users.name), asc(submissions.id));
 
   const copies: Copy[] = copyRows.map(({ value, ...copy }) => ({ ...copy, grade: value === null ? null : fromTwenty(value, max) }));
-  return { ...row, max, term, editable, copies };
+  return {
+    post: row.post, className: row.className, subjectName: row.subjectName, yearName: row.yearName,
+    max, term, lock, editable: lock === null, copies,
+  };
 }
 
-export type GradeFailure = 'not_found' | 'no_term' | 'closed' | 'invalid_grade';
+export type GradeFailure = 'not_found' | 'no_term' | 'past_year' | 'closed' | 'invalid_grade';
 
 /** Saves the grade and returns the copy to the student, in one batch. */
 export async function gradeSubmission(
@@ -160,44 +182,48 @@ export async function gradeSubmission(
   { teacherId, schoolId, submissionId, grade, comment, now = new Date() }:
   { teacherId: string; schoolId: string; submissionId: string; grade: string; comment: string; now?: Date },
 ): Promise<{ ok: true } | { ok: false; reason: GradeFailure }> {
-  const [row] = await db
-    .select({ submission: submissions, post: posts, yearId: classes.academicYearId })
-    .from(submissions)
-    .innerJoin(posts, and(eq(posts.id, submissions.postId), eq(posts.schoolId, schoolId), eq(posts.type, 'assignment')))
+  const [row] = await db.select({ ...workFields, studentId: submissions.studentId }).from(posts)
     .innerJoin(classes, and(eq(classes.id, posts.classId), eq(classes.schoolId, schoolId)))
-    .where(and(eq(submissions.id, submissionId), eq(submissions.schoolId, schoolId)))
+    .innerJoin(subjects, and(eq(subjects.id, posts.subjectId), eq(subjects.schoolId, schoolId)))
+    .leftJoin(academicYears, and(eq(academicYears.id, classes.academicYearId), eq(academicYears.schoolId, schoolId)))
+    .innerJoin(submissions, and(eq(submissions.postId, posts.id), eq(submissions.schoolId, schoolId)))
+    .where(and(eq(submissions.id, submissionId), eq(posts.schoolId, schoolId), eq(posts.type, 'assignment')))
     .limit(1);
   if (!row || !(await teacherTeachesClass(db, teacherId, schoolId, row.post.classId, row.post.subjectId))) {
     return { ok: false, reason: 'not_found' };
   }
-  const day = workDay(row.post);
-  const term = await termOfWork(db, schoolId, row.yearId, day);
-  if (!term) return { ok: false, reason: 'no_term' };
-  if (!(await getAcademicContext(db, schoolId, { day, termId: term.id })).editable) return { ok: false, reason: 'closed' };
+  const { term, lock } = workContext(await yearTerms(db, schoolId, row.yearId), workDay(row.post), row.yearCurrent);
+  if (lock || !term) return { ok: false, reason: lock ?? 'no_term' };
   const max = row.post.maxGrade ?? 20;
   const value = parseGrade(grade, max);
   if (value === null) return { ok: false, reason: 'invalid_grade' };
 
-  const fields = {
-    value: toTwenty(value, max),
-    coefficient: row.post.coefficient,
-    comment: comment.trim() || null,
-    termId: term.id,
-    updatedAt: now,
-  };
-  const [existing] = await db
-    .select({ id: grades.id })
-    .from(grades)
-    .where(and(eq(grades.schoolId, schoolId), eq(grades.submissionId, submissionId)))
-    .limit(1);
+  const fields = { value: toTwenty(value, max), coefficient: row.post.coefficient, comment: comment.trim() || null, termId: term.id, updatedAt: now };
   await db.batch([
-    existing
-      ? db.update(grades).set(fields).where(eq(grades.id, existing.id))
-      : db.insert(grades).values({
-          id: generateId(), schoolId, submissionId, studentId: row.submission.studentId,
-          subjectId: row.post.subjectId, classId: row.post.classId, createdAt: now, ...fields,
-        }),
+    // One statement: two saves of the same copy at once update the one row instead of colliding.
+    db.insert(grades)
+      .values({ id: generateId(), schoolId, submissionId, studentId: row.studentId, subjectId: row.post.subjectId, classId: row.post.classId, createdAt: now, ...fields })
+      .onConflictDoUpdate({ target: [grades.schoolId, grades.submissionId], targetWhere: sql`${grades.submissionId} is not null`, set: fields }),
     db.update(submissions).set({ status: 'returned', returnedAt: now, updatedAt: now }).where(eq(submissions.id, submissionId)),
   ]);
   return { ok: true };
+}
+
+/**
+ * Grades copy the work's coefficient and trimestre when saved. Call this after a work's date or
+ * coefficient changes, so its grades follow (D46).
+ */
+export async function syncWorkGrades(db: Database, schoolId: string, postId: string, now = new Date()) {
+  const [row] = await db.select(workFields).from(posts)
+    .innerJoin(classes, and(eq(classes.id, posts.classId), eq(classes.schoolId, schoolId)))
+    .innerJoin(subjects, and(eq(subjects.id, posts.subjectId), eq(subjects.schoolId, schoolId)))
+    .leftJoin(academicYears, and(eq(academicYears.id, classes.academicYearId), eq(academicYears.schoolId, schoolId)))
+    .where(and(eq(posts.id, postId), eq(posts.schoolId, schoolId))).limit(1);
+  if (!row) return;
+  const term = termForDay(await yearTerms(db, schoolId, row.yearId), workDay(row.post));
+  if (!term) return;
+  await db.update(grades).set({ coefficient: row.post.coefficient, termId: term.id, updatedAt: now }).where(and(
+    eq(grades.schoolId, schoolId),
+    inArray(grades.submissionId, db.select({ id: submissions.id }).from(submissions).where(and(eq(submissions.postId, postId), eq(submissions.schoolId, schoolId)))),
+  ));
 }

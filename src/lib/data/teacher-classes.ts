@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, exists, inArray, sql, type Column, type SQL } from 'drizzle-orm';
 
 import { academicLevels, academicYears, classes, studentEnrollments, subjects, teacherClasses } from '@/db/schema';
 import type { Database } from '@/lib/db';
@@ -13,6 +13,16 @@ export type TeacherClassRow = {
   academicYear: string;
   studentCount: number;
 };
+
+/** SQL condition: the teacher is assigned this class and subject. Access follows the course, not the author. */
+export function teachesCourse(db: Database, teacherId: string, schoolId: string, classId: Column | SQL, subjectId: Column | SQL) {
+  return exists(db.select({ id: teacherClasses.id }).from(teacherClasses).where(and(
+    eq(teacherClasses.schoolId, schoolId),
+    eq(teacherClasses.teacherId, teacherId),
+    eq(teacherClasses.classId, classId),
+    eq(teacherClasses.subjectId, subjectId),
+  )));
+}
 
 export function classSpaceHref(classId: string, subjectId: string, tab = 'programme') {
   return `/dashboard/teacher/classes/${classId}/${subjectId}/${tab}`;
