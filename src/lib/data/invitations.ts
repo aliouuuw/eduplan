@@ -1,5 +1,6 @@
 import 'server-only';
-import { and, desc, eq, gt, isNull } from 'drizzle-orm';
+import { and, count, desc, eq, gt, isNull, sql } from 'drizzle-orm';
+import { z } from 'zod';
 
 import { invitations } from '@/db/schema';
 import type { Database } from '@/lib/db';
@@ -14,9 +15,47 @@ export function invitationStatus(inv: { usedAt: Date | null; expiresAt: Date }, 
   return inv.expiresAt > now ? 'en_attente' : 'expiree';
 }
 
-/** A school's invitations, newest first. */
-export function listInvitations(db: Database, schoolId: string) {
-  return db.select().from(invitations).where(eq(invitations.schoolId, schoolId)).orderBy(desc(invitations.createdAt));
+export const INVITATIONS_PAGE_SIZE = 25;
+
+const pageInput = z.object({
+  page: z.coerce.number().int().min(1).max(Number.MAX_SAFE_INTEGER).catch(1),
+  q: z.string().trim().max(254).catch(''),
+});
+
+/** Bounded list, with school-wide status totals independent of the search or page. */
+export async function getInvitationPage(
+  db: Database,
+  schoolId: string,
+  input: { page?: unknown; q?: unknown } = {},
+  now = new Date(),
+) {
+  const { page: requestedPage, q } = pageInput.parse(input);
+  const status = sql<InvitationStatus>`case
+    when ${invitations.usedAt} is not null then 'acceptee'
+    when ${invitations.expiresAt} > ${Math.floor(now.getTime() / 1000)} then 'en_attente'
+    else 'expiree'
+  end`;
+  const totals: Record<InvitationStatus, number> = { en_attente: 0, acceptee: 0, expiree: 0 };
+  const counts = await db.select({ status, count: count() }).from(invitations)
+    .where(eq(invitations.schoolId, schoolId)).groupBy(status);
+  for (const row of counts) totals[row.status] = row.count;
+  const total = Object.values(totals).reduce((sum, value) => sum + value, 0);
+  // Treat SQL wildcard characters as literal email-search input.
+  const pattern = `%${q.replace(/[\\%_]/g, '\\$&')}%`;
+  const where = and(
+    eq(invitations.schoolId, schoolId),
+    q ? sql`${invitations.email} like ${pattern} escape '\\'` : undefined,
+  );
+  const [matches] = q
+    ? await db.select({ count: count() }).from(invitations).where(where)
+    : [{ count: total }];
+  const pages = Math.max(1, Math.ceil(matches.count / INVITATIONS_PAGE_SIZE));
+  const page = Math.min(requestedPage, pages);
+  // ponytail: offset work grows with page depth; use keyset cursors if measured school lists outgrow this view.
+  const rows = await db.select().from(invitations).where(where)
+    .orderBy(desc(invitations.createdAt), desc(invitations.id))
+    .limit(INVITATIONS_PAGE_SIZE).offset((page - 1) * INVITATIONS_PAGE_SIZE);
+  return { rows, totals, total, matched: matches.count, page, pages, q };
 }
 
 /** Creates an invitation unless a still-valid one exists for this email (an expired one does not block a new invite). */
