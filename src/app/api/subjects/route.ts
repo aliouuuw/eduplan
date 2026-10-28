@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { db, getCurrentTimestamp } from '@/lib/db';
 import { generateId } from '@/lib/utils';
-import { subjects, teacherSubjects } from '@/db/schema';
+import { subjects, teacherSubjects, teacherClasses } from '@/db/schema';
 import { canAccessSchool, isSuperAdmin, isSchoolAdmin } from '@/lib/auth';
-import { teacherClasses } from '@/db/schema';
-import { sql } from 'drizzle-orm';
+import { countTeachersWithOpenCapacity } from '@/lib/teacher-utils';
 
 const createSubjectSchema = z.object({
   schoolId: z.string(),
@@ -41,45 +40,53 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Build query with appropriate filters
     let allSubjects;
-    // Get all subjects with their class count and qualified teacher count
-    const allSubjectsQuery = await db.select({
-      id: subjects.id,
-      schoolId: subjects.schoolId,
-      name: subjects.name,
-      code: subjects.code,
-      description: subjects.description,
-      weeklyHours: subjects.weeklyHours,
-      createdAt: subjects.createdAt,
-      updatedAt: subjects.updatedAt,
-    }).from(subjects);
-
-    // Get class counts
-    const classCounts = await db.select({
-      subjectId: teacherClasses.subjectId,
-      classCount: sql<number>`count(${teacherClasses.id})`,
-    })
-    .from(teacherClasses)
-    .groupBy(teacherClasses.subjectId);
-
-    // Get qualified teacher counts
-    const teacherCounts = await db.select({
-      subjectId: teacherSubjects.subjectId,
-      teacherCount: sql<number>`count(${teacherSubjects.id})`,
-    })
-    .from(teacherSubjects)
-    .groupBy(teacherSubjects.subjectId);
+    const [allSubjectsQuery, classCounts, teacherCounts, actualHours] = await Promise.all([
+      db.select({
+        id: subjects.id,
+        schoolId: subjects.schoolId,
+        name: subjects.name,
+        code: subjects.code,
+        description: subjects.description,
+        weeklyHours: subjects.weeklyHours,
+        createdAt: subjects.createdAt,
+        updatedAt: subjects.updatedAt,
+      }).from(subjects),
+      db.select({
+        subjectId: teacherClasses.subjectId,
+        classCount: sql<number>`count(distinct ${teacherClasses.classId})`,
+      })
+        .from(teacherClasses)
+        .groupBy(teacherClasses.subjectId),
+      db.select({
+        subjectId: teacherSubjects.subjectId,
+        teacherCount: sql<number>`count(${teacherSubjects.id})`,
+      })
+        .from(teacherSubjects)
+        .groupBy(teacherSubjects.subjectId),
+      db.select({
+        subjectId: teacherClasses.subjectId,
+        totalActualHours: sql<number>`sum(${teacherClasses.weeklyHours})`,
+        assignedClasses: sql<number>`count(distinct case when ${teacherClasses.teacherId} is not null and ${teacherClasses.teacherId} != '' then ${teacherClasses.classId} end)`,
+      })
+        .from(teacherClasses)
+        .groupBy(teacherClasses.subjectId),
+    ]);
 
     // Combine the data
     const subjectsWithCounts = allSubjectsQuery.map(subject => {
       const classCount = classCounts.find(c => c.subjectId === subject.id)?.classCount || 0;
       const teacherCount = teacherCounts.find(t => t.subjectId === subject.id)?.teacherCount || 0;
+      const hours = actualHours.find(h => h.subjectId === subject.id);
+      const totalActualHours = hours?.totalActualHours || 0;
+      const assignedClasses = hours?.assignedClasses || 0;
 
       return {
         ...subject,
         classCount,
         teacherCount,
+        totalActualHours,
+        assignedClasses,
       };
     });
 
@@ -91,10 +98,24 @@ export async function GET(request: NextRequest) {
       allSubjects = subjectsWithCounts;
     }
 
-    // Sort by name
     allSubjects.sort((a, b) => a.name.localeCompare(b.name));
 
-    return NextResponse.json({ subjects: allSubjects });
+    // Teacher capacity costs three school-wide scans per school: only the subjects list asks for it.
+    if (searchParams.get('withCapacity') !== '1') {
+      return NextResponse.json({ subjects: allSubjects });
+    }
+    const schoolIds = [...new Set(allSubjects.map((subject) => subject.schoolId))];
+    const capacityEntries = await Promise.all(
+      schoolIds.map(async (id) => [id, await countTeachersWithOpenCapacity(id)] as const)
+    );
+    const openTeachersBySchool = new Map(capacityEntries);
+
+    return NextResponse.json({
+      subjects: allSubjects.map((subject) => ({
+        ...subject,
+        availableTeachers: openTeachersBySchool.get(subject.schoolId) ?? 0,
+      })),
+    });
   } catch (error) {
     console.error('Error fetching subjects:', error);
     return NextResponse.json(

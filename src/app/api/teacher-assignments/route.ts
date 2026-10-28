@@ -5,6 +5,7 @@ import { teacherClasses, teacherSubjects, users, classes, subjects, teacherAvail
 import { eq, and, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { generateId } from '@/lib/utils';
+import { activeTeacher } from '@/lib/teacher-scope';
 
 // Get current timestamp
 function getCurrentTimestamp(): Date {
@@ -194,7 +195,7 @@ export async function POST(request: NextRequest) {
           and(
             eq(users.id, validated.teacherId),
             eq(users.schoolId, validated.schoolId),
-            eq(users.role, 'teacher')
+            activeTeacher()
           )
         )
         .limit(1);
@@ -272,7 +273,7 @@ export async function POST(request: NextRequest) {
           and(
             eq(users.id, validated.teacherId),
             eq(users.schoolId, validated.schoolId),
-            eq(users.role, 'teacher')
+            activeTeacher()
           )
         )
         .limit(1);

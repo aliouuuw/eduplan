@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<title>EduPlan · Studio · {{NAME}}</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+{{FONTS}}
+<style>
+{{CSS}}
+</style></head><body>
+<div class="backdrop" aria-hidden="true"></div>
+<nav class="dock" aria-label="Navigation">
+  <div class="brand">e</div>
+  <a class="nav-item is-active" href="#" aria-current="page"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z"/></svg></span><span class="nav-label">Accueil</span></a>
+  <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="3"/><path d="M8 9.5h8M8 13.5h5"/></svg></span><span class="nav-label">Classes</span></a>
+  <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24"><path d="M7 3.5h7.5L19 8v12.5H7z"/><path d="M10 13h6M10 16.5h4"/></svg></span><span class="nav-label">Notes</span></a>
+  <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.8-3.6 3.4-5.5 6.5-5.5 1.6 0 3 .5 4.1 1.4M15 18l2 2 4-4.5"/></svg></span><span class="nav-label">Présences</span></a>
+  <a class="nav-item" href="#"><span class="nav-ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg></span><span class="nav-label">Agenda</span></a>
+  <div class="dock-end"><span class="bell" aria-label="Notifications"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5h4"/></svg></span><span class="avatar">AD</span></div>
+</nav>
+<main class="page">
+  <header class="top">
+    <div class="greet"><h1>Bonjour, Aïssatou</h1><p>Lundi 26 octobre · trimestre 1, semaine 8 sur 12</p></div>
+    <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>Rechercher</label>
+    <a class="btn btn-new" href="#"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nouveau</a>
+  </header>
+  <div class="grid">
+    <div class="col col-main">
+      <div class="stats">
+        <section class="mod stat m-grades">
+          <h2 class="stat-label">Notes saisies pour le conseil</h2>
+          <p class="stat-value"><b>9</b><span>sur 15</span></p>
+          <div class="meter meter-dots" role="img" aria-label="9 notes sur 15"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <p class="stat-cap">6 notes à prévoir d'ici le 11 décembre</p>
+        </section>
+        <section class="mod stat m-copies">
+          <h2 class="stat-label">Copies à corriger</h2>
+          <p class="stat-value"><b>53</b><span>copies</span></p>
+          <div class="meter meter-split" role="img" aria-label="22 devoirs maison, 31 contrôles papier"><i class="on" style="flex:22"></i><i class="alt" style="flex:31"></i></div>
+          <p class="stat-cap">22 devoirs maison · 31 contrôles papier</p>
+        </section>
+      </div>
+      <section class="mod m-pace">
+        <div class="mod-head"><h2>Rythme des notes jusqu'au conseil</h2><div class="legend"><span><svg class="lg" viewBox="0 0 14 3"><path class="c-actual" d="M0 1.5h14"/></svg>Saisies</span><span><svg class="lg" viewBox="0 0 14 3"><path class="c-expected" d="M0 1.5h14"/></svg>Rythme attendu</span></div></div>
+        <p class="kpi">9 notes saisies, 10 attendues à ce jour <b>· 1 de retard</b></p>
+        <div class="plot">
+          <svg viewBox="0 0 800 112" preserveAspectRatio="none" aria-label="Notes saisies par semaine, comparées au rythme attendu">
+            <path class="c-area" d="M0 108C40 104 50 102 72.7 101.5S120 96 145.5 94.7 200 89 218.2 88.2 270 83 290.9 81.6 340 70 363.6 68 410 63 436.4 61.4 490 52 509.1 48.3V112H0z"/>
+            <path class="c-expected" d="M0 108 800 6" vector-effect="non-scaling-stroke"/>
+            <path class="c-actual" d="M0 108C40 104 50 102 72.7 101.5S120 96 145.5 94.7 200 89 218.2 88.2 270 83 290.9 81.6 340 70 363.6 68 410 63 436.4 61.4 490 52 509.1 48.3" vector-effect="non-scaling-stroke"/>
+            <circle class="c-point" cx="509.1" cy="48.3" r="5.5" vector-effect="non-scaling-stroke"/>
+          </svg>
+          <div class="axis"><span>S1</span><span>S2</span><span>S3</span><span>S4</span><span>S5</span><span>S6</span><span>S7</span><b>S8</b><span>S9</span><span>S10</span><span>S11</span><b>Conseil</b></div>
+        </div>
+      </section>
+      <section class="mod m-today">
+        <div class="mod-head"><h2>Cours d'aujourd'hui</h2><a class="more" href="#">Emploi du temps<svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg></a></div>
+        <div class="slots">
+          <div class="slot is-done"><time>08:00 · 09:00</time><h3>4ème A</h3><p>Salle 12 · Pythagore</p><span class="slot-st"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Appel fait · 2 absents</span></div>
+          <div class="slot is-live"><time>10:00 · 11:00</time><h3>3ème B</h3><p>Salle 7 · Correction DM</p><span class="slot-st"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg>En cours</span></div>
+          <div class="slot"><time>14:00 · 15:00</time><h3>4ème B</h3><p>Salle 12 · Contrôle n°2</p><span class="slot-st">27 élèves</span></div>
+          <div class="slot"><time>16:00 · 17:00</time><h3>6ème A</h3><p>Salle 3 · Soutien</p><span class="slot-st">12 élèves</span></div>
+        </div>
+      </section>
+      <section class="mod m-follow">
+        <div class="mod-head"><h2>Élèves à suivre</h2><span class="count">4</span><a class="more" href="#">Tout voir</a></div>
+        <div class="kid"><div><div class="kid-name">Moussa Ndiaye</div><div class="kid-class">4ème A</div></div><div class="kid-why"><b>3 absences</b> sans justificatif ce trimestre</div><div class="kid-src">Règle de l'école</div></div>
+        <div class="kid"><div><div class="kid-name">Khady Fall</div><div class="kid-class">3ème B</div></div><div class="kid-why">Moyenne <b>8,5 / 20</b>, contre 11,0 en septembre</div><div class="kid-src">Règle de l'école</div></div>
+        <div class="kid"><div><div class="kid-name">Ibrahima Sow</div><div class="kid-class">4ème B</div></div><div class="kid-why"><b>2 devoirs</b> non rendus depuis le 12 octobre</div><div class="kid-src">Règle de l'école</div></div>
+        <div class="kid"><div><div class="kid-name">Fatou Sarr</div><div class="kid-class">4ème A</div></div><div class="kid-why">Ne participe plus depuis 2 semaines</div><div class="kid-src">Ajouté par vous</div></div>
+      </section>
+    </div>
+    <div class="col col-side">
+      <section class="mod m-live">
+        <span class="live-tag"><i></i>En cours depuis 10:00</span>
+        <h2>3ème B, salle 7</h2>
+        <p class="live-meta">Mathématiques · 31 élèves · 1 excusé</p>
+        <ol class="seq"><li><span>Correction du DM n°2</span><span>25 min</span></li><li><span>Exercices p. 86</span><span>30 min</span></li></ol>
+        <div class="track"><span>10:00</span><div class="track-bar"><i></i></div><span>11:00</span></div>
+        <a class="btn btn-primary" href="#"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Faire l'appel</a>
+      </section>
+      <section class="mod m-grade">
+        <div class="mod-head"><h2>À corriger</h2><a class="more" href="#">Tout voir</a></div>
+        <div class="task"><span class="check"></span><div><div class="task-t">Devoir maison n°3</div><div class="task-m">4ème A · coef. 1</div></div><div class="task-n">22/28<small class="late">6 en retard</small></div><div class="thumbs"><span class="thumb"><b>Awa D.</b>BC = 4 cm</span><span class="thumb"><b>Lamine C.</b>AC = 5 cm</span><span class="thumbs-more">+ 20 copies</span></div></div>
+        <div class="task"><span class="check"></span><div><div class="task-t">Contrôle Pythagore</div><div class="task-m">3ème B · copies papier · coef. 2</div></div><div class="task-n">31<small>à saisir</small></div></div>
+        <div class="alert"><div><div class="alert-t">2 absences sans justificatif</div><div class="alert-m">M. Ndiaye, F. Sarr · 4ème A</div></div><a href="#">Relancer</a></div>
+      </section>
+      <section class="mod m-prog">
+        <div class="mod-head"><h2>Programme</h2><span class="sub">Trimestre 1</span><a class="more" href="#">Détail</a></div>
+        <div class="cls"><div class="cls-row"><b>4ème A</b><span class="ahead">1 notion d'avance</span></div><div class="bar"><i style="width:72.2%"></i><u style="left:66.7%"></u></div><div class="cls-m">Ch. 3 Théorème de Pythagore · 13 sur 18</div></div>
+        <div class="cls"><div class="cls-row"><b>4ème B</b><span class="late">2 notions de retard</span></div><div class="bar"><i style="width:55.6%"></i><u style="left:66.7%"></u></div><div class="cls-m">Ch. 3 Théorème de Pythagore · 10 sur 18</div></div>
+        <div class="cls"><div class="cls-row"><b>3ème B</b><span class="late">2 notions de retard</span></div><div class="bar"><i style="width:55%"></i><u style="left:66.7%"></u></div><div class="cls-m">Ch. 4 Théorème de Thalès · 11 sur 20</div></div>
+        <div class="prog-foot"><u></u>Notions attendues à la semaine 8 sur 12</div>
+      </section>
+    </div>
+  </div>
+</main>
+</body></html>

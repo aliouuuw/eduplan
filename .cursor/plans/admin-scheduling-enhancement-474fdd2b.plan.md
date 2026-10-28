@@ -228,26 +228,26 @@ Based on docs, admin teacher availability page exists at `/dashboard/admin/teach
 
 1. **Bulk Availability Setting**
 
-                        - Select multiple teachers
-                        - Apply common schedule (e.g., Mon-Fri 8:00-17:00) to all
-                        - Already documented in `AUTO_SCHEDULER_MVP_FEATURE.md` as complete - verify it works
+                                                                                                - Select multiple teachers
+                                                                                                - Apply common schedule (e.g., Mon-Fri 8:00-17:00) to all
+                                                                                                - Already documented in `AUTO_SCHEDULER_MVP_FEATURE.md` as complete - verify it works
 
 2. **Coverage Dashboard**
 
-                        - Show which teachers have set availability
-                        - Warning for teachers without availability
-                        - Quick "remind" action to notify teachers
+                                                                                                - Show which teachers have set availability
+                                                                                                - Warning for teachers without availability
+                                                                                                - Quick "remind" action to notify teachers
 
 3. **Availability Override**
 
-                        - Admin can edit teacher availability directly
-                        - Useful for substitute teachers or schedule changes
-                        - Mark as "admin-set" vs "teacher-set"
+                                                                                                - Admin can edit teacher availability directly
+                                                                                                - Useful for substitute teachers or schedule changes
+                                                                                                - Mark as "admin-set" vs "teacher-set"
 
 4. **Conflict Detection**
 
-                        - Show if teacher availability conflicts with assigned classes
-                        - "Teacher X available Mon-Wed but has classes on Thursday"
+                                                                                                - Show if teacher availability conflicts with assigned classes
+                                                                                                - "Teacher X available Mon-Wed but has classes on Thursday"
 
 **Files to Check:**
 
@@ -377,33 +377,33 @@ Based on docs, admin teacher availability page exists at `/dashboard/admin/teach
 
 1. **Time Slot Templates**
 
-                        - Create primary and secondary templates
-                        - Assign different classes to different templates
-                        - Verify timetable builder shows correct slots
+                                                                                                - Create primary and secondary templates
+                                                                                                - Assign different classes to different templates
+                                                                                                - Verify timetable builder shows correct slots
 
 2. **Balanced Distribution**
 
-                        - Generate timetables for multiple classes
-                        - Verify subjects are spread across days
-                        - Test with edge cases (limited availability)
+                                                                                                - Generate timetables for multiple classes
+                                                                                                - Verify subjects are spread across days
+                                                                                                - Test with edge cases (limited availability)
 
 3. **Class-Level UI**
 
-                        - Navigate through all tabs
-                        - Edit timetable from class page
-                        - Verify auto-generate works
+                                                                                                - Navigate through all tabs
+                                                                                                - Edit timetable from class page
+                                                                                                - Verify auto-generate works
 
 4. **PDF Export**
 
-                        - Export various class sizes
-                        - Verify layout on different printers
-                        - Test with empty/partial timetables
+                                                                                                - Export various class sizes
+                                                                                                - Verify layout on different printers
+                                                                                                - Test with empty/partial timetables
 
 5. **Teacher Availability**
 
-                        - Bulk set availability for 10+ teachers
-                        - Verify coverage dashboard accuracy
-                        - Test conflict detection
+                                                                                                - Bulk set availability for 10+ teachers
+                                                                                                - Verify coverage dashboard accuracy
+                                                                                                - Test conflict detection
 
 ---
 

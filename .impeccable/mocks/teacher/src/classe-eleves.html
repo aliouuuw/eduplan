@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<title>EduPlan · 3ème B · Élèves</title>
+{{HEAD}}
+<style>
+.grid{display:grid;grid-template-columns:1fr 440px;gap:24px;align-items:start}
+.filters{display:flex;gap:4px;padding:4px;border-radius:22px;background:var(--prog-tt);width:max-content;margin-top:16px}
+.filters a{height:34px;padding:0 14px;border-radius:17px;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:var(--ink-2)}
+.filters a small{font-size:12.5px;font-weight:400;color:var(--ink-3)}
+.filters a.is-active{background:var(--sheet);color:var(--ink);box-shadow:0 6px 12px -10px rgba(117,99,230,.6)}
+.thead,.st{display:grid;grid-template-columns:1.6fr 90px 80px 1.2fr 100px 90px;gap:12px;align-items:center}
+.thead{margin-top:18px;padding:0 14px 10px;font-size:13px;color:var(--ink-3);border-bottom:1px solid var(--line)}
+.st{padding:11px 14px;border-radius:14px;font-size:14.5px;transition:background .2s}
+.st:hover{background:var(--prog-tt)}
+.st+.st{margin-top:1px}
+.st b{font-weight:500}
+.st .nm{font-weight:500;display:flex;align-items:center;gap:10px}
+.st .tr{font-size:13.5px}
+.flag{font-size:12.5px;font-weight:500;color:var(--now-ink)}
+.st.is-selected{background:linear-gradient(100deg,#fdeee9,#fff6f3)}
+.foot{display:flex;justify-content:space-between;margin-top:14px;padding:0 14px;font-size:13.5px;color:var(--ink-3)}
+
+/* student panel */
+.who{display:flex;align-items:flex-start;gap:12px}
+.who h2{font-size:26px;font-weight:500;letter-spacing:-.02em;line-height:1.15}
+.who p{color:var(--ink-3);margin-top:2px}
+.who .link{margin-left:auto;margin-top:6px}
+.why{margin-top:16px}
+.sig{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px}
+.sig div{padding:2px 0}
+.sig b{display:block;font-size:30px;font-weight:500;letter-spacing:-.02em}
+.sig span{font-size:13px;color:var(--ink-3)}
+.sig .late{color:var(--now-ink)}
+.sec{margin-top:22px}
+.sec h3{font-size:15px;font-weight:500;display:flex;align-items:center}
+.sec h3 .link{margin-left:auto}
+.marks{margin-top:8px}
+.marks div{display:grid;grid-template-columns:62px 1fr 56px 52px;gap:8px;padding:9px 0;font-size:14px;align-items:baseline}
+.marks .d{color:var(--ink-3);font-size:13px}
+.marks .c{color:var(--ink-3);font-size:13px;text-align:right}
+.marks b{font-weight:500;text-align:right}
+.rmk{padding:11px 0;display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center}
+.rmk p{font-size:14px}
+.rmk small{font-size:12.5px;color:var(--ink-3)}
+.vis{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2);grid-row:1/3;grid-column:2}
+.field{margin-top:10px;font-size:14.5px;min-height:112px}
+.count{display:flex;justify-content:space-between;margin-top:8px;font-size:12.5px;color:var(--ink-3)}
+.acts{display:flex;align-items:center;gap:16px;margin-top:18px;white-space:nowrap}
+</style></head><body>
+{{DOCK:classes}}
+<main class="page">
+  <div>
+    <a class="crumb" href="#"><svg viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6"/></svg>Mes classes</a>
+    <div class="top" style="margin-top:10px">
+      <div class="grow"><h1>3ème B · Mathématiques</h1><p>31 élèves · salle 7 · trimestre 1, semaine 8 sur 12</p></div>
+      <a class="btn btn-quiet" href="#"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Nouveau</a>
+    </div>
+  </div>
+  <nav class="tabs" aria-label="Espace de la classe">
+    <a class="tab" href="#">Travail</a>
+    <a class="tab" href="#">Programme</a>
+    <a class="tab is-active" href="#" aria-current="page">Élèves <small>31</small></a>
+    <a class="tab" href="#">Notes</a>
+    <a class="tab" href="#">Présences</a>
+    <a class="tab" href="#">Emploi du temps</a>
+  </nav>
+  <div class="grid">
+    <section class="card">
+      <div class="card-head"><h2>Élèves</h2><span class="sub">moyenne de la classe 12,5 / 20</span><a class="link end" href="#">Appréciations du trimestre</a></div>
+      <div class="filters"><a class="is-active" href="#">Tous <small>31</small></a><a href="#">À suivre <small>1</small></a><a href="#">Absences <small>14</small></a><a href="#">Devoirs non rendus <small>5</small></a></div>
+      <div class="thead"><span>Élève</span><span>Moyenne</span><span>Évolution</span><span>Absences</span><span>Non rendus</span><span>Remarques</span></div>
+      <a class='st' href='#'><span class='nm'>Aminata Ba</span><b>14,5</b><span class='tr'><span class='late'>−0,5</span></span><span>0</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Rokhaya Ba</span><b>10,5</b><span class='tr'><span class='ahead'>+1,5</span></span><span>1 justifiée</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Lamine Camara</span><b>14,0</b><span class='tr'><span class='ahead'>+1,5</span></span><span>1 justifiée</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Coumba Diagne</span><b>14,0</b><span class='tr'><span class='ahead'>+1,0</span></span><span>0</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Cheikh Diallo</span><b>10,2</b><span class='tr'><span class='late'>−0,6</span></span><span>2 <span class='late'>non justifiées</span></span><span>1</span><span>1</span></a>
+<a class='st' href='#'><span class='nm'>Alioune Dieng</span><b>13,5</b><span class='tr'><span class='ahead'>+1,0</span></span><span>1 justifiée</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Pape Diouf</span><b>11,1</b><span class='tr'><span class='ahead'>+0,3</span></span><span>1 <span class='late'>aujourd'hui</span></span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Awa Diop</span><b>15,0</b><span class='tr'><span class='late'>−1,0</span></span><span>0</span><span>1</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Ibrahima Fall</span><b>13,4</b><span class='tr'><span class='ahead'>+0,9</span></span><span>1 justifiée</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st is-selected' href='#'><span class='nm'>Khady Fall<span class='flag'>À suivre</span></span><b class='late'>8,5</b><span class='tr'><span class='late'>−2,5</span></span><span>0</span><span>0</span><span>2</span></a>
+<a class='st' href='#'><span class='nm'>Ndeye Faye</span><b>13,0</b><span class='tr'><span class='ahead'>+0,5</span></span><span>1 justifiée</span><span>1</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Moustapha Gaye</span><b>15,0</b><span class='tr'><span class='ahead'>+1,0</span></span><span>1 justifiée</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Khadija Gueye</span><b>10,0</b><span class='tr'><span class='ahead'>+1,5</span></span><span>0</span><span>1</span><span>1</span></a>
+<a class='st' href='#'><span class='nm'>Yacine Kâ</span><b>15,5</b><span class='tr'><span class='ahead'>+0,5</span></span><span>0</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Fatou Kane</span><b>10,0</b><span class='tr'><span class='muted'>=</span></span><span>0</span><span>0</span><span>1</span></a>
+<a class='st' href='#'><span class='nm'>Ibou Lô</span><b>11,0</b><span class='tr'><span class='ahead'>+0,5</span></span><span>0</span><span>1</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Ousmane Mbaye</span><b>12,0</b><span class='tr'><span class='muted'>=</span></span><span>1 retard</span><span>0</span><span>1</span></a>
+<a class='st' href='#'><span class='nm'>Sokhna Mbengue</span><b>10,5</b><span class='tr'><span class='ahead'>+1,0</span></span><span>1 justifiée</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Djibril Ndao</span><b>10,0</b><span class='tr'><span class='late'>−1,0</span></span><span>0</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Mariama Ndiaye</span><b>14,0</b><span class='tr'><span class='late'>−0,5</span></span><span>1 justifiée</span><span>0</span><span>1</span></a>
+<a class='st' href='#'><span class='nm'>Awa Ndour</span><b>13,5</b><span class='tr'><span class='ahead'>+0,5</span></span><span>0</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Adama Niang</span><b>13,0</b><span class='tr'><span class='ahead'>+1,5</span></span><span>1 justifiée</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Maïmouna Sall</span><b>15,0</b><span class='tr'><span class='late'>−1,0</span></span><span>0</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Babacar Sarr</span><b>11,5</b><span class='tr'><span class='muted'>=</span></span><span>0</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Abdou Seck</span><b>15,5</b><span class='tr'><span class='late'>−1,0</span></span><span>0</span><span>0</span><span>1</span></a>
+<a class='st' href='#'><span class='nm'>Seydou Sow</span><b>13,5</b><span class='tr'><span class='ahead'>+1,0</span></span><span>0</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Marème Sy</span><b>14,0</b><span class='tr'><span class='muted'>=</span></span><span>1 justifiée</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Cheikh Tall</span><b>10,5</b><span class='tr'><span class='late'>−0,5</span></span><span>0</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Astou Thiam</span><b>10,5</b><span class='tr'><span class='ahead'>+0,5</span></span><span>1 justifiée</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Saliou Touré</span><b>14,5</b><span class='tr'><span class='muted'>=</span></span><span>0</span><span>0</span><span><span class=muted>0</span></span></a>
+<a class='st' href='#'><span class='nm'>Modou Wade</span><b>10,0</b><span class='tr'><span class='muted'>=</span></span><span>0</span><span>0</span><span><span class=muted>0</span></span></a>
+      <div class="foot"><span>31 élèves · triés par nom</span><span>Moyennes sur 4 notes du trimestre 1</span></div>
+    </section>
+    <section class="card">
+      <div class="who"><div><h2>Khady Fall</h2><p>3ème B · Mathématiques</p></div><a class="link" href="#">Fiche complète<svg viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg></a></div>
+      <div class="callout why"><div><div class="t">À suivre</div><div class="m">Règle : moyenne sous 10</div></div><a href="#">Retirer</a></div>
+      <div class="sig"><div><b class="late">8,5</b><span>moyenne<br>classe 12,5</span></div><div><b>0</b><span>absence</span></div><div><b>0</b><span>non rendu</span></div></div>
+      <div class="sec"><h3>Notes du trimestre</h3>
+        <div class="marks rows">
+          <div><span class="d">14 sept.</span><span>Devoir maison n°1</span><span class="c">coef. 1</span><b>12</b></div>
+          <div><span class="d">28 sept.</span><span>Contrôle n°1</span><span class="c">coef. 2</span><b>10,5</b></div>
+          <div><span class="d">12 oct.</span><span>Devoir maison n°2</span><span class="c">coef. 1</span><b class="late">6</b></div>
+          <div><span class="d">19 oct.</span><span>Interrogation</span><span class="c">coef. 1</span><b class="late">3,5</b></div>
+        </div>
+      </div>
+      <div class="sec"><h3>Remarques<a class="link" href="#">Ajouter</a></h3>
+        <div class="rows" style="margin-top:4px">
+          <div class="rmk"><p>Bavardage pendant l'interrogation</p><span class="vis">Privée<span class="switch"></span></span><small>19 oct. · par vous</small></div>
+          <div class="rmk"><p>Très bonne participation à l'oral</p><span class="vis">Visible famille<span class="switch on"></span></span><small>2 oct. · par vous</small></div>
+        </div>
+      </div>
+      <div class="sec"><h3>Appréciation du trimestre 1</h3>
+        <div class="field">Khady participe bien à l'oral, mais ses résultats écrits baissent depuis octobre. Elle doit reprendre les exercices de calcul littéral et rendre un travail soigné.</div>
+        <div class="count"><span>Brouillon enregistré à 10:42</span><span>163 / 300</span></div>
+      </div>
+      <div class="acts"><a class="btn btn-primary btn-sm" href="#"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Valider l'appréciation</a><a class="link" href="#">Écrire aux parents</a></div>
+    </section>
+  </div>
+</main>
+</body></html>

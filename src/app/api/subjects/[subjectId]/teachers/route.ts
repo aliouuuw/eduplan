@@ -5,6 +5,7 @@ import { teacherSubjects, subjects, users } from '@/db/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { generateId } from '@/lib/utils';
+import { activeTeacher } from '@/lib/teacher-scope';
 
 // Schema for bulk teacher qualification management
 const bulkTeacherQualificationSchema = z.object({
@@ -59,7 +60,7 @@ export async function POST(
         and(
           inArray(users.id, validated.teacherIds),
           schoolId ? eq(users.schoolId, schoolId) : undefined,
-          eq(users.role, 'teacher')
+          activeTeacher()
         )
       );
 

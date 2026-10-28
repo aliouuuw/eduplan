@@ -68,20 +68,20 @@ export default function SuperAdminUsersPage() {
     try {
       setLoading(true);
 
-      // Fetch schools
-      const schoolsResponse = await fetch('/api/schools');
-      if (schoolsResponse.ok) {
-        const schoolsData = await schoolsResponse.json();
-        setSchools(schoolsData.schools);
-      }
-
-      // Fetch users
       const params = new URLSearchParams();
       if (selectedSchool !== 'all') params.append('schoolId', selectedSchool);
       if (selectedRole !== 'all') params.append('role', selectedRole);
       if (selectedStatus !== 'all') params.append('status', selectedStatus);
 
-      const usersResponse = await fetch(`/api/dashboard/superadmin/users?${params}`);
+      const [schoolsResponse, usersResponse] = await Promise.all([
+        fetch('/api/schools'),
+        fetch(`/api/dashboard/superadmin/users?${params}`),
+      ]);
+      if (schoolsResponse.ok) {
+        const schoolsData = await schoolsResponse.json();
+        setSchools(schoolsData.schools);
+      }
+
       if (usersResponse.ok) {
         const data = await usersResponse.json();
         setUsers(data.users);

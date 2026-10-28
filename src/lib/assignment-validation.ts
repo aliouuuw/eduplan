@@ -1,21 +1,8 @@
 import { db } from '@/lib/db';
-import { teacherClasses, teacherSubjects, users, subjects, classes } from '@/db/schema';
+import { teacherClasses, teacherSubjects, users } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
-
-export interface TeacherWorkload {
-  teacherId: string;
-  teacherName: string;
-  totalWeeklyHours: number;
-  assignmentCount: number;
-  classCount: number;
-  assignments: Array<{
-    classId: string;
-    className: string;
-    subjectId: string;
-    subjectName: string;
-    weeklyHours: number;
-  }>;
-}
+import { getTeacherMetrics } from './teacher-utils';
+import { activeTeacher } from '@/lib/teacher-scope';
 
 export interface ValidationWarning {
   type: 'error' | 'warning' | 'info';
@@ -25,59 +12,6 @@ export interface ValidationWarning {
 
 const MAX_WEEKLY_HOURS = 30;
 const WARNING_THRESHOLD = 25;
-
-/**
- * Calculate a teacher's total workload across all classes
- */
-export async function calculateTeacherWorkload(teacherId: string, schoolId: string): Promise<TeacherWorkload> {
-  // Get teacher info
-  const teacher = await db
-    .select({ id: users.id, name: users.name })
-    .from(users)
-    .where(and(eq(users.id, teacherId), eq(users.schoolId, schoolId)))
-    .limit(1);
-
-  if (teacher.length === 0) {
-    throw new Error('Teacher not found');
-  }
-
-  // Get all class assignments
-  const assignments = await db
-    .select({
-      classId: classes.id,
-      className: classes.name,
-      subjectId: subjects.id,
-      subjectName: subjects.name,
-      weeklyHours: teacherClasses.weeklyHours,
-    })
-    .from(teacherClasses)
-    .innerJoin(classes, eq(teacherClasses.classId, classes.id))
-    .innerJoin(subjects, eq(teacherClasses.subjectId, subjects.id))
-    .where(
-      and(
-        eq(teacherClasses.teacherId, teacherId),
-        eq(teacherClasses.schoolId, schoolId)
-      )
-    );
-
-  const totalWeeklyHours = assignments.reduce((sum, a) => sum + (a.weeklyHours || 0), 0);
-  const uniqueClasses = new Set(assignments.map(a => a.classId)).size;
-
-  return {
-    teacherId: teacher[0].id,
-    teacherName: teacher[0].name,
-    totalWeeklyHours,
-    assignmentCount: assignments.length,
-    classCount: uniqueClasses,
-    assignments: assignments.map(a => ({
-      classId: a.classId,
-      className: a.className,
-      subjectId: a.subjectId,
-      subjectName: a.subjectName,
-      weeklyHours: a.weeklyHours || 0,
-    })),
-  };
-}
 
 /**
  * Check if a teacher is qualified to teach a subject
@@ -104,6 +38,7 @@ export async function isTeacherQualified(
 
 /**
  * Validate a teacher assignment and return warnings
+ * Enhanced to check both workload AND availability
  */
 export async function validateTeacherAssignment(
   teacherId: string,
@@ -124,22 +59,59 @@ export async function validateTeacherAssignment(
     });
   }
 
-  // Check workload
-  const workload = await calculateTeacherWorkload(teacherId, schoolId);
-  const newTotalHours = workload.totalWeeklyHours + weeklyHours;
+  // Get comprehensive teacher metrics (workload + availability)
+  const metrics = await getTeacherMetrics(teacherId, schoolId);
+  const newTotalHours = metrics.workload.totalWeeklyHours + weeklyHours;
 
-  if (newTotalHours > MAX_WEEKLY_HOURS) {
-    warnings.push({
-      type: 'error',
-      message: `This assignment exceeds maximum weekly hours (${MAX_WEEKLY_HOURS}h)`,
-      details: `Teacher currently has ${workload.totalWeeklyHours}h. Adding ${weeklyHours}h would total ${newTotalHours}h.`,
-    });
-  } else if (newTotalHours > WARNING_THRESHOLD) {
+  // Check availability capacity FIRST (more important than arbitrary limits)
+  if (metrics.availability.hasAvailability) {
+    const newAvailableHours = metrics.capacity.availableHours - weeklyHours;
+    
+    if (newAvailableHours < 0) {
+      warnings.push({
+        type: 'error',
+        message: 'Assignment exceeds teacher availability',
+        details: `Teacher has ${metrics.availability.totalWeeklyHours}h available. Current workload: ${metrics.workload.totalWeeklyHours}h. Adding ${weeklyHours}h would exceed capacity by ${Math.abs(newAvailableHours)}h.`,
+      });
+    } else if (newAvailableHours < 2) {
+      warnings.push({
+        type: 'warning',
+        message: 'Near capacity',
+        details: `This assignment would leave only ${newAvailableHours}h of available time remaining.`,
+      });
+    }
+
+    // Show capacity utilization info
+    const newUtilization = Math.round((newTotalHours / metrics.availability.totalWeeklyHours) * 100);
+    if (newUtilization >= 90) {
+      warnings.push({
+        type: 'info',
+        message: `High capacity utilization: ${newUtilization}%`,
+        details: `Teacher will be using ${newUtilization}% of their available time slots.`,
+      });
+    }
+  } else {
+    // No availability set - fall back to hard limits with warning
     warnings.push({
       type: 'warning',
-      message: 'High workload detected',
-      details: `This assignment will bring total hours to ${newTotalHours}h (near the ${MAX_WEEKLY_HOURS}h limit).`,
+      message: 'No availability schedule set',
+      details: 'This teacher has not set their availability. Consider adding availability slots for better scheduling.',
     });
+
+    // Use legacy hard limits as fallback
+    if (newTotalHours > MAX_WEEKLY_HOURS) {
+      warnings.push({
+        type: 'error',
+        message: `Assignment exceeds maximum weekly hours (${MAX_WEEKLY_HOURS}h)`,
+        details: `Teacher currently has ${metrics.workload.totalWeeklyHours}h. Adding ${weeklyHours}h would total ${newTotalHours}h.`,
+      });
+    } else if (newTotalHours > WARNING_THRESHOLD) {
+      warnings.push({
+        type: 'warning',
+        message: 'High workload detected',
+        details: `This assignment will bring total hours to ${newTotalHours}h (near the ${MAX_WEEKLY_HOURS}h limit).`,
+      });
+    }
   }
 
   // Check for duplicate assignment
@@ -184,7 +156,7 @@ export async function getQualifiedTeachers(subjectId: string, schoolId: string) 
       and(
         eq(teacherSubjects.subjectId, subjectId),
         eq(teacherSubjects.schoolId, schoolId),
-        eq(users.role, 'teacher')
+        activeTeacher()
       )
     );
 }

@@ -5,6 +5,7 @@ import { timeSlotTemplates, classes, timeSlots } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 import { nanoid } from 'nanoid';
+import { schoolScopeFor } from '@/lib/school-scope';
 
 // Validation schema
 const createTemplateSchema = z.object({
@@ -31,9 +32,7 @@ export async function GET(req: NextRequest) {
 
     // Get schoolId from query params (for superadmin) or use user's schoolId
     const { searchParams } = new URL(req.url);
-    const schoolId = user.role === 'superadmin' 
-      ? (searchParams.get('schoolId') || user.schoolId)
-      : user.schoolId;
+    const schoolId = schoolScopeFor(user, searchParams.get('schoolId'));
 
     if (!schoolId) {
       return NextResponse.json({ error: 'School ID required' }, { status: 400 });

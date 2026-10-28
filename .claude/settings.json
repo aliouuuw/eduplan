@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$CLAUDE_PROJECT_DIR/scripts/check-changed.sh\"",
+            "timeout": 300,
+            "statusMessage": "Checking typecheck, lint and tests"
+          }
+        ]
+      }
+    ]
+  }
+}

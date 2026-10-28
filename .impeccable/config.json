@@ -1,0 +1,62 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "prototype/index.html"
+        ],
+        "createdAt": "2026-10-22T09:03:58.336Z",
+        "reason": "agent: ink-tinted shadows on .tabs and .popover have a y-offset (1px and 6px); elevation, not a zero-offset glow"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/teacher-home/variants/base.html"
+        ],
+        "createdAt": "2026-10-26T03:34:45.738Z",
+        "reason": "agent: base.html is an unstyled build template ({{CSS}} placeholder); type scale comes from the direction CSS, and all 6 built pages pass detect with []"
+      },
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/teacher/classe-eleves.html"
+        ],
+        "createdAt": "2026-10-27T14:58:45.000Z",
+        "reason": "agent: the flagged element is the appr\u00e9ciation text field (.field), a form input that needs a visible boundary; a probe with the field background removed returns []"
+      },
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/teacher/correction.html"
+        ],
+        "createdAt": "2026-10-27T14:59:53.708Z",
+        "reason": "agent: the flagged elements are the grade input (.score .in) and the comment field (.field), form inputs that need a visible boundary; a probe with their fills removed returns []"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/teacher/src/classe-programme.html"
+        ],
+        "createdAt": "2026-10-27T15:01:49.966Z",
+        "reason": "agent: src page template; the type scale (h1 38px from app.css) is inlined at build via {{HEAD}}, and the built page .impeccable/mocks/teacher/classe-programme.html passes detect with []"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/teacher/src/correction.html"
+        ],
+        "createdAt": "2026-10-27T15:01:49.985Z",
+        "reason": "agent: src page template; the type scale (h1 38px from app.css) is inlined at build via {{HEAD}}, and the built page .impeccable/mocks/teacher/correction.html passes detect with []"
+      }
+    ]
+  }
+}

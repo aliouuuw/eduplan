@@ -12,40 +12,34 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get system-wide user counts by role
-    const userStats = await db
-      .select({
-        role: users.role,
-        count: sql<number>`count(*)`,
-      })
-      .from(users)
-      .groupBy(users.role);
-
-    // Get total counts across all schools
-    const totalSchools = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(schools);
-
-    const totalClasses = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(classes);
-
-    const totalSubjects = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(subjects);
-
-    const totalLevels = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(academicLevels);
-
-    // Get active vs inactive schools
-    const schoolStatus = await db
-      .select({
-        isActive: schools.isActive,
-        count: sql<number>`count(*)`,
-      })
-      .from(schools)
-      .groupBy(schools.isActive);
+    const [userStats, totalSchools, totalClasses, totalSubjects, totalLevels, schoolStatus] = await Promise.all([
+      db
+        .select({
+          role: users.role,
+          count: sql<number>`count(*)`,
+        })
+        .from(users)
+        .groupBy(users.role),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(schools),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(classes),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(subjects),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(academicLevels),
+      db
+        .select({
+          isActive: schools.isActive,
+          count: sql<number>`count(*)`,
+        })
+        .from(schools)
+        .groupBy(schools.isActive),
+    ]);
 
     // Process stats
     const stats = {

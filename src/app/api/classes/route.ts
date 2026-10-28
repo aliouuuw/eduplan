@@ -4,6 +4,7 @@ import { eq, and } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { db, getCurrentTimestamp } from '@/lib/db';
 import { generateId } from '@/lib/utils';
+import { yearIdForLabel } from '@/lib/data/academic-context';
 import { classes, academicLevels } from '@/db/schema';
 import { canAccessSchool, isSuperAdmin, isSchoolAdmin } from '@/lib/auth';
 
@@ -154,6 +155,8 @@ export async function POST(request: NextRequest) {
       levelId,
       name,
       academicYear,
+      // ponytail: no screen creates academic_years yet, so an unknown label stays unlinked; phase 9 setup makes it required.
+      academicYearId: await yearIdForLabel(db, schoolId, academicYear),
       capacity: capacity || 30,
       createdAt: now,
       updatedAt: now,

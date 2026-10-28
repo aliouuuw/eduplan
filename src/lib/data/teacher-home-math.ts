@@ -1,0 +1,68 @@
+/** Term calendar helpers shared by teacher-home and tests. */
+
+export const DEFAULT_SCHOOL_TIME_ZONE = 'Africa/Dakar';
+
+export function schoolDate(now: Date, timeZone = DEFAULT_SCHOOL_TIME_ZONE): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+}
+
+/** Epoch seconds of 00:00 on `day` (YYYY-MM-DD) in the school's time zone. */
+export function schoolDayStart(day: string, timeZone = DEFAULT_SCHOOL_TIME_ZONE): number {
+  const utc = Date.parse(`${day}T00:00:00Z`);
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit',
+  }).formatToParts(utc);
+  const part = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
+  const offset = Date.UTC(part('year'), part('month') - 1, part('day'), part('hour'), part('minute'), part('second')) - utc;
+  return (utc - offset) / 1000;
+}
+
+export function schoolWeekday(now: Date, timeZone = DEFAULT_SCHOOL_TIME_ZONE): number {
+  const weekday = new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'short' }).format(now);
+  const days: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 };
+  return days[weekday] ?? 1;
+}
+
+export function schoolClockHm(now: Date, timeZone = DEFAULT_SCHOOL_TIME_ZONE): string {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(now);
+  const hour = parts.find((part) => part.type === 'hour')?.value ?? '00';
+  const minute = parts.find((part) => part.type === 'minute')?.value ?? '00';
+  return `${hour}:${minute}`;
+}
+
+export function termWeekCount(startsOn: string, endsOn: string): number {
+  const start = Date.parse(`${startsOn}T00:00:00Z`);
+  const end = Date.parse(`${endsOn}T00:00:00Z`);
+  const days = Math.floor((end - start) / 86_400_000) + 1;
+  return Math.max(1, Math.ceil(days / 7));
+}
+
+/** Notions expected by the end of `week`, from the class chapter window (D8, D13). */
+export function expectedNotionsAtWeek(
+  week: number,
+  total: number,
+  plannedWeekStart: number | null,
+  plannedWeekEnd: number | null,
+  termWeeks: number,
+): number {
+  if (total === 0 || week <= 0) return 0;
+  if (plannedWeekStart != null && plannedWeekEnd != null) {
+    if (week < plannedWeekStart) return 0;
+    if (week >= plannedWeekEnd) return total;
+    const span = plannedWeekEnd - plannedWeekStart + 1;
+    const elapsed = week - plannedWeekStart + 1;
+    return Math.round((total * elapsed) / span);
+  }
+  return Math.round((total * week) / termWeeks);
+}
+
+/** Linear council pace: how many grade entries should exist by `week`. */
+export function expectedGradeEntriesAtWeek(week: number, target: number, termWeeks: number): number {
+  if (target === 0 || week <= 0) return 0;
+  return Math.round((target * week) / termWeeks);
+}

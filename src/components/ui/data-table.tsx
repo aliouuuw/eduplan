@@ -60,13 +60,13 @@ export function DataTable<T extends { id: string }>({
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <div className="h-10 w-64 bg-gray-200 rounded animate-pulse" />
-          <div className="h-10 w-32 bg-gray-200 rounded animate-pulse" />
+          <div className="h-11 w-72 rounded-full bg-progress-soft animate-pulse" />
+          <div className="h-11 w-36 rounded-full bg-progress-soft animate-pulse" />
         </div>
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
-          <div className="h-12 bg-gray-100 border-b border-gray-200" />
+        <div className="rounded-xl bg-card px-7 py-4 shadow-lift">
+          <div className="h-10 border-b border-border" />
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 border-b last:border-b-0 bg-white border-gray-200" />
+            <div key={i} className="h-14 border-b border-border last:border-b-0" />
           ))}
         </div>
       </div>
@@ -77,69 +77,70 @@ export function DataTable<T extends { id: string }>({
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         {searchable && (
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <div className="relative w-72">
+            <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder={searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-gray-300 focus:border-black focus:ring-black"
+              className="bg-card pl-10 shadow-lift"
             />
           </div>
         )}
         {!searchable && <div />}
         
         {onAdd && (
-          <Button onClick={onAdd} className="flex items-center gap-2 bg-black hover:bg-gray-800">
-            <Plus className="h-4 w-4" />
+          <Button onClick={onAdd}>
+            <Plus />
             {addLabel}
           </Button>
         )}
       </div>
 
-      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+      <div className="rounded-xl bg-card px-4 py-2 shadow-lift">
         <Table>
           <TableHeader>
-            <TableRow className="border-b border-gray-200 bg-gray-50 hover:bg-gray-50">
+            <TableRow className="hover:bg-transparent">
               {columns.map((column) => (
-                <TableHead key={String(column.key)} className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                <TableHead key={String(column.key)}>
                   {column.label}
                 </TableHead>
               ))}
-              {(onEdit || onDelete || customActions) && <TableHead className="w-24 text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</TableHead>}
+              {(onEdit || onDelete || customActions) && <TableHead className="w-24">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredData.length === 0 ? (
-              <TableRow className="hover:bg-white">
+              <TableRow className="hover:bg-transparent">
                 <TableCell
                   colSpan={columns.length + (onEdit || onDelete || customActions ? 1 : 0)}
-                  className="text-center py-12 text-gray-500"
+                  className="py-12 text-center text-muted-foreground"
                 >
                   {emptyMessage}
                 </TableCell>
               </TableRow>
             ) : (
               filteredData.map((item) => (
-                <TableRow key={item.id} className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                <TableRow key={item.id}>
                   {columns.map((column) => (
-                    <TableCell key={String(column.key)} className="py-4">
+                    <TableCell key={String(column.key)}>
                       {column.render
                         ? column.render(item[column.key], item)
                         : String(item[column.key] || '')}
                     </TableCell>
                   ))}
                   {(onEdit || onDelete || customActions) && (
-                    <TableCell className="py-4">
-                      <div className="flex items-center gap-2">
+                    <TableCell>
+                      <div className="flex items-center gap-1">
                         {onEdit && (
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => onEdit(item)}
-                            className="hover:bg-gray-200"
+                            aria-label="Modifier"
+                            title="Modifier"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="size-4" />
                           </Button>
                         )}
                         {onDelete && (
@@ -147,9 +148,11 @@ export function DataTable<T extends { id: string }>({
                             variant="ghost"
                             size="sm"
                             onClick={() => onDelete(item)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            aria-label="Supprimer"
+                            title="Supprimer"
+                            className="text-now-ink hover:bg-now-soft hover:text-now-ink"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="size-4" />
                           </Button>
                         )}
                         {customActions && customActions(item)}

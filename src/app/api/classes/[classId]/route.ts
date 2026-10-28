@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { eq, and } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { db, getCurrentTimestamp } from '@/lib/db';
-import { classes } from '@/db/schema';
+import { classes, studentEnrollments } from '@/db/schema';
+import { yearIdForLabel } from '@/lib/data/academic-context';
 import { canAccessSchool, isSuperAdmin, isSchoolAdmin } from '@/lib/auth';
 
 const updateClassSchema = z.object({
@@ -134,11 +135,28 @@ export async function PUT(
       }
     }
 
+    // One class row per year (D40): moving a class with students would carry their records into another year.
+    const yearChanged = updateData.academicYear !== undefined && updateData.academicYear !== classItem.academicYear;
+    if (yearChanged) {
+      const [enrolled] = await db
+        .select({ id: studentEnrollments.id })
+        .from(studentEnrollments)
+        .where(and(eq(studentEnrollments.classId, classId), eq(studentEnrollments.schoolId, classItem.schoolId)))
+        .limit(1);
+      if (enrolled) {
+        return NextResponse.json(
+          { message: 'Cette classe a des élèves inscrits. Créez une nouvelle classe pour une autre année.' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Update class
     const updatedClass = await db
       .update(classes)
       .set({
         ...updateData,
+        ...(yearChanged ? { academicYearId: await yearIdForLabel(db, classItem.schoolId, updateData.academicYear!) } : {}),
         updatedAt: getCurrentTimestamp(),
       })
       .where(eq(classes.id, classId))

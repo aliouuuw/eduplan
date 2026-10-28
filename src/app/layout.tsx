@@ -1,22 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import AuthSessionProvider from "@/components/providers/session-provider";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/toaster";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+// D33: Poppins. next/font downloads it at build time and serves it from our domain (SIL OFL).
+const poppins = Poppins({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-poppins",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "EduPlan - School Management System",
-  description: "Multi-tenant school management system for Senegalese schools",
+  title: "EduPlan",
+  description: "La plateforme de l'enseignement et de l'apprentissage de l'école.",
 };
 
 export default function RootLayout({
@@ -25,13 +23,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html lang="fr" className={poppins.variable}>
+      <body>
         <AuthSessionProvider>
           {children}
-          <Toaster position="top-right" />
+          <Toaster />
         </AuthSessionProvider>
       </body>
     </html>

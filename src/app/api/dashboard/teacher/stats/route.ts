@@ -31,57 +31,52 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'School not found' }, { status: 400 });
     }
 
-    // Get total assigned subjects
-    const subjectsResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(teacherSubjects)
-      .where(
-        and(
-          eq(teacherSubjects.teacherId, teacherId),
-          eq(teacherSubjects.schoolId, schoolId)
+    const [subjectsResult, classesResult, studentsResult, periodsResult] = await Promise.all([
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(teacherSubjects)
+        .where(
+          and(
+            eq(teacherSubjects.teacherId, teacherId),
+            eq(teacherSubjects.schoolId, schoolId)
+          )
+        ),
+      db
+        .select({ count: sql<number>`count(distinct ${teacherClasses.classId})` })
+        .from(teacherClasses)
+        .where(
+          and(
+            eq(teacherClasses.teacherId, teacherId),
+            eq(teacherClasses.schoolId, schoolId)
+          )
+        ),
+      db
+        .select({ count: sql<number>`count(distinct ${studentEnrollments.studentId})` })
+        .from(teacherClasses)
+        .innerJoin(
+          studentEnrollments,
+          and(
+            eq(teacherClasses.classId, studentEnrollments.classId),
+            eq(studentEnrollments.isActive, true)
+          )
         )
-      );
-
-    // Get total assigned classes
-    const classesResult = await db
-      .select({ count: sql<number>`count(distinct ${teacherClasses.classId})` })
-      .from(teacherClasses)
-      .where(
-        and(
-          eq(teacherClasses.teacherId, teacherId),
-          eq(teacherClasses.schoolId, schoolId)
-        )
-      );
-
-    // Get total students in assigned classes
-    const studentsResult = await db
-      .select({ count: sql<number>`count(distinct ${studentEnrollments.studentId})` })
-      .from(teacherClasses)
-      .innerJoin(
-        studentEnrollments,
-        and(
-          eq(teacherClasses.classId, studentEnrollments.classId),
-          eq(studentEnrollments.isActive, true)
-        )
-      )
-      .where(
-        and(
-          eq(teacherClasses.teacherId, teacherId),
-          eq(teacherClasses.schoolId, schoolId)
-        )
-      );
-
-    // Get total scheduled periods (timetable entries)
-    const periodsResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(timetables)
-      .where(
-        and(
-          eq(timetables.teacherId, teacherId),
-          eq(timetables.schoolId, schoolId),
-          eq(timetables.status, 'active')
-        )
-      );
+        .where(
+          and(
+            eq(teacherClasses.teacherId, teacherId),
+            eq(teacherClasses.schoolId, schoolId)
+          )
+        ),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(timetables)
+        .where(
+          and(
+            eq(timetables.teacherId, teacherId),
+            eq(timetables.schoolId, schoolId),
+            eq(timetables.status, 'active')
+          )
+        ),
+    ]);
 
     return NextResponse.json({
       totalSubjects: Number(subjectsResult[0]?.count || 0),

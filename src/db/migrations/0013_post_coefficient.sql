@@ -1,0 +1,1 @@
+ALTER TABLE `posts` ADD `coefficient` real DEFAULT 1 NOT NULL;

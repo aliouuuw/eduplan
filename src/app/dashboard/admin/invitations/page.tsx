@@ -1,260 +1,188 @@
-'use client';
+import { MailPlus, SearchX } from 'lucide-react';
+import Link from 'next/link';
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeader } from '@/components/layout/page-header';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { InvitationForm } from '@/components/forms/invitation-form';
-import { toast } from 'sonner';
-import { Copy, Plus, Trash2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/input';
+import { ListRow, ListRows } from '@/components/ui/list-row';
+import { Stat } from '@/components/ui/stat';
+import { getInvitationPage, INVITATIONS_PAGE_SIZE, invitationStatus, type InvitationStatus } from '@/lib/data/invitations';
+import { db } from '@/lib/db';
+import { formatDay, frSpaces } from '@/lib/fr';
+import { getInvitationLink } from '@/lib/invitations';
+import { ROLE_LABEL } from '@/lib/navigation';
+import { requireSchoolRole } from '@/lib/session';
+import { InvitationActions } from './invitation-actions';
+import { NewInvitation } from './new-invitation';
 
-interface Invitation {
-  id: string;
-  email: string;
-  role: string;
-  token: string;
-  expiresAt: Date;
-  usedAt: Date | null;
-  createdAt: Date;
+export const metadata = { title: 'Invitations · EduPlan' };
+
+const PAGE = '/dashboard/admin/invitations';
+
+const STATUS: Record<InvitationStatus, { label: string; heading: string; tone?: 'now' | 'progress' }> = {
+  en_attente: { label: 'En attente', heading: 'En attente', tone: 'progress' },
+  acceptee: { label: 'Acceptée', heading: 'Acceptées' },
+  expiree: { label: 'Expirée', heading: 'Expirées', tone: 'now' },
+};
+
+/** Keeps the search when moving between pages; page 1 stays out of the URL. */
+function pageHref(q: string, page: number) {
+  const params = new URLSearchParams();
+  if (q) params.set('q', q);
+  if (page > 1) params.set('page', String(page));
+  const query = params.toString();
+  return query ? `${PAGE}?${query}` : PAGE;
 }
 
-export default function InvitationsPage() {
-  const [invitations, setInvitations] = useState<Invitation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [formOpen, setFormOpen] = useState(false);
-
-  useEffect(() => {
-    fetchInvitations();
-  }, []);
-
-  const fetchInvitations = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/invitations');
-      if (response.ok) {
-        const data = await response.json();
-        setInvitations(data.invitations);
-      } else {
-        toast.error('Failed to fetch invitations');
-      }
-    } catch (error) {
-      toast.error('Error fetching invitations');
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreateInvitation = async (data: { email: string; role: string }) => {
-    try {
-      const response = await fetch('/api/invitations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        toast.success(
-          <div className="space-y-2">
-            <p className="font-semibold">Invitation created for {data.email}</p>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={result.invitation.invitationLink}
-                readOnly
-                className="text-xs bg-gray-100 p-1 rounded flex-1"
-                onClick={(e) => (e.target as HTMLInputElement).select()}
-              />
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(result.invitation.invitationLink);
-                  toast.success('Link copied!');
-                }}
-                className="text-xs px-2 py-1 bg-black text-white rounded"
-              >
-                Copy
-              </button>
-            </div>
-          </div>,
-          { duration: 10000 }
-        );
-        fetchInvitations();
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.message || 'Failed to create invitation');
-      }
-    } catch (error) {
-      toast.error('Error creating invitation');
-      console.error('Error:', error);
-    }
-  };
-
-  const handleDeleteInvitation = async (invitation: Invitation) => {
-    if (!confirm(`Are you sure you want to delete the invitation for ${invitation.email}?`)) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/invitations?id=${invitation.id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        toast.success('Invitation deleted successfully');
-        fetchInvitations();
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.message || 'Failed to delete invitation');
-      }
-    } catch (error) {
-      toast.error('Error deleting invitation');
-      console.error('Error:', error);
-    }
-  };
-
-  const copyInvitationLink = (token: string) => {
-    const baseUrl = window.location.origin;
-    const link = `${baseUrl}/invite/${token}`;
-    navigator.clipboard.writeText(link);
-    toast.success('Invitation link copied to clipboard!');
-  };
-
-  const getStatusBadge = (invitation: Invitation) => {
-    if (invitation.usedAt) {
-      return <Badge variant="default" className="bg-green-600">Accepted</Badge>;
-    }
-    
-    const isExpired = new Date(invitation.expiresAt) < new Date();
-    if (isExpired) {
-      return <Badge variant="secondary">Expired</Badge>;
-    }
-    
-    return <Badge variant="default" className="bg-blue-600">Pending</Badge>;
-  };
-
-  const pendingInvitations = invitations.filter(
-    inv => !inv.usedAt && new Date(inv.expiresAt) > new Date()
+// Reference page for the data pattern (APP_BUILD_PLAN phase 2): a server component reads through
+// src/lib/data, writes go through ./actions.ts, and only the interactive bits are client islands.
+export default async function InvitationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const viewer = await requireSchoolRole('admin');
+  const params = await searchParams;
+  const now = new Date();
+  const { rows, totals, total, matched, page, pages, q } = await getInvitationPage(
+    db,
+    viewer.schoolId,
+    { page: params.page, q: params.q },
+    now,
   );
-  const acceptedInvitations = invitations.filter(inv => inv.usedAt);
-  const expiredInvitations = invitations.filter(
-    inv => !inv.usedAt && new Date(inv.expiresAt) < new Date()
-  );
+  const first = (page - 1) * INVITATIONS_PAGE_SIZE + 1;
+  const last = first + rows.length - 1;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Invitations</h1>
-          <p className="text-gray-600 mt-1">Manage user invitations for your school</p>
-        </div>
-        <Button onClick={() => setFormOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          New Invitation
-        </Button>
-      </div>
-
-      {/* Statistics */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Pending</CardDescription>
-            <CardTitle className="text-3xl">{pendingInvitations.length}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Accepted</CardDescription>
-            <CardTitle className="text-3xl">{acceptedInvitations.length}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardDescription>Expired</CardDescription>
-            <CardTitle className="text-3xl">{expiredInvitations.length}</CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
-
-      {/* Invitations List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Invitations</CardTitle>
-          <CardDescription>View and manage all invitations</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-              <p className="text-gray-600 mt-2">Loading invitations...</p>
-            </div>
-          ) : invitations.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-600">No invitations found. Create your first invitation to get started.</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {invitations.map((invitation) => (
-                <div
-                  key={invitation.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <p className="font-medium">{invitation.email}</p>
-                      {getStatusBadge(invitation)}
-                      <Badge variant="outline" className="capitalize">
-                        {invitation.role}
-                      </Badge>
-                    </div>
-                    <div className="text-sm text-gray-500 mt-1">
-                      Created: {new Date(invitation.createdAt).toLocaleDateString()}
-                      {' • '}
-                      Expires: {new Date(invitation.expiresAt).toLocaleDateString()}
-                      {invitation.usedAt && (
-                        <>
-                          {' • '}
-                          Accepted: {new Date(invitation.usedAt).toLocaleDateString()}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {!invitation.usedAt && new Date(invitation.expiresAt) > new Date() && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => copyInvitationLink(invitation.token)}
-                      >
-                        <Copy className="w-4 h-4 mr-1" />
-                        Copy Link
-                      </Button>
-                    )}
-                    {!invitation.usedAt && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteInvitation(invitation)}
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <InvitationForm
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        onSubmit={handleCreateInvitation}
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Invitations"
+        subtitle="Invitez enseignants, parents et élèves à rejoindre l'école."
+        actions={total > 0 && <NewInvitation />}
       />
+
+      <div className="grid gap-6 sm:grid-cols-3">
+        {(['en_attente', 'acceptee', 'expiree'] as const).map((s) => (
+          <Card key={s}>
+            <CardContent>
+              <Stat label={STATUS[s].heading} value={totals[s]} unit={totals[s] > 1 ? 'invitations' : 'invitation'} />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card>
+        {total === 0 ? (
+          <EmptyState icon={<MailPlus />} title="Aucune invitation pour l'instant" action={<NewInvitation />}>
+            Invitez les enseignants de l&apos;école : ils recevront un lien pour créer leur compte.
+          </EmptyState>
+        ) : (
+          <>
+            <CardHeader className="gap-4">
+              <CardTitle>{q ? frSpaces(`Recherche « ${q} »`) : 'Toutes les invitations'}</CardTitle>
+              {/* A plain GET form: a new search drops the page, so it always starts on page 1. */}
+              <form role="search" action={PAGE} className="flex flex-wrap gap-2">
+                <label htmlFor="invitation-search" className="sr-only">
+                  Rechercher une adresse e-mail
+                </label>
+                <Input
+                  key={q}
+                  id="invitation-search"
+                  name="q"
+                  type="search"
+                  defaultValue={q}
+                  placeholder="Rechercher une adresse e-mail"
+                  maxLength={254}
+                  autoComplete="off"
+                  className="min-w-0 flex-1 basis-56"
+                />
+                <Button type="submit" variant="secondary">
+                  Rechercher
+                </Button>
+                {q && (
+                  <Button asChild variant="ghost">
+                    <Link href={PAGE}>Effacer</Link>
+                  </Button>
+                )}
+              </form>
+            </CardHeader>
+            <CardContent>
+              {matched === 0 ? (
+                <EmptyState
+                  icon={<SearchX />}
+                  title="Aucune adresse ne correspond"
+                  action={
+                    <Button asChild variant="secondary">
+                      <Link href={PAGE}>Voir toutes les invitations</Link>
+                    </Button>
+                  }
+                >
+                  {frSpaces(`Aucune des ${total} invitations de l'école ne contient « ${q} ».`)}
+                </EmptyState>
+              ) : (
+                <>
+                  <ListRows>
+                    {rows.map((inv) => {
+                      const status = invitationStatus(inv, now);
+                      return (
+                        <div key={inv.id} className="flex flex-wrap items-center gap-x-4">
+                          <ListRow
+                            className="min-w-0 flex-1 basis-64"
+                            title={<span className="break-all">{inv.email}</span>}
+                            meta={`${ROLE_LABEL[inv.role]} · envoyée le ${formatDay(inv.createdAt)} · ${
+                              inv.usedAt ? `acceptée le ${formatDay(inv.usedAt)}` : `expire le ${formatDay(inv.expiresAt)}`
+                            }`}
+                            trailingMeta={STATUS[status].label}
+                            trailingTone={STATUS[status].tone}
+                          />
+                          <InvitationActions
+                            id={inv.id}
+                            email={inv.email}
+                            link={status === 'en_attente' ? getInvitationLink(inv.token) : null}
+                            canDelete={status !== 'acceptee'}
+                          />
+                        </div>
+                      );
+                    })}
+                  </ListRows>
+                  <nav
+                    aria-label="Pages des invitations"
+                    className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"
+                  >
+                    <p className="text-[13.5px] text-muted-foreground" aria-live="polite">
+                      {first}–{last} sur {matched}
+                      {q ? (matched > 1 ? ' résultats' : ' résultat') : matched > 1 ? ' invitations' : ' invitation'}
+                    </p>
+                    {pages > 1 && (
+                      <div className="flex items-center gap-2">
+                        {page > 1 ? (
+                          <Button asChild variant="outline" size="sm">
+                            <Link href={pageHref(q, page - 1)} rel="prev">Précédente</Link>
+                          </Button>
+                        ) : (
+                          <Button variant="outline" size="sm" disabled>Précédente</Button>
+                        )}
+                        <span className="whitespace-nowrap px-1 text-[13.5px] text-ink-2">
+                          Page {page} sur {pages}
+                        </span>
+                        {page < pages ? (
+                          <Button asChild variant="outline" size="sm">
+                            <Link href={pageHref(q, page + 1)} rel="next">Suivante</Link>
+                          </Button>
+                        ) : (
+                          <Button variant="outline" size="sm" disabled>Suivante</Button>
+                        )}
+                      </div>
+                    )}
+                  </nav>
+                </>
+              )}
+            </CardContent>
+          </>
+        )}
+      </Card>
     </div>
   );
 }
-

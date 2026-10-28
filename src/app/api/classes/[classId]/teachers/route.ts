@@ -11,6 +11,7 @@ import {
 import { eq, and, InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import { z } from 'zod';
 import { generateId } from '@/lib/utils';
+import { activeTeacher } from '@/lib/teacher-scope';
 
 type TeacherAssignment = InferSelectModel<typeof teacherClasses>;
 type NewTeacherAssignment = InferInsertModel<typeof teacherClasses>;
@@ -148,7 +149,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const teacherExists = await db.select().from(users).where(
       and(
         eq(users.id, teacherId),
-        eq(users.role, 'teacher'),
+        activeTeacher(),
         schoolId ? eq(users.schoolId, schoolId) : undefined
       )
     ).limit(1);
