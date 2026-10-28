@@ -77,7 +77,8 @@ Status (2026-10-28, branch `feat/academic-context`): D40 and D41 accepted.
 - Migration 0012 adds `classes.academic_year_id` (foreign key, backfilled from the label within the same school) and `terms.closed_at`.
 - `src/lib/data/academic-context.ts` resolves year and term (URL term checked against the school, default term, `editable`). Teacher home, class list, and class programme use it and filter classes by year ID.
 - The class update route refuses a year change once students are enrolled.
-Still open: no screen creates years or terms (only the seed), so a class with an unknown label stays unlinked; no screen closes a term; no page reads `?term=` yet (the grading loop is the first); enrolments and timetables still key on the year label.
+- Réglages (`/dashboard/admin/parametres`, branch `feat/admin-academic-years`): the admin creates a year with its trimestres (validated: inside the year, in order, no overlap; unique name; no overlapping year), switches the current year, and closes or reopens a term. Creating a year links the school's classes that carry its label. Browser-checked at 1440 and 375 px on an isolated scratch database.
+Still open: no page reads `?term=` yet (the grading loop is the first); editing or deleting a year or term; enrolments and timetables still key on the year label.
 
 ### 3. Find work at real volumes, before expanding the class tabs
 
