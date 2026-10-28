@@ -109,6 +109,17 @@ export async function seedDemo(db: Database) {
     updatedAt: NOW,
   });
 
+  await db.insert(academicYears).values({
+    id: 'demo-year',
+    schoolId: DEMO_SCHOOL_ID,
+    name: '2025-2026',
+    startsOn: '2026-09-07',
+    endsOn: '2027-06-30',
+    isCurrent: true,
+    createdAt: NOW,
+    updatedAt: NOW,
+  });
+
   const classSizes = [
     { id: 'demo-4a', name: '4ème A', n: 28 },
     { id: 'demo-4b', name: '4ème B', n: 30 },
@@ -122,6 +133,7 @@ export async function seedDemo(db: Database) {
       levelId: 'demo-secondary',
       name: c.name,
       academicYear: '2025-2026',
+      academicYearId: 'demo-year',
       capacity: c.n,
       headTeacherId: c.id === 'demo-3b' ? 'demo-aissatou' : null,
       createdAt: NOW,
@@ -185,16 +197,6 @@ export async function seedDemo(db: Database) {
     }
   }
 
-  await db.insert(academicYears).values({
-    id: 'demo-year',
-    schoolId: DEMO_SCHOOL_ID,
-    name: '2025-2026',
-    startsOn: '2026-09-07',
-    endsOn: '2027-06-30',
-    isCurrent: true,
-    createdAt: NOW,
-    updatedAt: NOW,
-  });
   await db.insert(terms).values({
     id: 'demo-t1',
     schoolId: DEMO_SCHOOL_ID,

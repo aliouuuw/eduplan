@@ -47,7 +47,10 @@ test('home excludes other subjects, historical work, drafts, and foreign-school 
   // Teaching French in another class must not grant French in every maths class.
   await db.insert(teacherClasses).values({ ...assignment, id: 'french-assignment', classId: 'demo-6a', subjectId: 'demo-french' });
   const [currentClass] = await db.select().from(classes).where(eq(classes.id, 'demo-4a'));
-  await db.insert(classes).values({ ...currentClass, id: 'old-class', academicYear: '2024-2025' });
+  const [year] = await db.select().from(academicYears).limit(1);
+  await db.insert(academicYears).values({ ...year, id: 'old-year', name: '2024-2025', isCurrent: false });
+  await db.insert(classes).values({ ...currentClass, id: 'old-class', academicYear: '2024-2025', academicYearId: 'old-year' });
+  await db.insert(teacherClasses).values({ ...assignment, id: 'old-assignment', classId: 'old-class' });
   const [post] = await db.select().from(posts).where(eq(posts.id, 'demo-dm3'));
   await db.insert(posts).values({ ...post, id: 'old-post', classId: 'old-class' });
   const [copy] = await db.select().from(submissions).where(eq(submissions.postId, post.id)).limit(1);

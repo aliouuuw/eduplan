@@ -3,7 +3,6 @@ import 'server-only';
 import { and, eq, exists, inArray, isNull, or, sql } from 'drizzle-orm';
 
 import {
-  academicYears,
   chapters,
   classChapterPlans,
   classes,
@@ -17,7 +16,6 @@ import {
   submissions,
   teacherClasses,
   teacherTermGradeTargets,
-  terms,
   timeSlots,
   timetables,
   users,
@@ -25,6 +23,7 @@ import {
 } from '@/db/schema';
 import type { Database } from '@/lib/db';
 
+import { getAcademicContext } from './academic-context';
 import {
   DEFAULT_SCHOOL_TIME_ZONE,
   expectedGradeEntriesAtWeek,
@@ -122,11 +121,8 @@ export async function getTeacherHome(
   const [school] = await db.select({ timeZone: schools.timeZone }).from(schools).where(eq(schools.id, schoolId)).limit(1);
   const timeZone = school?.timeZone || DEFAULT_SCHOOL_TIME_ZONE;
 
-  const [year] = await db
-    .select()
-    .from(academicYears)
-    .where(and(eq(academicYears.schoolId, schoolId), eq(academicYears.isCurrent, true)))
-    .limit(1);
+  const day = schoolDate(now, timeZone);
+  const { year, term } = await getAcademicContext(db, schoolId, { day });
   const links = year ? await db
     .select()
     .from(teacherClasses)
@@ -136,23 +132,18 @@ export async function getTeacherHome(
         eq(teacherClasses.teacherId, teacherId),
         eq(teacherClasses.schoolId, schoolId),
         eq(classes.schoolId, schoolId),
-        eq(classes.academicYear, year.name),
+        eq(classes.academicYearId, year.id),
       ),
     ) : [];
   const assignments = links.map((row) => row.teacher_classes);
   const headClasses = year ? await db.select().from(classes).where(and(
     eq(classes.schoolId, schoolId),
-    eq(classes.academicYear, year.name),
+    eq(classes.academicYearId, year.id),
     eq(classes.headTeacherId, teacherId),
   )) : [];
   const classIds = [...new Set([...assignments.map((row) => row.classId), ...headClasses.map((row) => row.id)])];
   const taught = new Set(assignments.map((row) => `${row.classId}:${row.subjectId}`));
 
-  const termRows = year
-    ? await db.select().from(terms).where(and(eq(terms.schoolId, schoolId), eq(terms.academicYearId, year.id)))
-    : [];
-  const day = schoolDate(now, timeZone);
-  const term = termRows.find((row) => row.startsOn <= day && row.endsOn >= day);
   const weeks = term ? termWeekCount(term.startsOn, term.endsOn) : 12;
   const week = term ? termWeek(now, term.startsOn, weeks) : null;
 
@@ -246,7 +237,7 @@ export async function getTeacherHome(
       eq(posts.authorId, teacherId),
       eq(posts.schoolId, schoolId),
       eq(posts.type, 'assignment'),
-      eq(classes.academicYear, year.name),
+      eq(classes.academicYearId, year.id),
       exists(db.select({ id: teacherClasses.id }).from(teacherClasses).where(and(
         eq(teacherClasses.schoolId, schoolId),
         eq(teacherClasses.teacherId, teacherId),
@@ -328,7 +319,7 @@ export async function getTeacherHome(
       eq(studentEnrollments.academicYear, year.name),
       eq(studentEnrollments.isActive, true),
     ))
-    .innerJoin(classes, and(eq(classes.id, studentEnrollments.classId), eq(classes.schoolId, schoolId), eq(classes.academicYear, year.name)))
+    .innerJoin(classes, and(eq(classes.id, studentEnrollments.classId), eq(classes.schoolId, schoolId), eq(classes.academicYearId, year.id)))
     .where(and(
       eq(studentFlags.schoolId, schoolId),
       isNull(studentFlags.dismissedAt),

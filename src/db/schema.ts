@@ -87,13 +87,15 @@ export const classes = sqliteTable('classes', {
   levelId: text('level_id').notNull(),
   timeSlotTemplateId: text('time_slot_template_id'), // Links to time slot template
   name: text('name').notNull(), // e.g., "6ème A", "CM2 B"
-  academicYear: text('academic_year').notNull(), // e.g., "2024-2025"
+  academicYear: text('academic_year').notNull(), // display label; the year key is academicYearId
+  academicYearId: text('academic_year_id').references(() => academicYears.id), // one class row per year (D40)
   capacity: integer('capacity').default(30),
   headTeacherId: text('head_teacher_id'), // professeur principal (D37)
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 }, (table) => ({
   schoolYear: index('classes_school_year_idx').on(table.schoolId, table.academicYear),
+  schoolYearId: index('classes_school_year_id_idx').on(table.schoolId, table.academicYearId),
 }));
 
 // Subjects taught in the school
@@ -240,6 +242,7 @@ export const terms = sqliteTable('terms', {
   position: integer('position').notNull(),
   startsOn: text('starts_on').notNull(),
   endsOn: text('ends_on').notNull(),
+  closedAt: integer('closed_at', { mode: 'timestamp' }), // set by the admin after the conseil; closed = read-only (D41)
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 }, (table) => ({

@@ -45,7 +45,7 @@ export async function listTeacherClasses(db: Database, teacherId: string, school
         eq(classes.schoolId, schoolId),
         eq(subjects.schoolId, schoolId),
         eq(academicLevels.schoolId, schoolId),
-        eq(classes.academicYear, year.name),
+        eq(classes.academicYearId, year.id),
       ),
     )
     .orderBy(classes.name, subjects.name);

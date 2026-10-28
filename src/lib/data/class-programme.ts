@@ -3,7 +3,6 @@ import 'server-only';
 import { and, asc, count, eq, inArray } from 'drizzle-orm';
 
 import {
-  academicYears,
   chapters,
   classChapterPlans,
   classes,
@@ -14,7 +13,6 @@ import {
   studentEnrollments,
   subjects,
   teacherClasses,
-  terms,
   timeSlots,
   timetables,
 } from '@/db/schema';
@@ -28,6 +26,7 @@ import {
   schoolWeekday,
   termWeekCount,
 } from './teacher-home-math';
+import { getAcademicContext } from './academic-context';
 import { termWeek } from './teacher-home';
 import { teacherTeachesClass } from './teacher-classes';
 
@@ -118,14 +117,10 @@ export async function getClassProgramme(
     .from(studentEnrollments)
     .where(and(eq(studentEnrollments.classId, classId), eq(studentEnrollments.schoolId, schoolId), eq(studentEnrollments.isActive, true)));
 
-  const [year] = await db
-    .select()
-    .from(academicYears)
-    .where(and(eq(academicYears.schoolId, schoolId), eq(academicYears.name, classRow.academicYear)))
-    .limit(1);
-  const termRows = year ? await db.select().from(terms).where(and(eq(terms.schoolId, schoolId), eq(terms.academicYearId, year.id))) : [];
-  const day = schoolDate(now, timeZone);
-  const term = termRows.find((row) => row.startsOn <= day && row.endsOn >= day);
+  // The class's own year (D40), so an archived class keeps its own terms.
+  const { term } = classRow.academicYearId
+    ? await getAcademicContext(db, schoolId, { day: schoolDate(now, timeZone), yearId: classRow.academicYearId })
+    : { term: null };
   const weeks = term ? termWeekCount(term.startsOn, term.endsOn) : 12;
   const week = term ? termWeek(now, term.startsOn, weeks) : null;
 

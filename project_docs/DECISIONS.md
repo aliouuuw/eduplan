@@ -1,6 +1,6 @@
 # EduPlan decisions
 
-Last update: 2026-10-27. One log for every accepted decision about the app. Each ID is stable. To change a decision, add a new row that says which ID it replaces. Do not edit the old row.
+Last update: 2026-10-28. One log for every accepted decision about the app. Each ID is stable. To change a decision, add a new row that says which ID it replaces. Do not edit the old row.
 
 Context: `PRODUCT.md` (who and why), `MVP_REWORK_PLAN.md` (scope, IA, flows, order of work), `DESIGN_HANDOVER_TEACHER_HOME.md` (visual language and mocks).
 
@@ -57,7 +57,13 @@ Context: `PRODUCT.md` (who and why), `MVP_REWORK_PLAN.md` (scope, IA, flows, ord
 | D37 | Appréciation générale (answers open question 4) | **Yes in the MVP.** The professeur principal writes one appréciation générale per student per trimestre, next to the subject appréciations | 10-27 |
 | D38 | Class space identity | The class space is **class + subject** (`/dashboard/teacher/classes/[classId]/[subjectId]/…`). Programme plans, coverage, and timetable room/topic belong to that pair. Clock time uses `schools.time_zone` (default `Africa/Dakar`) | 10-27 |
 | D39 | Duplicate protection | One submission per school/post/student; one attendance row per school/timetable/date/student; one grade per linked submission; one subject or general appreciation per school/student/term. Standalone grades remain repeatable. Migration must not delete conflicting rows automatically | 10-27 |
+| D40 | Annual class lifecycle | One class row per academic year. "6ème A" next year is a new row; a row is never moved to another year. `classes.academic_year_id` links the row to `academic_years` (foreign key). Year rollover copies classes | 10-28 |
+| D41 | Year and term context | The term lives in the URL (`?term=<id>`), checked against the school on the server. Default: the term that contains today, else the last finished term, else the first. A term is editable until the admin closes it (`terms.closed_at`); past years are read-only | 10-28 |
+| D42 | Grade identity | `classes.grade_code` from the fixed national ladder (CI … CM2, 6e … 3e, 2nde, 1re, Tle). Programmes are keyed by school + subject + grade. Never parse the class name. Lycée series (L, S) is a later optional column | 10-28 |
+| D43 | Automatic flags | D34 rules are calculated in SQL when the screen loads, per class, subject and term. Only manual flags and dismissals are stored. A dismissal holds for that student, rule, subject and term | 10-28 |
+| D44 | Attendance saves | Online first: each change is an upsert on the unique key, with saving / saved / failed states. No offline queue in the MVP. Lesson dates come from the timetable plus an exceptions table (holidays, cancellations). Register completion is its own row | 10-28 |
+| D45 | Multi-school identity | One login identity with school memberships (school + role). Required before a second school is onboarded, not before a one-school pilot | 10-28 |
 
 ## Open
 
-Product safety gates are tracked in `SCALABILITY_AND_USABILITY.md`. Before a multi-school pilot, resolve identity/membership, annual class lifecycle, and year/term selection. Those proposals are not accepted auth or schema replacements yet.
+Product safety gates are tracked in `SCALABILITY_AND_USABILITY.md`. D40–D45 answer the open product questions. Implemented so far: D40 (year link) and D41 (resolver and term closing column), branch `feat/academic-context`. D42–D45 are accepted but not built.

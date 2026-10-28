@@ -1,4 +1,4 @@
-// Read-only preflight for migration 0011. Never chooses or deletes duplicate rows.
+// Read-only preflight for migrations 0011 and 0012. Never chooses or deletes duplicate rows.
 import { sql } from 'drizzle-orm';
 
 import { db } from '../src/lib/db';
@@ -26,9 +26,22 @@ for (const [label, columns, where] of checks) {
   console.log(`${label}: ${count} duplicate groups`);
 }
 
+// 0012 links each class to its year by label. A class with no matching year stays unlinked
+// and drops out of every current-year teacher view.
+const [orphans] = await db.all<{ count: number }>(sql.raw(
+  `select count(*) as count from classes c where not exists (
+    select 1 from academic_years y where y.school_id = c.school_id and y.name = c.academic_year
+  )`,
+));
+console.log(`classes with no matching academic year: ${Number(orphans.count)}`);
+if (Number(orphans.count) > 0) {
+  console.error('Create the missing academic_years rows before applying migration 0012.');
+  process.exitCode = 1;
+}
+
 if (duplicateGroups > 0) {
   console.error('Do not apply migration 0011. Review duplicate rows first. No rows were changed.');
   process.exitCode = 1;
 } else {
-  console.log('No conflicting keys found. Take a backup before applying migration 0011.');
+  console.log('No conflicting keys found. Take a backup before applying migrations 0011 and 0012.');
 }

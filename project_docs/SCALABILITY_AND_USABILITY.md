@@ -39,7 +39,7 @@ The dashboard flag list and correction list are still unbounded within the curre
 ## Safe migration procedure
 
 1. Back up the database using the deployment's existing backup process.
-2. Run the read-only preflight against the target environment:
+2. Run the read-only preflight against the target environment (it also counts classes whose year label has no `academic_years` row; 0012 leaves those unlinked):
    `bun --env-file=.env.local run scripts/check-teaching-integrity.ts`.
 3. Stop if any duplicate-group count is non-zero. Review the rows with the school owner. Do not delete automatically.
 4. Apply checked-in migrations through the deployment migration runner. Do not use `db:push` as a substitute.
@@ -73,7 +73,11 @@ Scenario: a teacher enters last term's grades during a holiday.
 - Replace year labels as relational keys with `academic_years.id` after an inventory and backfill plan.
 - Decide whether a class row is an annual cohort. Deriving a post's year through its class is safe only if the class is never repurposed next year.
 
-Status: pending schema/context design. Current-year filtering is a containment fix, not a year-rollover implementation.
+Status (2026-10-28, branch `feat/academic-context`): D40 and D41 accepted.
+- Migration 0012 adds `classes.academic_year_id` (foreign key, backfilled from the label within the same school) and `terms.closed_at`.
+- `src/lib/data/academic-context.ts` resolves year and term (URL term checked against the school, default term, `editable`). Teacher home, class list, and class programme use it and filter classes by year ID.
+- The class update route refuses a year change once students are enrolled.
+Still open: no screen creates years or terms (only the seed), so a class with an unknown label stays unlinked; no screen closes a term; no page reads `?term=` yet (the grading loop is the first); enrolments and timetables still key on the year label.
 
 ### 3. Find work at real volumes, before expanding the class tabs
 
