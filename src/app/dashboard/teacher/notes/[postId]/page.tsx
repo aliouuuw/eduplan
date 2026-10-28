@@ -42,8 +42,9 @@ export default async function CorrectionPage({
 
   const { post, copies, max, editable, term, lock } = view;
   const toGrade = copies.filter((c) => c.status === 'submitted' || c.status === 'late');
-  const graded = copies.filter((c) => c.status === 'returned');
-  const missing = copies.filter((c) => c.status === 'assigned');
+  // A missing copy with a grade (a 0 for "non rendu") counts as graded and stays marked as not handed in.
+  const graded = copies.filter((c) => c.status === 'returned' || (c.status === 'assigned' && c.grade !== null));
+  const missing = copies.filter((c) => c.status === 'assigned' && c.grade === null);
   const paper = post.assignmentFormat === 'paper';
   const current = copies.find((c) => c.id === copyParam) ?? toGrade[0] ?? copies[0];
   // Next = the following copy still to grade, wrapping to the top of the list.
@@ -115,7 +116,7 @@ export default async function CorrectionPage({
                           >
                             <span className="min-w-0 truncate">{c.student}</span>
                             <small className={cn('shrink-0 text-[12.5px] text-muted-foreground', c.status === 'late' && 'text-now-ink')}>
-                              {c.status === 'returned' && c.grade !== null
+                              {c.grade !== null
                                 ? <b className="font-medium text-foreground tabular-nums">{grade(c.grade)}</b>
                                 : c.status === 'late' ? 'en retard'
                                 : c.submittedAt && !paper ? formatDay(c.submittedAt).replace(/ \d{4}$/, '') : null}

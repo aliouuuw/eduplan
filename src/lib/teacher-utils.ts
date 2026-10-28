@@ -88,30 +88,13 @@ function calculateDurationMinutes(startTime: string, endTime: string): number {
 /**
  * Get comprehensive teacher metrics including workload, availability, and capacity
  */
-export async function getTeacherMetrics(
-  teacherId: string,
-  schoolId: string
-): Promise<TeacherMetrics> {
+// The three per-teacher reads, for one teacher or for a whole school at once.
+async function loadMetricRows(schoolId: string, teacherIds: string[]) {
   const { db } = await import('@/lib/db');
-
-  // Get teacher info
-  const teacher = await db
-    .select({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-    })
-    .from(users)
-    .where(and(eq(users.id, teacherId), eq(users.schoolId, schoolId)))
-    .limit(1);
-
-  if (teacher.length === 0) {
-    throw new Error('Teacher not found');
-  }
-
-  const [assignments, availabilitySlots, qualifications] = await Promise.all([
+  return Promise.all([
     db
       .select({
+        teacherId: teacherClasses.teacherId,
         assignmentId: teacherClasses.id,
         classId: classes.id,
         className: classes.name,
@@ -123,23 +106,14 @@ export async function getTeacherMetrics(
       .from(teacherClasses)
       .innerJoin(classes, eq(teacherClasses.classId, classes.id))
       .innerJoin(subjects, eq(teacherClasses.subjectId, subjects.id))
-      .where(
-        and(
-          eq(teacherClasses.teacherId, teacherId),
-          eq(teacherClasses.schoolId, schoolId)
-        )
-      ),
+      .where(and(inArray(teacherClasses.teacherId, teacherIds), eq(teacherClasses.schoolId, schoolId))),
     db
       .select()
       .from(teacherAvailability)
-      .where(
-        and(
-          eq(teacherAvailability.teacherId, teacherId),
-          eq(teacherAvailability.schoolId, schoolId)
-        )
-      ),
+      .where(and(inArray(teacherAvailability.teacherId, teacherIds), eq(teacherAvailability.schoolId, schoolId))),
     db
       .select({
+        teacherId: teacherSubjects.teacherId,
         qualificationId: teacherSubjects.id,
         subjectId: subjects.id,
         subjectName: subjects.name,
@@ -147,13 +121,19 @@ export async function getTeacherMetrics(
       })
       .from(teacherSubjects)
       .innerJoin(subjects, eq(teacherSubjects.subjectId, subjects.id))
-      .where(
-        and(
-          eq(teacherSubjects.teacherId, teacherId),
-          eq(teacherSubjects.schoolId, schoolId)
-        )
-      ),
+      .where(and(inArray(teacherSubjects.teacherId, teacherIds), eq(teacherSubjects.schoolId, schoolId))),
   ]);
+}
+
+type MetricRows = Awaited<ReturnType<typeof loadMetricRows>>;
+
+function buildTeacherMetrics(
+  teacher: { id: string; name: string; email: string },
+  [allAssignments, allSlots, allQualifications]: MetricRows,
+): TeacherMetrics {
+  const assignments = allAssignments.filter((a) => a.teacherId === teacher.id);
+  const availabilitySlots = allSlots.filter((a) => a.teacherId === teacher.id);
+  const qualifications = allQualifications.filter((q) => q.teacherId === teacher.id);
 
   const totalWeeklyHours = assignments.reduce((sum, a) => sum + (a.weeklyHours || 0), 0);
   const uniqueClasses = new Set(assignments.map(a => a.classId)).size;
@@ -173,16 +153,16 @@ export async function getTeacherMetrics(
 
   // Calculate Capacity
   const availableHours = totalAvailabilityHours - totalWeeklyHours;
-  const utilizationPercentage = totalAvailabilityHours > 0 
+  const utilizationPercentage = totalAvailabilityHours > 0
     ? Math.round((totalWeeklyHours / totalAvailabilityHours) * 100)
     : 0;
   const isOverallocated = totalWeeklyHours > totalAvailabilityHours;
   const canAcceptMoreHours = Math.max(0, availableHours);
 
   return {
-    teacherId: teacher[0].id,
-    teacherName: teacher[0].name,
-    teacherEmail: teacher[0].email,
+    teacherId: teacher.id,
+    teacherName: teacher.name,
+    teacherEmail: teacher.email,
     workload: {
       totalWeeklyHours,
       assignmentCount: assignments.length,
@@ -220,6 +200,38 @@ export async function getTeacherMetrics(
       })),
     },
   };
+}
+
+/**
+ * Get comprehensive teacher metrics including workload, availability, and capacity
+ */
+export async function getTeacherMetrics(
+  teacherId: string,
+  schoolId: string
+): Promise<TeacherMetrics> {
+  const { db } = await import('@/lib/db');
+  const [teacher] = await db
+    .select({ id: users.id, name: users.name, email: users.email })
+    .from(users)
+    .where(and(eq(users.id, teacherId), eq(users.schoolId, schoolId)))
+    .limit(1);
+  if (!teacher) {
+    throw new Error('Teacher not found');
+  }
+  return buildTeacherMetrics(teacher, await loadMetricRows(schoolId, [teacherId]));
+}
+
+/** Metrics for every active teacher of a school: 4 queries whatever the number of teachers. */
+export async function getSchoolTeacherMetrics(schoolId: string): Promise<TeacherMetrics[]> {
+  const { db } = await import('@/lib/db');
+  const teachers = await db
+    .select({ id: users.id, name: users.name, email: users.email })
+    .from(users)
+    .where(and(eq(users.schoolId, schoolId), activeTeacher()))
+    .orderBy(users.name);
+  if (teachers.length === 0) return [];
+  const rows = await loadMetricRows(schoolId, teachers.map((t) => t.id));
+  return teachers.map((teacher) => buildTeacherMetrics(teacher, rows));
 }
 
 /**

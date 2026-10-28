@@ -4,11 +4,13 @@ import { eq } from 'drizzle-orm';
 import { academicYears, grades, posts, submissions, teacherClasses, terms } from '@/db/schema';
 
 import { seedDemo } from './demo-seed';
-import { getCorrection, gradeSubmission, listTermWork, parseGrade, syncWorkGrades } from './grading';
+import { fromTwenty, getCorrection, gradeSubmission, listTermWork, parseGrade, syncWorkGrades, toTwenty } from './grading';
+import { schoolDayStart } from './teacher-home-math';
 import { getTeacherHome } from './teacher-home';
 import { testDb } from './test-db';
 
 const DAY = '2026-10-27';
+const NOW = new Date(`${DAY}T10:00:00Z`);
 const base = { teacherId: 'demo-aissatou', schoolId: 'demo-dakar', comment: '' };
 
 test('grades accept a French decimal comma and quarter points within the scale', () => {
@@ -24,7 +26,7 @@ test('grades accept a French decimal comma and quarter points within the scale',
 test('the term list counts copies by state for the taught courses only', async () => {
   const db = await testDb();
   await seedDemo(db);
-  const { works, context } = await listTermWork(db, 'demo-aissatou', 'demo-dakar', { day: DAY });
+  const { works, context } = await listTermWork(db, 'demo-aissatou', 'demo-dakar', { now: NOW });
   expect(context.term?.id).toBe('demo-t1');
   const dm3 = works.find((w) => w.id === 'demo-dm3');
   expect(dm3).toMatchObject({ toGrade: 22, missing: 6, graded: 0, total: 28 });
@@ -32,7 +34,7 @@ test('the term list counts copies by state for the taught courses only', async (
 
   // Without the course assignment, the work disappears even for its author.
   await db.delete(teacherClasses).where(eq(teacherClasses.classId, 'demo-4a'));
-  const after = await listTermWork(db, 'demo-aissatou', 'demo-dakar', { day: DAY });
+  const after = await listTermWork(db, 'demo-aissatou', 'demo-dakar', { now: NOW });
   expect(after.works.map((w) => w.id)).toEqual(['demo-pyth']);
 });
 
@@ -88,7 +90,7 @@ test('work due in a holiday gap counts in the next trimestre, on the list and in
   await db.insert(terms).values({ ...t1, id: 'demo-t2', name: 'Trimestre 2', position: 2, startsOn: '2026-12-07', endsOn: '2027-03-14' });
   await db.update(posts).set({ dueAt: new Date('2026-12-02T12:00:00Z') }).where(eq(posts.id, 'demo-dm3')); // T1 ends 29 Nov
 
-  const ids = async (termId: string) => (await listTermWork(db, 'demo-aissatou', 'demo-dakar', { day: DAY, termId })).works.map((w) => w.id);
+  const ids = async (termId: string) => (await listTermWork(db, 'demo-aissatou', 'demo-dakar', { now: NOW, termId })).works.map((w) => w.id);
   expect(await ids('demo-t1')).not.toContain('demo-dm3');
   expect(await ids('demo-t2')).toContain('demo-dm3');
   expect(await gradeSubmission(db, { ...base, submissionId: 'sub-dm3-0', grade: '12' })).toEqual({ ok: true });
@@ -116,9 +118,38 @@ test('the home and the Notes list count the same copies, for every teacher of th
   await db.insert(teacherClasses).values({ ...assignment, id: 'co-teacher', teacherId: 'co-teacher' });
   for (const teacher of ['demo-aissatou', 'co-teacher']) {
     const home = await getTeacherHome(db, teacher, 'demo-dakar', new Date(`${DAY}T10:00:00Z`));
-    const { works } = await listTermWork(db, teacher, 'demo-dakar', { day: DAY });
+    const { works } = await listTermWork(db, teacher, 'demo-dakar', { now: NOW });
     const homeRow = home.corrections.find((row) => row.id === 'demo-dm3');
     expect(homeRow?.waiting).toBe(works.find((w) => w.id === 'demo-dm3')?.toGrade);
     expect(homeRow?.waiting).toBe(22); // 6 copies never handed in are not waiting
   }
+});
+
+test('every quarter point comes back unchanged on any scale', () => {
+  for (const max of [10, 20, 30, 40, 60, 100]) {
+    for (let q = 0; q <= max * 4; q++) {
+      const typed = q / 4;
+      expect(fromTwenty(toTwenty(typed, max), max)).toBe(typed);
+    }
+  }
+});
+
+test('a missing copy can get a grade and stays marked as not handed in', async () => {
+  const db = await testDb();
+  await seedDemo(db);
+  // sub-dm3-27 was never handed in (status "assigned").
+  expect(await gradeSubmission(db, { ...base, submissionId: 'sub-dm3-27', grade: '0' })).toEqual({ ok: true });
+  const [copy] = await db.select().from(submissions).where(eq(submissions.id, 'sub-dm3-27'));
+  expect(copy.status).toBe('assigned');
+  const dm3 = (await listTermWork(db, 'demo-aissatou', 'demo-dakar', { now: NOW })).works.find((w) => w.id === 'demo-dm3');
+  expect(dm3).toMatchObject({ graded: 1, missing: 5, toGrade: 22, total: 28 });
+  const home = await getTeacherHome(db, 'demo-aissatou', 'demo-dakar', NOW);
+  expect(home.corrections.find((row) => row.id === 'demo-dm3')?.graded).toBe(1);
+});
+
+test('day starts follow the school time zone', () => {
+  const utcMidnight = Date.parse('2026-10-27T00:00:00Z') / 1000;
+  expect(schoolDayStart('2026-10-27', 'Africa/Dakar')).toBe(utcMidnight);
+  expect(schoolDayStart('2026-10-27', 'Africa/Lagos')).toBe(utcMidnight - 3600);
+  expect(schoolDayStart('2026-10-27', 'America/Martinique')).toBe(utcMidnight + 4 * 3600);
 });

@@ -233,10 +233,12 @@ export async function getTeacherHome(
       format: posts.assignmentFormat,
       status: submissions.status,
       count: sql<number>`count(*)`.mapWith(Number),
+      gradedCount: sql<number>`count(${grades.id})`.mapWith(Number),
     })
     .from(posts)
     .innerJoin(classes, and(eq(posts.classId, classes.id), eq(classes.schoolId, schoolId)))
     .innerJoin(submissions, and(eq(submissions.postId, posts.id), eq(submissions.schoolId, schoolId)))
+    .leftJoin(grades, and(eq(grades.submissionId, submissions.id), eq(grades.schoolId, schoolId)))
     .where(and(
       eq(posts.schoolId, schoolId),
       eq(posts.type, 'assignment'),
@@ -258,7 +260,7 @@ export async function getTeacherHome(
     // Same rule as the Notes list: only handed-in copies wait for grading; assigned work is neither.
     const waiting = isWaiting(row.status);
     if (waiting) correction.waiting += row.count;
-    if (row.status === 'returned') correction.graded += row.count;
+    correction.graded += row.gradedCount; // same count as the Notes list, "non rendu" grades included
     if (row.status === 'late') correction.late += row.count;
     if (row.format === 'paper') {
       if (waiting) copiesPaper += row.count;

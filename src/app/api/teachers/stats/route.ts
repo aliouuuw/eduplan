@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth, isSchoolAdmin, isSuperAdmin } from '@/lib/auth';
-import { getTeacherMetrics } from '@/lib/teacher-utils';
-import { db } from '@/lib/db';
-import { users } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
-import { activeTeacher } from '@/lib/teacher-scope';
+import { getSchoolTeacherMetrics } from '@/lib/teacher-utils';
 import { schoolScopeFor } from '@/lib/school-scope';
 
 /**
  * GET /api/teachers/stats?schoolId=xxx
  * Get bulk teacher statistics for all teachers in a school
- * Optimized to avoid N+1 queries on listing pages
+ * One batched load for the whole school (4 queries), not one load per teacher
  */
 export async function GET(request: NextRequest) {
   try {
@@ -32,27 +28,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Get all teachers for the school
-    const teachers = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(and(eq(users.schoolId, schoolId), activeTeacher()))
-      .orderBy(users.name);
-
-    // Fetch metrics for all teachers
-    const teacherStats = await Promise.all(
-      teachers.map(async (teacher) => {
-        try {
-          return await getTeacherMetrics(teacher.id, schoolId);
-        } catch (error) {
-          console.error(`Error fetching metrics for teacher ${teacher.id}:`, error);
-          return null;
-        }
-      })
-    );
-
-    // Filter out any failed fetches
-    const validStats = teacherStats.filter((stat) => stat !== null);
+    const validStats = await getSchoolTeacherMetrics(schoolId);
 
     return NextResponse.json({ teachers: validStats }, { status: 200 });
   } catch (error: any) {

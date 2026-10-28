@@ -65,6 +65,7 @@ Context: `PRODUCT.md` (who and why), `MVP_REWORK_PLAN.md` (scope, IA, flows, ord
 | D45 | Multi-school identity | One login identity with school memberships (school + role). Required before a second school is onboarded, not before a one-school pilot | 10-28 |
 | D46 | Which trimestre a grade belongs to | The trimestre that contains the work's due date, else its publication date. A closed trimestre or a past year refuses new grades. Grades are stored /20; a work on another scale is converted. Each work carries its own coefficient (`posts.coefficient`, default 1) | 10-28 |
 | D47 | Work dated between trimestres (refines D46) | Each trimestre owns the days after the previous one ends, up to its own end; the last has no end. A work due in a holiday gap counts in the next trimestre. A trimestre left open in a past year is read-only too. When a work's date or coefficient changes, its grades follow (`syncWorkGrades`) | 10-28 |
+| D48 | Grade on a copy never handed in | Allowed (for example 0 for "non rendu"). The copy keeps status "not handed in"; it counts as graded, not missing. `syncWorkGrades` stays and is wired into the work edit path in the next slice | 10-28 |
 
 ## Open
 

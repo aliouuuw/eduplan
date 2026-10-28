@@ -29,7 +29,8 @@ export async function createYearAction(input: z.input<typeof yearInput>): Promis
 export async function setCurrentYearAction(yearId: string): Promise<ActionResult> {
   const viewer = await schoolViewerFor('admin');
   if (!viewer) return fail(NO_ACCESS);
-  if (!(await setCurrentYear(db, viewer.schoolId, id.parse(yearId)))) return fail('Année introuvable.');
+  const parsed = id.safeParse(yearId);
+  if (!parsed.success || !(await setCurrentYear(db, viewer.schoolId, parsed.data))) return fail('Année introuvable.');
   revalidatePath('/dashboard', 'layout'); // every role's home reads the current year
   return ok(undefined);
 }
@@ -37,7 +38,8 @@ export async function setCurrentYearAction(yearId: string): Promise<ActionResult
 export async function setTermClosedAction(termId: string, closed: boolean): Promise<ActionResult> {
   const viewer = await schoolViewerFor('admin');
   if (!viewer) return fail(NO_ACCESS);
-  if (!(await setTermClosed(db, viewer.schoolId, id.parse(termId), z.boolean().parse(closed)))) return fail('Trimestre introuvable.');
+  const parsed = z.object({ termId: id, closed: z.boolean() }).safeParse({ termId, closed });
+  if (!parsed.success || !(await setTermClosed(db, viewer.schoolId, parsed.data.termId, parsed.data.closed))) return fail('Trimestre introuvable.');
   revalidatePath('/dashboard', 'layout');
   return ok(undefined);
 }

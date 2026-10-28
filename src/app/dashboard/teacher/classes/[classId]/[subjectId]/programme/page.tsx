@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { cache } from 'react';
 
 import { ClassShell } from '@/components/teacher/class-shell';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
@@ -9,10 +10,13 @@ import { classLabel } from '@/lib/fr';
 import { requireSchoolRole } from '@/lib/session';
 import { cn } from '@/lib/utils';
 
+// Metadata and page share one load per request.
+const loadProgramme = cache(getClassProgramme);
+
 export async function generateMetadata({ params }: { params: Promise<{ classId: string; subjectId: string }> }) {
   const { classId, subjectId } = await params;
   const viewer = await requireSchoolRole('teacher');
-  const programme = await getClassProgramme(db, viewer.userId, viewer.schoolId, classId, subjectId);
+  const programme = await loadProgramme(db, viewer.userId, viewer.schoolId, classId, subjectId);
   if (!programme) return { title: 'Programme · EduPlan' };
   return { title: `Programme · ${classLabel(programme.className)} · ${programme.subjectName}` };
 }
@@ -20,8 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ classId: 
 export default async function ClassProgrammePage({ params }: { params: Promise<{ classId: string; subjectId: string }> }) {
   const { classId, subjectId } = await params;
   const viewer = await requireSchoolRole('teacher');
-  const now = new Date();
-  const programme = await getClassProgramme(db, viewer.userId, viewer.schoolId, classId, subjectId, now);
+  const programme = await loadProgramme(db, viewer.userId, viewer.schoolId, classId, subjectId);
   if (!programme) notFound();
 
   const current = programme.chapters.find((chapter) => chapter.status === 'current');

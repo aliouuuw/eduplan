@@ -28,7 +28,6 @@ import {
 } from './teacher-home-math';
 import { getAcademicContext } from './academic-context';
 import { termWeek } from './teacher-home';
-import { teacherTeachesClass } from './teacher-classes';
 
 export type ProgrammeNotion = {
   id: string;
@@ -91,12 +90,12 @@ export async function getClassProgramme(
   subjectId: string,
   now = new Date(),
 ): Promise<ClassProgramme | null> {
-  if (!(await teacherTeachesClass(db, teacherId, schoolId, classId, subjectId))) return null;
-
+  // Access check and subject name in one query: the assignment, its class and its subject all in this school.
   const [assignment] = await db
     .select({ subjectId: teacherClasses.subjectId, subjectName: subjects.name })
     .from(teacherClasses)
-    .innerJoin(subjects, eq(teacherClasses.subjectId, subjects.id))
+    .innerJoin(classes, and(eq(classes.id, teacherClasses.classId), eq(classes.schoolId, schoolId)))
+    .innerJoin(subjects, and(eq(subjects.id, teacherClasses.subjectId), eq(subjects.schoolId, schoolId)))
     .where(
       and(
         eq(teacherClasses.teacherId, teacherId),

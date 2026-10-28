@@ -3,11 +3,12 @@
 import 'server-only';
 import { and, asc, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 
-import { academicYears, classes, grades, posts, subjects, submissions, terms, users } from '@/db/schema';
+import { academicYears, classes, grades, posts, schools, subjects, submissions, terms, users } from '@/db/schema';
 import type { Database } from '@/lib/db';
 import { generateId } from '@/lib/utils';
 
 import { getAcademicContext } from './academic-context';
+import { DEFAULT_SCHOOL_TIME_ZONE, schoolDate, schoolDayStart } from './teacher-home-math';
 import { teachesCourse, teacherTeachesClass } from './teacher-classes';
 
 type Term = typeof terms.$inferSelect;
@@ -15,7 +16,8 @@ type CopyStatus = (typeof submissions.$inferSelect)['status'];
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 export const toTwenty = (value: number, max: number) => round2((value * 20) / max);
-export const fromTwenty = (value: number, max: number) => round2((value * max) / 20);
+// Snap to the quarter point: a grade stored /20 at 2 decimals must come back exactly as it was typed.
+export const fromTwenty = (value: number, max: number) => Math.round(((value * max) / 20) * 4) / 4;
 
 /** A handed-in copy (on time or late) that still waits for its grade. The home and the Notes list share this rule. */
 export const isWaiting = (status: CopyStatus | null) => status === 'submitted' || status === 'late';
@@ -29,7 +31,7 @@ export function parseGrade(text: string, max: number): number | null {
 }
 
 /**
- * D46: each trimestre owns the days after the previous one ends, up to its own end; the last one
+ * D47: each trimestre owns the days after the previous one ends, up to its own end; the last one
  * has no end. A work dated in a holiday gap therefore counts in the next trimestre, and every date
  * of the year lands in exactly one. `rows` must be in position order.
  */
@@ -37,10 +39,15 @@ export function termForDay(rows: Term[], day: string): Term | null {
   return rows.find((term) => day <= term.endsOn) ?? rows.at(-1) ?? null;
 }
 
-// ponytail: day boundaries in UTC, which is Dakar time; a school in another time zone needs schools.time_zone here.
-const dayStart = (day: string) => new Date(`${day}T00:00:00Z`);
-const nextDay = (day: string) => Math.floor(dayStart(day).getTime() / 1000) + 86_400;
-const workDay = (post: { dueAt: Date | null; createdAt: Date }) => (post.dueAt ?? post.createdAt).toISOString().slice(0, 10);
+// Days follow the school's own clock (schools.time_zone), like the home.
+const nextDay = (day: string, timeZone: string) =>
+  schoolDayStart(new Date(Date.parse(`${day}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10), timeZone);
+const workDay = (post: { dueAt: Date | null; createdAt: Date }, timeZone: string) => schoolDate(post.dueAt ?? post.createdAt, timeZone);
+
+async function schoolTimeZone(db: Database, schoolId: string) {
+  const [row] = await db.select({ timeZone: schools.timeZone }).from(schools).where(eq(schools.id, schoolId)).limit(1);
+  return row?.timeZone || DEFAULT_SCHOOL_TIME_ZONE;
+}
 const workDate = sql`coalesce(${posts.dueAt}, ${posts.createdAt})`;
 
 async function yearTerms(db: Database, schoolId: string, yearId: string | null) {
@@ -71,8 +78,9 @@ export type TermWork = {
 };
 
 /** The teacher's graded work in one trimestre, with copy counts from SQL. */
-export async function listTermWork(db: Database, teacherId: string, schoolId: string, { day, termId }: { day: string; termId?: string | null }) {
-  const context = await getAcademicContext(db, schoolId, { day, termId });
+export async function listTermWork(db: Database, teacherId: string, schoolId: string, { now = new Date(), termId }: { now?: Date; termId?: string | null }) {
+  const timeZone = await schoolTimeZone(db, schoolId);
+  const context = await getAcademicContext(db, schoolId, { day: schoolDate(now, timeZone), termId });
   const { year, term, terms: rows } = context;
   if (!year || !term) return { context, works: [] as TermWork[] };
 
@@ -93,16 +101,18 @@ export async function listTermWork(db: Database, teacherId: string, schoolId: st
       createdAt: posts.createdAt,
       status: submissions.status,
       count: sql<number>`count(${submissions.id})`.mapWith(Number),
+      gradedCount: sql<number>`count(${grades.id})`.mapWith(Number),
     })
     .from(posts)
     .innerJoin(classes, and(eq(classes.id, posts.classId), eq(classes.schoolId, schoolId), eq(classes.academicYearId, year.id)))
     .innerJoin(subjects, and(eq(subjects.id, posts.subjectId), eq(subjects.schoolId, schoolId)))
     .leftJoin(submissions, and(eq(submissions.postId, posts.id), eq(submissions.schoolId, schoolId)))
+    .leftJoin(grades, and(eq(grades.submissionId, submissions.id), eq(grades.schoolId, schoolId)))
     .where(and(
       eq(posts.schoolId, schoolId),
       eq(posts.type, 'assignment'),
-      previous ? gte(workDate, nextDay(previous.endsOn)) : undefined,
-      last ? undefined : lt(workDate, nextDay(term.endsOn)),
+      previous ? gte(workDate, nextDay(previous.endsOn, timeZone)) : undefined,
+      last ? undefined : lt(workDate, nextDay(term.endsOn, timeZone)),
       teachesCourse(db, teacherId, schoolId, posts.classId, posts.subjectId),
     ))
     .groupBy(posts.id, submissions.status)
@@ -112,10 +122,11 @@ export async function listTermWork(db: Database, teacherId: string, schoolId: st
   for (const row of rowsSql) {
     const work = works.get(row.id) ?? {
       id: row.id, title: row.title, classId: row.classId, className: row.className, subjectName: row.subjectName,
-      format: row.format, coefficient: row.coefficient, day: workDay(row), toGrade: 0, graded: 0, missing: 0, total: 0,
+      format: row.format, coefficient: row.coefficient, day: workDay(row, timeZone), toGrade: 0, graded: 0, missing: 0, total: 0,
     };
-    if (row.status === 'returned') work.graded += row.count;
-    else if (row.status === 'assigned') work.missing += row.count;
+    // A copy never handed in can still get a grade (a 0 for "non rendu"): it counts as graded, not missing.
+    work.graded += row.gradedCount;
+    if (row.status === 'assigned') work.missing += row.count - row.gradedCount;
     else if (isWaiting(row.status)) work.toGrade += row.count;
     work.total += row.count;
     works.set(row.id, work);
@@ -136,7 +147,7 @@ export type Copy = {
 
 // The work, its class, subject, and the class's year in one query: the lock needs only isCurrent from the year.
 const workFields = {
-  post: posts, className: classes.name, subjectName: subjects.name,
+  post: posts, className: classes.name, subjectName: subjects.name, timeZone: schools.timeZone,
   yearId: classes.academicYearId, yearName: academicYears.name, yearCurrent: academicYears.isCurrent,
 };
 
@@ -146,11 +157,12 @@ export async function getCorrection(db: Database, teacherId: string, schoolId: s
     .innerJoin(classes, and(eq(classes.id, posts.classId), eq(classes.schoolId, schoolId)))
     .innerJoin(subjects, and(eq(subjects.id, posts.subjectId), eq(subjects.schoolId, schoolId)))
     .leftJoin(academicYears, and(eq(academicYears.id, classes.academicYearId), eq(academicYears.schoolId, schoolId)))
+    .innerJoin(schools, eq(schools.id, posts.schoolId))
     .where(and(eq(posts.id, postId), eq(posts.schoolId, schoolId), eq(posts.type, 'assignment')))
     .limit(1);
   if (!row || !(await teacherTeachesClass(db, teacherId, schoolId, row.post.classId, row.post.subjectId))) return null;
   const max = row.post.maxGrade ?? 20;
-  const { term, lock } = workContext(await yearTerms(db, schoolId, row.yearId), workDay(row.post), row.yearCurrent);
+  const { term, lock } = workContext(await yearTerms(db, schoolId, row.yearId), workDay(row.post, row.timeZone), row.yearCurrent);
   const copyRows = await db
     .select({
       id: submissions.id,
@@ -182,17 +194,18 @@ export async function gradeSubmission(
   { teacherId, schoolId, submissionId, grade, comment, now = new Date() }:
   { teacherId: string; schoolId: string; submissionId: string; grade: string; comment: string; now?: Date },
 ): Promise<{ ok: true } | { ok: false; reason: GradeFailure }> {
-  const [row] = await db.select({ ...workFields, studentId: submissions.studentId }).from(posts)
+  const [row] = await db.select({ ...workFields, studentId: submissions.studentId, copyStatus: submissions.status }).from(posts)
     .innerJoin(classes, and(eq(classes.id, posts.classId), eq(classes.schoolId, schoolId)))
     .innerJoin(subjects, and(eq(subjects.id, posts.subjectId), eq(subjects.schoolId, schoolId)))
     .leftJoin(academicYears, and(eq(academicYears.id, classes.academicYearId), eq(academicYears.schoolId, schoolId)))
+    .innerJoin(schools, eq(schools.id, posts.schoolId))
     .innerJoin(submissions, and(eq(submissions.postId, posts.id), eq(submissions.schoolId, schoolId)))
     .where(and(eq(submissions.id, submissionId), eq(posts.schoolId, schoolId), eq(posts.type, 'assignment')))
     .limit(1);
   if (!row || !(await teacherTeachesClass(db, teacherId, schoolId, row.post.classId, row.post.subjectId))) {
     return { ok: false, reason: 'not_found' };
   }
-  const { term, lock } = workContext(await yearTerms(db, schoolId, row.yearId), workDay(row.post), row.yearCurrent);
+  const { term, lock } = workContext(await yearTerms(db, schoolId, row.yearId), workDay(row.post, row.timeZone), row.yearCurrent);
   if (lock || !term) return { ok: false, reason: lock ?? 'no_term' };
   const max = row.post.maxGrade ?? 20;
   const value = parseGrade(grade, max);
@@ -204,7 +217,8 @@ export async function gradeSubmission(
     db.insert(grades)
       .values({ id: generateId(), schoolId, submissionId, studentId: row.studentId, subjectId: row.post.subjectId, classId: row.post.classId, createdAt: now, ...fields })
       .onConflictDoUpdate({ target: [grades.schoolId, grades.submissionId], targetWhere: sql`${grades.submissionId} is not null`, set: fields }),
-    db.update(submissions).set({ status: 'returned', returnedAt: now, updatedAt: now }).where(eq(submissions.id, submissionId)),
+    // A missing copy keeps "assigned": the grade (often 0) never makes it look handed in.
+    db.update(submissions).set({ status: row.copyStatus === 'assigned' ? 'assigned' : 'returned', returnedAt: now, updatedAt: now }).where(eq(submissions.id, submissionId)),
   ]);
   return { ok: true };
 }
@@ -218,9 +232,10 @@ export async function syncWorkGrades(db: Database, schoolId: string, postId: str
     .innerJoin(classes, and(eq(classes.id, posts.classId), eq(classes.schoolId, schoolId)))
     .innerJoin(subjects, and(eq(subjects.id, posts.subjectId), eq(subjects.schoolId, schoolId)))
     .leftJoin(academicYears, and(eq(academicYears.id, classes.academicYearId), eq(academicYears.schoolId, schoolId)))
+    .innerJoin(schools, eq(schools.id, posts.schoolId))
     .where(and(eq(posts.id, postId), eq(posts.schoolId, schoolId))).limit(1);
   if (!row) return;
-  const term = termForDay(await yearTerms(db, schoolId, row.yearId), workDay(row.post));
+  const term = termForDay(await yearTerms(db, schoolId, row.yearId), workDay(row.post, row.timeZone));
   if (!term) return;
   await db.update(grades).set({ coefficient: row.post.coefficient, termId: term.id, updatedAt: now }).where(and(
     eq(grades.schoolId, schoolId),

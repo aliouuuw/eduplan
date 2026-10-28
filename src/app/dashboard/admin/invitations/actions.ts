@@ -32,7 +32,9 @@ export async function createInvitationAction(input: z.input<typeof createSchema>
 export async function deleteInvitationAction(id: string): Promise<ActionResult> {
   const viewer = await schoolViewerFor('admin');
   if (!viewer) return fail(NO_ACCESS);
-  const result = await deleteInvitation(db, { schoolId: viewer.schoolId, id: z.string().min(1).parse(id) });
+  const parsed = z.string().min(1).safeParse(id);
+  if (!parsed.success) return fail('Invitation introuvable.');
+  const result = await deleteInvitation(db, { schoolId: viewer.schoolId, id: parsed.data });
   if (!result.ok) {
     return fail(result.reason === 'already_used' ? 'Cette invitation a déjà été acceptée.' : 'Invitation introuvable.');
   }

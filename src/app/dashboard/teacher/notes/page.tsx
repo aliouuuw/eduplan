@@ -7,7 +7,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ListRow, ListRows } from '@/components/ui/list-row';
 import { listTermWork } from '@/lib/data/grading';
-import { schoolDate } from '@/lib/data/teacher-home-math';
 import { db } from '@/lib/db';
 import { classLabel, formatDay } from '@/lib/fr';
 import { requireSchoolRole } from '@/lib/session';
@@ -21,7 +20,6 @@ export default async function TeacherNotesPage({ searchParams }: { searchParams:
   const viewer = await requireSchoolRole('teacher');
   const { term: termParam } = await searchParams;
   const { context, works } = await listTermWork(db, viewer.userId, viewer.schoolId, {
-    day: schoolDate(new Date()),
     termId: typeof termParam === 'string' ? termParam : null,
   });
   const { year, term, terms, editable } = context;
@@ -84,7 +82,7 @@ export default async function TeacherNotesPage({ searchParams }: { searchParams:
                   <ListRow
                     title={work.title}
                     meta={`${classLabel(work.className)} · ${work.subjectName} · coef. ${work.coefficient} · ${formatDay(new Date(work.day))}`}
-                    trailing={work.toGrade > 0 ? `${work.toGrade} à corriger` : 'Tout corrigé'}
+                    trailing={work.toGrade > 0 ? `${work.toGrade} à corriger` : work.graded > 0 ? 'Tout corrigé' : 'Aucune copie rendue'}
                     trailingMeta={`${work.graded} corrigée${work.graded > 1 ? 's' : ''} sur ${work.total}`}
                   />
                 </Link>
