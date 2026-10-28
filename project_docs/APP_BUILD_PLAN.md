@@ -15,6 +15,13 @@ Status: plan, 2026-10-27. Starts after the design system (D32) landed in code. S
 
 ## 2. Phases
 
+Data safety gate (2026-10-27): migration `0011` adds duplicate protection and read indexes.
+Teacher-home scope, aggregation, PP follow-up, and year filters have regression tests.
+Remaining multi-school and usability gates: `SCALABILITY_AND_USABILITY.md`.
+Do not treat those gates as shipped features.
+Agent pickup, verification state, browser blocker, and continuation prompt:
+`HANDOVER_DATA_SAFETY.md`.
+
 Each phase ends with every check green and a screenshot of the new screen next to its mock.
 
 | # | Phase | Contents | MVP step | Estimate |

@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, count, eq, inArray } from 'drizzle-orm';
 
 import {
   academicYears,
@@ -112,15 +112,16 @@ export async function getClassProgramme(
   const [school] = await db.select({ timeZone: schools.timeZone }).from(schools).where(eq(schools.id, schoolId)).limit(1);
   const timeZone = school?.timeZone || DEFAULT_SCHOOL_TIME_ZONE;
   const [classRow] = await db.select().from(classes).where(and(eq(classes.id, classId), eq(classes.schoolId, schoolId)));
-  const enrollments = await db
-    .select()
+  if (!classRow) return null;
+  const [enrollmentCount] = await db
+    .select({ count: count() })
     .from(studentEnrollments)
     .where(and(eq(studentEnrollments.classId, classId), eq(studentEnrollments.schoolId, schoolId), eq(studentEnrollments.isActive, true)));
 
   const [year] = await db
     .select()
     .from(academicYears)
-    .where(and(eq(academicYears.schoolId, schoolId), eq(academicYears.isCurrent, true)))
+    .where(and(eq(academicYears.schoolId, schoolId), eq(academicYears.name, classRow.academicYear)))
     .limit(1);
   const termRows = year ? await db.select().from(terms).where(and(eq(terms.schoolId, schoolId), eq(terms.academicYearId, year.id))) : [];
   const day = schoolDate(now, timeZone);
@@ -142,7 +143,7 @@ export async function getClassProgramme(
         .limit(1)
     : [undefined];
   const chapterRows = programme
-    ? await db.select().from(chapters).where(eq(chapters.programmeId, programme.id)).orderBy(asc(chapters.position))
+    ? await db.select().from(chapters).where(and(eq(chapters.schoolId, schoolId), eq(chapters.programmeId, programme.id))).orderBy(asc(chapters.position))
     : [];
   const plans = await db
     .select()
@@ -170,6 +171,8 @@ export async function getClassProgramme(
             eq(timetables.subjectId, subjectId),
             eq(timetables.teacherId, teacherId),
             eq(timetables.schoolId, schoolId),
+            eq(timetables.academicYear, classRow.academicYear),
+            eq(timetables.status, 'active'),
             inArray(timetables.timeSlotId, slotIds),
           ),
         )
@@ -193,7 +196,7 @@ export async function getClassProgramme(
 
   const chapterIds = chapterRows.map((row) => row.id);
   const notionRows = chapterIds.length
-    ? await db.select().from(notions).where(inArray(notions.chapterId, chapterIds)).orderBy(asc(notions.position))
+    ? await db.select().from(notions).where(and(eq(notions.schoolId, schoolId), inArray(notions.chapterId, chapterIds))).orderBy(asc(notions.position))
     : [];
   const notionsByChapter = new Map<string, typeof notionRows>();
   for (const notion of notionRows) {
@@ -272,7 +275,7 @@ export async function getClassProgramme(
     className: classRow?.name ?? classId,
     subjectId: assignment.subjectId,
     subjectName: assignment.subjectName,
-    studentCount: enrollments.length,
+    studentCount: enrollmentCount.count,
     roomLabel,
     termName: term?.name ?? null,
     week,

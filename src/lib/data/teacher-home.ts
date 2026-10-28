@@ -1,5 +1,6 @@
 // Teacher home numbers for the Studio screen. Reads the teaching tables only.
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import 'server-only';
+import { and, eq, exists, inArray, isNull, or, sql } from 'drizzle-orm';
 
 import {
   academicYears,
@@ -26,7 +27,6 @@ import type { Database } from '@/lib/db';
 
 import {
   DEFAULT_SCHOOL_TIME_ZONE,
-  cumulativeGradesByWeek,
   expectedGradeEntriesAtWeek,
   expectedNotionsAtWeek,
   schoolClockHm,
@@ -127,7 +127,7 @@ export async function getTeacherHome(
     .from(academicYears)
     .where(and(eq(academicYears.schoolId, schoolId), eq(academicYears.isCurrent, true)))
     .limit(1);
-  const links = await db
+  const links = year ? await db
     .select()
     .from(teacherClasses)
     .innerJoin(classes, eq(teacherClasses.classId, classes.id))
@@ -135,12 +135,17 @@ export async function getTeacherHome(
       and(
         eq(teacherClasses.teacherId, teacherId),
         eq(teacherClasses.schoolId, schoolId),
-        ...(year ? [eq(classes.academicYear, year.name)] : []),
+        eq(classes.schoolId, schoolId),
+        eq(classes.academicYear, year.name),
       ),
-    );
+    ) : [];
   const assignments = links.map((row) => row.teacher_classes);
-  const classIds = [...new Set(assignments.map((row) => row.classId))];
-  const subjectIds = [...new Set(assignments.map((row) => row.subjectId))];
+  const headClasses = year ? await db.select().from(classes).where(and(
+    eq(classes.schoolId, schoolId),
+    eq(classes.academicYear, year.name),
+    eq(classes.headTeacherId, teacherId),
+  )) : [];
+  const classIds = [...new Set([...assignments.map((row) => row.classId), ...headClasses.map((row) => row.id)])];
   const taught = new Set(assignments.map((row) => `${row.classId}:${row.subjectId}`));
 
   const termRows = year
@@ -185,9 +190,9 @@ export async function getTeacherHome(
     slots: [],
     corrections: [],
   };
-  if (classIds.length === 0) return empty;
+  if (!year || classIds.length === 0) return empty;
 
-  const classRows = await db.select().from(classes).where(inArray(classes.id, classIds));
+  const classRows = await db.select().from(classes).where(and(eq(classes.schoolId, schoolId), inArray(classes.id, classIds)));
   const className = new Map(classRows.map((row) => [row.id, row.name]));
   const plans = (await db
     .select()
@@ -200,9 +205,9 @@ export async function getTeacherHome(
       ),
     )).filter((plan) => taught.has(`${plan.classId}:${plan.subjectId}`));
   const chapterIds = plans.map((plan) => plan.chapterId);
-  const chapterRows = chapterIds.length ? await db.select().from(chapters).where(inArray(chapters.id, chapterIds)) : [];
+  const chapterRows = chapterIds.length ? await db.select().from(chapters).where(and(eq(chapters.schoolId, schoolId), inArray(chapters.id, chapterIds))) : [];
   const chapterTitle = new Map(chapterRows.map((row) => [row.id, row.title]));
-  const notionRows = chapterIds.length ? await db.select().from(notions).where(inArray(notions.chapterId, chapterIds)) : [];
+  const notionRows = chapterIds.length ? await db.select().from(notions).where(and(eq(notions.schoolId, schoolId), inArray(notions.chapterId, chapterIds))) : [];
   const coveredRows = await db
     .select()
     .from(notionCoverage)
@@ -224,60 +229,121 @@ export async function getTeacherHome(
     });
   }
 
-  const myPosts = await db
-    .select()
+  // Count on the database: do not transfer every student's copy to render a summary.
+  const copyCounts = await db
+    .select({
+      id: posts.id,
+      title: posts.title,
+      className: classes.name,
+      format: posts.assignmentFormat,
+      status: submissions.status,
+      count: sql<number>`count(*)`.mapWith(Number),
+    })
     .from(posts)
-    .where(and(eq(posts.authorId, teacherId), eq(posts.schoolId, schoolId), eq(posts.type, 'assignment')));
-  const postFormat = new Map(myPosts.map((row) => [row.id, row.assignmentFormat ?? 'homework']));
-  const postIds = myPosts.map((row) => row.id);
-  const copies = postIds.length ? await db.select().from(submissions).where(inArray(submissions.postId, postIds)) : [];
-  const corrections: HomeCorrection[] = [];
-  for (const post of myPosts) {
-    const rows = copies.filter((row) => row.postId === post.id);
-    const waiting = rows.filter((row) => row.status === 'submitted' || row.status === 'late');
-    if (waiting.length === 0) continue;
-    corrections.push({
-      id: post.id,
-      title: post.title,
-      className: className.get(post.classId) ?? post.classId,
-      graded: rows.length - waiting.length,
-      total: rows.length,
-      late: rows.filter((row) => row.status === 'late').length,
-    });
+    .innerJoin(classes, and(eq(posts.classId, classes.id), eq(classes.schoolId, schoolId)))
+    .innerJoin(submissions, and(eq(submissions.postId, posts.id), eq(submissions.schoolId, schoolId)))
+    .where(and(
+      eq(posts.authorId, teacherId),
+      eq(posts.schoolId, schoolId),
+      eq(posts.type, 'assignment'),
+      eq(classes.academicYear, year.name),
+      exists(db.select({ id: teacherClasses.id }).from(teacherClasses).where(and(
+        eq(teacherClasses.schoolId, schoolId),
+        eq(teacherClasses.teacherId, teacherId),
+        eq(teacherClasses.classId, posts.classId),
+        eq(teacherClasses.subjectId, posts.subjectId),
+      ))),
+    ))
+    .groupBy(posts.id, submissions.status)
+    .orderBy(posts.createdAt, posts.id, submissions.status);
+  const correctionMap = new Map<string, HomeCorrection>();
+  let copiesHomework = 0;
+  let copiesPaper = 0;
+  let copiesSubmitted = 0;
+  let copiesLate = 0;
+  for (const row of copyCounts) {
+    const correction = correctionMap.get(row.id) ?? {
+      id: row.id, title: row.title, className: row.className, graded: 0, total: 0, late: 0,
+    };
+    correction.total += row.count;
+    // Assigned work is not graded work.
+    if (row.status === 'returned') correction.graded += row.count;
+    if (row.status === 'late') correction.late += row.count;
+    const waiting = row.status === 'submitted' || row.status === 'late';
+    if (row.format === 'paper') {
+      if (waiting) copiesPaper += row.count;
+    } else {
+      if (waiting) copiesHomework += row.count;
+      if (row.status === 'submitted') copiesSubmitted += row.count;
+      if (row.status === 'late') copiesLate += row.count;
+    }
+    correctionMap.set(row.id, correction);
   }
+  const waitingPostIds = new Set(copyCounts.filter((row) => row.status === 'submitted' || row.status === 'late').map((row) => row.id));
+  const corrections = [...correctionMap.values()].filter((row) => waitingPostIds.has(row.id));
 
-  const gradeRows = term
+  const gradeWeek = term
+    ? sql<number>`min(${weeks}, max(1, cast((${grades.createdAt} - ${Date.parse(`${term.startsOn}T00:00:00Z`) / 1000}) / 604800 as integer) + 1))`.mapWith(Number)
+    : sql<number>`1`;
+  const gradeCounts = term
     ? await db
-        .select()
+        .select({ week: gradeWeek, count: sql<number>`count(*)`.mapWith(Number) })
         .from(grades)
-        .where(and(eq(grades.schoolId, schoolId), eq(grades.termId, term.id), inArray(grades.classId, classIds)))
+        .where(and(
+          eq(grades.schoolId, schoolId),
+          eq(grades.termId, term.id),
+          exists(db.select({ id: teacherClasses.id }).from(teacherClasses).where(and(
+            eq(teacherClasses.schoolId, schoolId),
+            eq(teacherClasses.teacherId, teacherId),
+            eq(teacherClasses.classId, grades.classId),
+            eq(teacherClasses.subjectId, grades.subjectId),
+            inArray(teacherClasses.classId, classIds),
+          ))),
+        ))
+        .groupBy(gradeWeek)
     : [];
-  const gradesByWeek = term
-    ? cumulativeGradesByWeek(gradeRows, term.startsOn, weeks, termWeek)
-    : Array.from({ length: weeks }, () => 0);
+  const weekly = new Map(gradeCounts.map((row) => [row.week, row.count]));
+  let gradesEntered = 0;
+  const gradesByWeek = Array.from({ length: weeks }, (_, index) => {
+    gradesEntered += weekly.get(index + 1) ?? 0;
+    return gradesEntered;
+  });
 
-  const flagRows = subjectIds.length
-    ? await db
-        .select()
-        .from(studentFlags)
-        .where(and(eq(studentFlags.schoolId, schoolId), inArray(studentFlags.subjectId, subjectIds), isNull(studentFlags.dismissedAt)))
-    : [];
-  const flags: HomeFlag[] = [];
-  for (const flag of flagRows) {
-    const [student] = await db.select().from(users).where(eq(users.id, flag.studentId));
-    const [enrollment] = await db
-      .select()
-      .from(studentEnrollments)
-      .where(and(eq(studentEnrollments.studentId, flag.studentId), eq(studentEnrollments.schoolId, schoolId), eq(studentEnrollments.isActive, true)));
-    flags.push({
-      id: flag.id,
-      student: student?.name ?? flag.studentId,
-      className: className.get(enrollment?.classId ?? '') ?? '',
-      reason: flag.reason,
-      source: flag.source,
-      ruleKind: flag.ruleKind,
-    });
-  }
+  // A subject alone is not permission: the student must be in a taught class.
+  // PP follow-up includes every subject, but does not expand the grading scope.
+  const flags: HomeFlag[] = await db
+    .select({
+      id: studentFlags.id,
+      student: users.name,
+      className: sql<string>`group_concat(distinct ${classes.name})`,
+      reason: studentFlags.reason,
+      source: studentFlags.source,
+      ruleKind: studentFlags.ruleKind,
+    })
+    .from(studentFlags)
+    .innerJoin(users, and(eq(users.id, studentFlags.studentId), eq(users.schoolId, schoolId), isNull(users.deletedAt), eq(users.isActive, true)))
+    .innerJoin(studentEnrollments, and(
+      eq(studentEnrollments.studentId, studentFlags.studentId),
+      eq(studentEnrollments.schoolId, schoolId),
+      eq(studentEnrollments.academicYear, year.name),
+      eq(studentEnrollments.isActive, true),
+    ))
+    .innerJoin(classes, and(eq(classes.id, studentEnrollments.classId), eq(classes.schoolId, schoolId), eq(classes.academicYear, year.name)))
+    .where(and(
+      eq(studentFlags.schoolId, schoolId),
+      isNull(studentFlags.dismissedAt),
+      or(
+        eq(classes.headTeacherId, teacherId),
+        exists(db.select({ id: teacherClasses.id }).from(teacherClasses).where(and(
+          eq(teacherClasses.schoolId, schoolId),
+          eq(teacherClasses.teacherId, teacherId),
+          eq(teacherClasses.classId, classes.id),
+          eq(teacherClasses.subjectId, studentFlags.subjectId),
+        ))),
+      ),
+    ))
+    .groupBy(studentFlags.id)
+    .orderBy(studentFlags.createdAt, studentFlags.id);
 
   const weekday = schoolWeekday(now, timeZone);
   const date = day;
@@ -291,16 +357,31 @@ export async function getTeacherHome(
     ? await db
         .select()
         .from(timetables)
-        .where(and(eq(timetables.teacherId, teacherId), eq(timetables.schoolId, schoolId), inArray(timetables.timeSlotId, slotIds)))
+        .where(and(
+          eq(timetables.teacherId, teacherId),
+          eq(timetables.schoolId, schoolId),
+          eq(timetables.academicYear, year.name),
+          eq(timetables.status, 'active'),
+          inArray(timetables.classId, classIds),
+          inArray(timetables.timeSlotId, slotIds),
+        ))
     : [];
+  const entryIds = entries.map((entry) => entry.id);
+  const absentCounts = entryIds.length ? await db
+    .select({ timetableId: attendanceRecords.timetableId, count: sql<number>`count(*)`.mapWith(Number) })
+    .from(attendanceRecords)
+    .where(and(
+      eq(attendanceRecords.schoolId, schoolId),
+      inArray(attendanceRecords.timetableId, entryIds),
+      eq(attendanceRecords.date, date),
+      eq(attendanceRecords.status, 'absent'),
+    ))
+    .groupBy(attendanceRecords.timetableId) : [];
+  const absentsByEntry = new Map(absentCounts.map((row) => [row.timetableId, row.count]));
   const slots: HomeSlot[] = [];
   for (const entry of entries) {
     const slot = todaySlots.find((row) => row.id === entry.timeSlotId);
     if (!slot?.startTime || !slot.endTime) continue;
-    const absents = await db
-      .select()
-      .from(attendanceRecords)
-      .where(and(eq(attendanceRecords.timetableId, entry.id), eq(attendanceRecords.date, date), eq(attendanceRecords.status, 'absent')));
     const room = entry.room ?? '';
     const topic = entry.topic ?? '';
     slots.push({
@@ -312,26 +393,21 @@ export async function getTeacherHome(
       topic,
       placeLabel: slotPlaceLabel(room, topic, slot.name),
       state: slotState(hm, slot.startTime, slot.endTime),
-      absents: absents.length,
+      absents: absentsByEntry.get(entry.id) ?? 0,
     });
   }
   slots.sort((a, b) => a.start.localeCompare(b.start));
-
-  const waiting = copies.filter((row) => row.status === 'submitted' || row.status === 'late');
-  const homeworkWaiting = waiting.filter((row) => postFormat.get(row.postId) !== 'paper');
-  const paperWaiting = waiting.filter((row) => postFormat.get(row.postId) === 'paper');
-  const homeworkCopies = copies.filter((row) => postFormat.get(row.postId) !== 'paper');
 
   return {
     week,
     weeks,
     termName: term?.name ?? null,
-    copiesToGrade: waiting.length,
-    copiesHomework: homeworkWaiting.length,
-    copiesPaper: paperWaiting.length,
-    copiesSubmitted: homeworkCopies.filter((row) => row.status === 'submitted').length,
-    copiesLate: homeworkCopies.filter((row) => row.status === 'late').length,
-    gradesEntered: gradeRows.length,
+    copiesToGrade: copiesHomework + copiesPaper,
+    copiesHomework,
+    copiesPaper,
+    copiesSubmitted,
+    copiesLate,
+    gradesEntered,
     gradesTarget,
     gradesExpected,
     gradesByWeek,

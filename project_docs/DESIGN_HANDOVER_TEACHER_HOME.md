@@ -1,5 +1,7 @@
 # Design handover: teacher home
 
+> **Current engineering handover (2026-10-27):** Read `HANDOVER_DATA_SAFETY.md` before continuing app work. It records the uncommitted data fixes, passing checks, invitation UI blocker, remaining product gates, and a continuation prompt. This document remains the design reference, not the engineering status log.
+
 > **History.** This document records the design exploration that led to A+ Plat vif (D32) and Poppins (D33). The mock files and renders it lists were removed in the cleanup of 2026-10-27; they remain in git history. Current references: `DECISIONS.md` (D32, D33), `.impeccable/mocks/teacher/` and `.impeccable/mocks/teacher-home/studio-vif-desktop.html`.
 
 Last update: 2026-10-27. For: the next agent or designer who continues EduPlan's design work. You need no other context than this file and the files it links.
@@ -12,8 +14,8 @@ Last update: 2026-10-27. For: the next agent or designer who continues EduPlan's
 | **Live mocks** | Teacher home: `.impeccable/mocks/teacher-home/studio-vif-desktop.html` (build: `variants/build.ts`). Other teacher screens: `.impeccable/mocks/teacher/index.html` + `src/app.css` |
 | **Picked** | Structure **Studio**. Language **A+ Plat vif**. Brief: `.impeccable/surfaces/src-app-dashboard-teacher-page-tsx.md` |
 | **Tokens in code** | `src/app/globals.css` (header comment). Preview: `/design-system` (dev) |
-| **Next** | MVP step 2: shell and IA in code (`APP_BUILD_PLAN.md`). Match mocks above; do not reopen variant compare pages |
-| **Not done** | Most dashboard routes still use the old lilac look until step 2 |
+| **Next** | Continue the current slice in `HANDOVER_DATA_SAFETY.md`; the shell and teacher home already exist. Match the approved language; do not reopen variant compare pages |
+| **Not done** | Remaining class tabs, grading, attendance, and legacy admin page rebuilds; see `APP_BUILD_PLAN.md` |
 
 ## 2. Read first
 
@@ -22,7 +24,7 @@ Last update: 2026-10-27. For: the next agent or designer who continues EduPlan's
 3. `project_docs/REFERENCES.md`: every site and image we used, with what each one is for.
 4. This file, sections 3 to 6.
 
-Do not use `src/app/globals.css` as a reference. It holds the old look (lilac `#6b7cf7`, Plus Jakarta Sans), which is being replaced.
+Use `src/app/globals.css` and its header comment as the current token reference (D32/D33). The hardcoded lilac in untouched legacy pages is not the design system.
 
 ## 3. Decisions (do not re-ask)
 

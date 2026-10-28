@@ -55,22 +55,3 @@ export function expectedGradeEntriesAtWeek(week: number, target: number, termWee
   if (target === 0 || week <= 0) return 0;
   return Math.round((target * week) / termWeeks);
 }
-
-/** Cumulative grade counts per term week (1-indexed buckets). */
-export function cumulativeGradesByWeek(
-  rows: { createdAt: Date }[],
-  termStartsOn: string,
-  termWeeks: number,
-  weekOf: (date: Date, startsOn: string, weeks: number) => number,
-): number[] {
-  const counts = Array.from({ length: termWeeks }, () => 0);
-  for (const row of rows) {
-    const w = weekOf(row.createdAt, termStartsOn, termWeeks);
-    if (w >= 1 && w <= termWeeks) counts[w - 1]++;
-  }
-  let sum = 0;
-  return counts.map((n) => {
-    sum += n;
-    return sum;
-  });
-}

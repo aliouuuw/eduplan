@@ -24,6 +24,7 @@ export async function listTeacherClasses(db: Database, teacherId: string, school
     .from(academicYears)
     .where(and(eq(academicYears.schoolId, schoolId), eq(academicYears.isCurrent, true)))
     .limit(1);
+  if (!year) return [];
 
   const assigned = await db
     .select({
@@ -41,7 +42,10 @@ export async function listTeacherClasses(db: Database, teacherId: string, school
       and(
         eq(teacherClasses.teacherId, teacherId),
         eq(teacherClasses.schoolId, schoolId),
-        ...(year ? [eq(classes.academicYear, year.name)] : []),
+        eq(classes.schoolId, schoolId),
+        eq(subjects.schoolId, schoolId),
+        eq(academicLevels.schoolId, schoolId),
+        eq(classes.academicYear, year.name),
       ),
     )
     .orderBy(classes.name, subjects.name);
@@ -72,6 +76,8 @@ export async function teacherTeachesClass(
   const [row] = await db
     .select({ classId: teacherClasses.classId })
     .from(teacherClasses)
+    .innerJoin(classes, and(eq(classes.id, teacherClasses.classId), eq(classes.schoolId, schoolId)))
+    .innerJoin(subjects, and(eq(subjects.id, teacherClasses.subjectId), eq(subjects.schoolId, schoolId)))
     .where(
       and(
         eq(teacherClasses.teacherId, teacherId),

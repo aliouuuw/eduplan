@@ -56,7 +56,8 @@ Context: `PRODUCT.md` (who and why), `MVP_REWORK_PLAN.md` (scope, IA, flows, ord
 | D36 | Who sees flags (answers open question 3) | Teacher, professeur principal and admin always. Students and parents only if the admin turns it on in Réglages (one switch each, off by default) | 10-27 |
 | D37 | Appréciation générale (answers open question 4) | **Yes in the MVP.** The professeur principal writes one appréciation générale per student per trimestre, next to the subject appréciations | 10-27 |
 | D38 | Class space identity | The class space is **class + subject** (`/dashboard/teacher/classes/[classId]/[subjectId]/…`). Programme plans, coverage, and timetable room/topic belong to that pair. Clock time uses `schools.time_zone` (default `Africa/Dakar`) | 10-27 |
+| D39 | Duplicate protection | One submission per school/post/student; one attendance row per school/timetable/date/student; one grade per linked submission; one subject or general appreciation per school/student/term. Standalone grades remain repeatable. Migration must not delete conflicting rows automatically | 10-27 |
 
 ## Open
 
-None at the moment. Add questions here as they come up; answer them with a new row above.
+Product safety gates are tracked in `SCALABILITY_AND_USABILITY.md`. Before a multi-school pilot, resolve identity/membership, annual class lifecycle, and year/term selection. Those proposals are not accepted auth or schema replacements yet.
