@@ -275,6 +275,7 @@ export const posts = sqliteTable('posts', {
   body: text('body'),
   dueAt: integer('due_at', { mode: 'timestamp' }),
   maxGrade: real('max_grade'),
+  coefficient: real('coefficient').notNull().default(1), // weight of this work's grade in the trimestre average
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 }, (table) => ({

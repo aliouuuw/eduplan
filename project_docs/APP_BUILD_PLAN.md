@@ -31,7 +31,7 @@ Each phase ends with every check green and a screenshot of the new screen next t
 | 3 ✅ | Schema + demo seed. Teaching tables `0008`, home metadata `0009`. Seed: `bun run seed:demo` | 3 | — |
 | 4 ✅ | Teacher home (2026-10-27). Studio A+ with live data: courses, copies, grade pace, programme and flags summaries | 7 | — |
 | 5 | Class space (in progress). Programme tab for `/dashboard/teacher/classes/[classId]/programme`; other tabs next | 4, 10, 11 | 3 to 4 days |
-| 6 | Grading loop | Post an assignment, submissions, the correction screen (mock: `correction`), gradebook /20 with coefficients | 5 | 2 to 3 days |
+| 6 | Grading loop (in progress, branch `feat/grading-loop`: Notes list per trimestre and correction screen done 2026-10-28; gradebook averages and new work next) | Post an assignment, submissions, the correction screen (mock: `correction`), gradebook /20 with coefficients | 5 | 2 to 3 days |
 | 7 | Attendance | Register per slot, phone first (mock: `appel-phone`), parent justification | 6 | 2 days |
 | 8 | Other roles | Parent and student homes, appréciations (D18), family thread (D14), weekly digest (D2) | 7, 8, 12, 13 | 3 to 4 days |
 | 9 | Admin setup | Guided setup flow; rebuild the remaining admin pages on the phase 2 pattern | 9 | 2 days |

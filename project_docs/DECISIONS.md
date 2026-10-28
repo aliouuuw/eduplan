@@ -63,6 +63,7 @@ Context: `PRODUCT.md` (who and why), `MVP_REWORK_PLAN.md` (scope, IA, flows, ord
 | D43 | Automatic flags | D34 rules are calculated in SQL when the screen loads, per class, subject and term. Only manual flags and dismissals are stored. A dismissal holds for that student, rule, subject and term | 10-28 |
 | D44 | Attendance saves | Online first: each change is an upsert on the unique key, with saving / saved / failed states. No offline queue in the MVP. Lesson dates come from the timetable plus an exceptions table (holidays, cancellations). Register completion is its own row | 10-28 |
 | D45 | Multi-school identity | One login identity with school memberships (school + role). Required before a second school is onboarded, not before a one-school pilot | 10-28 |
+| D46 | Which trimestre a grade belongs to | The trimestre that contains the work's due date, else its publication date. A closed trimestre or a past year refuses new grades. Grades are stored /20; a work on another scale is converted. Each work carries its own coefficient (`posts.coefficient`, default 1) | 10-28 |
 
 ## Open
 
