@@ -61,7 +61,8 @@ function MeterDots({ total, done, tone = "progress", label }: { total: number; d
 function MeterSplit({ parts, label }: { parts: { value: number; tone: Tone | "soft-now" | "soft-progress" }[]; label: string }) {
   return (
     <div role="img" aria-label={label} className="flex gap-1">
-      {parts.map((p, i) => (
+      {/* An empty part would still take a gap slot and push the bar off the edge. */}
+      {parts.filter((p) => p.value > 0).map((p, i) => (
         <span
           key={i}
           style={{ flexGrow: p.value }}

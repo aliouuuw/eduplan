@@ -150,7 +150,7 @@ export default async function ClassNotesPage({ params, searchParams }: Params) {
                     </table>
                   </div>
                   <div className="mt-3.5 flex justify-between gap-4 px-3 text-[13.5px] text-muted-foreground">
-                    <span>{students.length} élèves · triés par nom</span>
+                    <span>{students.length} élève{students.length > 1 ? 's' : ''} · triés par nom</span>
                     <span>{graded} devoir{graded > 1 ? 's' : ''} noté{graded > 1 ? 's' : ''} sur {works.length}</span>
                   </div>
                 </>

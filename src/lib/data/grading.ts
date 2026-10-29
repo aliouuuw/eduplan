@@ -291,44 +291,46 @@ export async function getGradebook(
   subjectId: string,
   { now = new Date(), termId }: { now?: Date; termId?: string | null } = {},
 ) {
-  const header = await getClassHeader(db, teacherId, schoolId, classId, subjectId, now);
+  // The header follows the same trimestre as the table, so the subtitle and the term links agree.
+  const header = await getClassHeader(db, teacherId, schoolId, classId, subjectId, now, termId);
   if (!header) return null;
-  const { classRow, timeZone, ...shown } = header;
-  const context = classRow.academicYearId
-    ? await getAcademicContext(db, schoolId, { day: schoolDate(now, timeZone), yearId: classRow.academicYearId, termId })
-    : { year: null, terms: [], term: null, editable: false };
+  const { classRow: _classRow, timeZone, context, ...shown } = header;
   const { term } = context;
   const empty = { header: shown, context, works: [] as GradebookWork[], students: [] as GradebookStudent[], average: null, hasOther: false };
   if (!term) return empty;
 
-  const workRows = await db.select().from(posts).where(and(
-    eq(posts.schoolId, schoolId), eq(posts.type, 'assignment'), eq(posts.classId, classId), eq(posts.subjectId, subjectId),
-    termWindow(context.terms, term, timeZone),
-  )).orderBy(asc(workDate), asc(posts.id));
-  const studentRows = await db.select({ id: users.id, name: users.name }).from(studentEnrollments)
-    .innerJoin(users, and(eq(users.id, studentEnrollments.studentId), eq(users.schoolId, schoolId), isNull(users.deletedAt)))
-    .where(and(eq(studentEnrollments.schoolId, schoolId), eq(studentEnrollments.classId, classId), eq(studentEnrollments.isActive, true)));
+  const inTerm = termWindow(context.terms, term, timeZone);
+  const [workRows, studentRows, copyRows, gradeRows] = await Promise.all([
+    db.select({ id: posts.id, title: posts.title, dueAt: posts.dueAt, createdAt: posts.createdAt, coefficient: posts.coefficient }).from(posts)
+      .where(and(eq(posts.schoolId, schoolId), eq(posts.type, 'assignment'), eq(posts.classId, classId), eq(posts.subjectId, subjectId), inTerm))
+      .orderBy(asc(workDate), asc(posts.id)),
+    // Same students as the header count: an active enrollment of a live, active account.
+    db.select({ id: users.id, name: users.name }).from(studentEnrollments)
+      .innerJoin(users, and(eq(users.id, studentEnrollments.studentId), eq(users.schoolId, schoolId), isNull(users.deletedAt), eq(users.isActive, true)))
+      .where(and(eq(studentEnrollments.schoolId, schoolId), eq(studentEnrollments.classId, classId), eq(studentEnrollments.isActive, true))),
+    db.select({ postId: submissions.postId, studentId: submissions.studentId, status: submissions.status }).from(submissions)
+      .innerJoin(posts, and(eq(posts.id, submissions.postId), eq(posts.schoolId, schoolId)))
+      .where(and(eq(submissions.schoolId, schoolId), eq(posts.type, 'assignment'), eq(posts.classId, classId), eq(posts.subjectId, subjectId), inTerm)),
+    // Every grade of the trimestre counts in the average, with its own stored coefficient (kept in step by syncWorkGrades).
+    db.select({ studentId: grades.studentId, value: grades.value, coefficient: grades.coefficient, postId: submissions.postId })
+      .from(grades)
+      .leftJoin(submissions, and(eq(submissions.id, grades.submissionId), eq(submissions.schoolId, schoolId)))
+      .where(and(eq(grades.schoolId, schoolId), eq(grades.termId, term.id), eq(grades.classId, classId), eq(grades.subjectId, subjectId)))
+      .orderBy(asc(grades.createdAt), asc(grades.id)),
+  ]);
   // French order in JS: the database compares bytes, so "Aïda" would land after "Awa".
   studentRows.sort((a, b) => a.name.localeCompare(b.name, 'fr') || a.id.localeCompare(b.id));
-  const workIds = workRows.map((work) => work.id);
-  const copyRows = workIds.length
-    ? await db.select({ postId: submissions.postId, studentId: submissions.studentId, status: submissions.status }).from(submissions)
-      .where(and(eq(submissions.schoolId, schoolId), inArray(submissions.postId, workIds)))
-    : [];
-  // Every grade of the trimestre counts in the average, with its own stored coefficient (kept in step by syncWorkGrades).
-  const gradeRows = await db.select({ studentId: grades.studentId, value: grades.value, coefficient: grades.coefficient, postId: submissions.postId })
-    .from(grades)
-    .leftJoin(submissions, and(eq(submissions.id, grades.submissionId), eq(submissions.schoolId, schoolId)))
-    .where(and(eq(grades.schoolId, schoolId), eq(grades.termId, term.id), eq(grades.classId, classId), eq(grades.subjectId, subjectId)))
-    .orderBy(asc(grades.createdAt), asc(grades.id));
+  const workIds = new Set(workRows.map((work) => work.id));
 
   const key = (postId: string, studentId: string) => `${postId}:${studentId}`;
   const copyStatus = new Map(copyRows.map((copy) => [key(copy.postId, copy.studentId), copy.status]));
   const gradeOf = new Map<string, number>();
   const gradesBy = new Map<string, typeof gradeRows>();
   for (const row of gradeRows) {
-    if (row.postId && workIds.includes(row.postId)) gradeOf.set(key(row.postId, row.studentId), row.value);
-    gradesBy.set(row.studentId, [...(gradesBy.get(row.studentId) ?? []), row]);
+    if (row.postId && workIds.has(row.postId)) gradeOf.set(key(row.postId, row.studentId), row.value);
+    const list = gradesBy.get(row.studentId);
+    if (list) list.push(row);
+    else gradesBy.set(row.studentId, [row]);
   }
 
   const students: GradebookStudent[] = studentRows.map((student) => {
@@ -341,7 +343,7 @@ export async function getGradebook(
       // Same rule as the Notes list: a copy not handed in and not graded is missing.
       return status === 'assigned' ? { kind: 'missing' } : { kind: 'none' };
     });
-    const other = own.filter((row) => !row.postId || !workIds.includes(row.postId)).map((row) => row.value);
+    const other = own.filter((row) => !row.postId || !workIds.has(row.postId)).map((row) => row.value);
     return { ...student, cells, other, average: weightedAverage(own) };
   });
 

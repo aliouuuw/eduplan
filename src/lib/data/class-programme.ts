@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { and, asc, count, eq, inArray } from 'drizzle-orm';
+import { and, asc, count, eq, inArray, isNull } from 'drizzle-orm';
 
 import {
   chapters,
@@ -15,6 +15,7 @@ import {
   teacherClasses,
   timeSlots,
   timetables,
+  users,
 } from '@/db/schema';
 import type { Database } from '@/lib/db';
 
@@ -26,7 +27,7 @@ import {
   schoolWeekday,
   termWeekCount,
 } from './teacher-home-math';
-import { getAcademicContext } from './academic-context';
+import { getAcademicContext, type AcademicContext } from './academic-context';
 import { termWeek } from './teacher-home';
 
 export type ProgrammeNotion = {
@@ -85,7 +86,10 @@ function stateLabel(status: 'done' | 'current' | 'upcoming', covered: number, to
   return 'Au rythme';
 }
 
-/** The class space header: the access check, then name, students, room and week. Every class tab shares it. */
+/**
+ * The class space header: the access check, then name, students, room and week. Every class tab
+ * shares it. `termId` (from the URL) picks the trimestre, only within the class's own year.
+ */
 export async function getClassHeader(
   db: Database,
   teacherId: string,
@@ -93,7 +97,8 @@ export async function getClassHeader(
   classId: string,
   subjectId: string,
   now = new Date(),
-): Promise<(ClassHeader & { classRow: typeof classes.$inferSelect; timeZone: string }) | null> {
+  termId: string | null = null,
+): Promise<(ClassHeader & { classRow: typeof classes.$inferSelect; timeZone: string; context: AcademicContext }) | null> {
   // Access check and subject name in one query: the assignment, its class and its subject all in this school.
   const [assignment] = await db
     .select({ subjectId: teacherClasses.subjectId, subjectName: subjects.name })
@@ -115,15 +120,18 @@ export async function getClassHeader(
   const timeZone = school?.timeZone || DEFAULT_SCHOOL_TIME_ZONE;
   const [classRow] = await db.select().from(classes).where(and(eq(classes.id, classId), eq(classes.schoolId, schoolId)));
   if (!classRow) return null;
+  // Same students as the class lists: an active enrollment of a live, active account.
   const [enrollmentCount] = await db
     .select({ count: count() })
     .from(studentEnrollments)
+    .innerJoin(users, and(eq(users.id, studentEnrollments.studentId), eq(users.schoolId, schoolId), isNull(users.deletedAt), eq(users.isActive, true)))
     .where(and(eq(studentEnrollments.classId, classId), eq(studentEnrollments.schoolId, schoolId), eq(studentEnrollments.isActive, true)));
 
   // The class's own year (D40), so an archived class keeps its own terms.
-  const { term } = classRow.academicYearId
-    ? await getAcademicContext(db, schoolId, { day: schoolDate(now, timeZone), yearId: classRow.academicYearId })
-    : { term: null };
+  const context: AcademicContext = classRow.academicYearId
+    ? await getAcademicContext(db, schoolId, { day: schoolDate(now, timeZone), yearId: classRow.academicYearId, termId })
+    : { year: null, terms: [], term: null, editable: false };
+  const { term } = context;
   const weeks = term ? termWeekCount(term.startsOn, term.endsOn) : 12;
   const week = term ? termWeek(now, term.startsOn, weeks) : null;
 
@@ -176,6 +184,7 @@ export async function getClassHeader(
     weeks,
     classRow,
     timeZone,
+    context,
   };
 }
 
@@ -189,7 +198,7 @@ export async function getClassProgramme(
 ): Promise<ClassProgramme | null> {
   const header = await getClassHeader(db, teacherId, schoolId, classId, subjectId, now);
   if (!header) return null;
-  const { classRow, ...shown } = header;
+  const { classRow, timeZone: _timeZone, context: _context, ...shown } = header;
   const { week, weeks } = shown;
 
   const [programme] = await db

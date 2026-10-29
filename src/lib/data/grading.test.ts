@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { and, eq, isNull, ne } from 'drizzle-orm';
 
-import { academicYears, grades, posts, submissions, teacherClasses, terms } from '@/db/schema';
+import { academicYears, grades, posts, submissions, teacherClasses, terms, users } from '@/db/schema';
 
 import { seedDemo } from './demo-seed';
 import { averageBands, fromTwenty, getCorrection, getGradebook, gradeSubmission, listTermWork, meanOf, parseGrade, syncWorkGrades, toTwenty, weightedAverage } from './grading';
@@ -184,6 +184,12 @@ test('the gradebook counts every grade of the trimestre, shows each copy state, 
   const kinds = view?.students.map((s) => s.cells[0].kind);
   expect(kinds?.filter((k) => k === 'missing')).toHaveLength(6);
   expect(view?.average).toBe(meanOf(view!.students.map((s) => s.average)));
+  expect(view?.header.studentCount).toBe(view?.students.length);
+  // A deactivated account leaves the rows, the header count and the class average.
+  await db.update(users).set({ isActive: false }).where(eq(users.id, copy.studentId));
+  const after = await getGradebook(db, 'demo-aissatou', 'demo-dakar', 'demo-4a', 'demo-math', { now: NOW });
+  expect(after?.students.some((s) => s.id === copy.studentId)).toBe(false);
+  expect(after?.header.studentCount).toBe(after?.students.length);
   const names = view!.students.map((s) => s.name);
   expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'fr')));
 
@@ -192,6 +198,13 @@ test('the gradebook counts every grade of the trimestre, shows each copy state, 
   await db.insert(terms).values({ ...t1, id: 'demo-t2', name: 'Trimestre 2', position: 2, startsOn: '2026-12-07', endsOn: '2027-03-14' });
   const t2 = await getGradebook(db, 'demo-aissatou', 'demo-dakar', 'demo-4a', 'demo-math', { now: NOW, termId: 'demo-t2' });
   expect(t2).toMatchObject({ works: [], average: null });
+  expect(t2?.header.termName).toBe('Trimestre 2'); // the subtitle follows the trimestre shown
+
+  // A term of another year never shows on this year's class: it falls back to the default.
+  const [year] = await db.select().from(academicYears).where(eq(academicYears.id, t1.academicYearId));
+  await db.insert(academicYears).values({ ...year, id: 'past-year', name: '2024-2025', isCurrent: false });
+  await db.insert(terms).values({ ...t1, id: 'past-t1', academicYearId: 'past-year', startsOn: '2024-09-01', endsOn: '2024-11-30' });
+  expect((await getGradebook(db, 'demo-aissatou', 'demo-dakar', 'demo-4a', 'demo-math', { now: NOW, termId: 'past-t1' }))?.context.term?.id).toBe('demo-t1');
   expect((await getGradebook(db, 'demo-aissatou', 'demo-dakar', 'demo-4a', 'demo-math', { now: NOW, termId: 'nope' }))?.context.term?.id).toBe('demo-t1');
 
   // No course assignment, no gradebook.

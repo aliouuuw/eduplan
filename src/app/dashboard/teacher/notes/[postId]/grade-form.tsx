@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Kbd } from '@/components/ui/kbd';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { frSpaces } from '@/lib/fr';
+import { formatGrade, frSpaces } from '@/lib/fr';
 import { gradeAction } from '../actions';
 
 // The grading panel: one number, one comment, then straight to the next copy (mock: correction).
@@ -28,7 +28,7 @@ export function GradeForm({
   next: { href: string; student: string } | null;
 }) {
   const router = useRouter();
-  const [value, setValue] = React.useState(grade === null ? '' : String(grade).replace('.', ','));
+  const [value, setValue] = React.useState(grade === null ? '' : formatGrade(grade));
   const [text, setText] = React.useState(comment ?? '');
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
