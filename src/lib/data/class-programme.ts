@@ -46,7 +46,7 @@ export type ProgrammeChapter = {
   notions: ProgrammeNotion[];
 };
 
-export type ClassProgramme = {
+export type ClassHeader = {
   classId: string;
   className: string;
   subjectId: string;
@@ -56,6 +56,9 @@ export type ClassProgramme = {
   termName: string | null;
   week: number | null;
   weeks: number;
+};
+
+export type ClassProgramme = ClassHeader & {
   chapters: ProgrammeChapter[];
   pace: {
     covered: number;
@@ -82,14 +85,15 @@ function stateLabel(status: 'done' | 'current' | 'upcoming', covered: number, to
   return 'Au rythme';
 }
 
-export async function getClassProgramme(
+/** The class space header: the access check, then name, students, room and week. Every class tab shares it. */
+export async function getClassHeader(
   db: Database,
   teacherId: string,
   schoolId: string,
   classId: string,
   subjectId: string,
   now = new Date(),
-): Promise<ClassProgramme | null> {
+): Promise<(ClassHeader & { classRow: typeof classes.$inferSelect; timeZone: string }) | null> {
   // Access check and subject name in one query: the assignment, its class and its subject all in this school.
   const [assignment] = await db
     .select({ subjectId: teacherClasses.subjectId, subjectName: subjects.name })
@@ -122,34 +126,6 @@ export async function getClassProgramme(
     : { term: null };
   const weeks = term ? termWeekCount(term.startsOn, term.endsOn) : 12;
   const week = term ? termWeek(now, term.startsOn, weeks) : null;
-
-  const [programme] = classRow
-    ? await db
-        .select()
-        .from(programmes)
-        .where(
-          and(
-            eq(programmes.schoolId, schoolId),
-            eq(programmes.subjectId, assignment.subjectId),
-            eq(programmes.levelId, classRow.levelId),
-          ),
-        )
-        .limit(1)
-    : [undefined];
-  const chapterRows = programme
-    ? await db.select().from(chapters).where(and(eq(chapters.schoolId, schoolId), eq(chapters.programmeId, programme.id))).orderBy(asc(chapters.position))
-    : [];
-  const plans = await db
-    .select()
-    .from(classChapterPlans)
-    .where(
-      and(
-        eq(classChapterPlans.classId, classId),
-        eq(classChapterPlans.subjectId, subjectId),
-        eq(classChapterPlans.schoolId, schoolId),
-      ),
-    );
-  const planByChapter = new Map(plans.map((row) => [row.chapterId, row]));
 
   const weekday = schoolWeekday(now, timeZone);
   const hm = schoolClockHm(now, timeZone);
@@ -187,6 +163,55 @@ export async function getClassProgramme(
   const roomLabel = liveOrNext?.entry.room
     ? `salle ${liveOrNext.entry.room.replace(/^Salle\s*/i, '')}`
     : null;
+
+  return {
+    classId,
+    className: classRow.name,
+    subjectId: assignment.subjectId,
+    subjectName: assignment.subjectName,
+    studentCount: enrollmentCount.count,
+    roomLabel,
+    termName: term?.name ?? null,
+    week,
+    weeks,
+    classRow,
+    timeZone,
+  };
+}
+
+export async function getClassProgramme(
+  db: Database,
+  teacherId: string,
+  schoolId: string,
+  classId: string,
+  subjectId: string,
+  now = new Date(),
+): Promise<ClassProgramme | null> {
+  const header = await getClassHeader(db, teacherId, schoolId, classId, subjectId, now);
+  if (!header) return null;
+  const { classRow, ...shown } = header;
+  const { week, weeks } = shown;
+
+  const [programme] = await db
+    .select()
+    .from(programmes)
+    .where(and(eq(programmes.schoolId, schoolId), eq(programmes.subjectId, subjectId), eq(programmes.levelId, classRow.levelId)))
+    .limit(1);
+  const chapterRows = programme
+    ? await db.select().from(chapters).where(and(eq(chapters.schoolId, schoolId), eq(chapters.programmeId, programme.id))).orderBy(asc(chapters.position))
+    : [];
+  const plans = await db
+    .select()
+    .from(classChapterPlans)
+    .where(
+      and(
+        eq(classChapterPlans.classId, classId),
+        eq(classChapterPlans.subjectId, subjectId),
+        eq(classChapterPlans.schoolId, schoolId),
+      ),
+    );
+  const planByChapter = new Map(plans.map((row) => [row.chapterId, row]));
+
 
   const chapterIds = chapterRows.map((row) => row.id);
   const notionRows = chapterIds.length
@@ -265,15 +290,7 @@ export async function getClassProgramme(
   const perWeek = remaining > 0 ? Math.round((remaining / weeksLeft) * 100) / 100 : 0;
 
   return {
-    classId,
-    className: classRow?.name ?? classId,
-    subjectId: assignment.subjectId,
-    subjectName: assignment.subjectName,
-    studentCount: enrollmentCount.count,
-    roomLabel,
-    termName: term?.name ?? null,
-    week,
-    weeks,
+    ...shown,
     chapters: chaptersOut,
     pace: {
       covered: paceCovered,
