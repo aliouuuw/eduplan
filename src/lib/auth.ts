@@ -1,3 +1,4 @@
+import { connection } from 'next/server';
 import { cache } from 'react';
 
 import { profileForAuthUser } from './data/profiles';
@@ -8,6 +9,9 @@ export type Session = { user: { id: string; name: string; email: string; role: s
 
 /** The signed-in EduPlan user, or null. Neon Auth proves who it is (D49); the profile gives role and school. */
 export const auth = cache(async (): Promise<Session | null> => {
+  // Per-request by nature. Saying so up front stops the build from trying to prerender the page, which
+  // the Neon SDK would otherwise log as a cookie error for every route.
+  await connection();
   const { data } = await neonAuth.getSession();
   if (!data?.user) return null;
   const user = await profileForAuthUser(db, data.user.id);
