@@ -5,10 +5,9 @@
 import { db, generateId, getCurrentTimestamp } from '../src/lib/db';
 import { users } from '../src/db/schema';
 import { eq } from 'drizzle-orm';
-import { ensureLogin } from './neon-login';
+import { ensureLogin, seedPassword } from './neon-login';
 
 const SUPERADMIN_EMAIL = 'superadmin@eduplan.com';
-const SUPERADMIN_PASSWORD = 'Admin@123'; // Change this in production!
 const SUPERADMIN_NAME = 'System Administrator';
 
 async function seedSuperAdmin() {
@@ -31,7 +30,7 @@ async function seedSuperAdmin() {
 
     console.log('⚙️  Creating superadmin account...');
     
-    const authUserId = await ensureLogin(SUPERADMIN_EMAIL, SUPERADMIN_NAME, SUPERADMIN_PASSWORD);
+    const authUserId = await ensureLogin(SUPERADMIN_EMAIL, SUPERADMIN_NAME, seedPassword());
 
     // Create superadmin user
     const userId = generateId();
@@ -52,9 +51,8 @@ async function seedSuperAdmin() {
     console.log('✅ Superadmin account created successfully!');
     console.log('');
     console.log('📧 Email:', SUPERADMIN_EMAIL);
-    console.log('🔑 Password:', SUPERADMIN_PASSWORD);
+    console.log('🔑 Password: the SEED_PASSWORD value');
     console.log('');
-    console.log('⚠️  IMPORTANT: Change the password after first login!');
     console.log('');
     console.log('🚀 You can now login at: http://localhost:3000/login');
   } catch (error) {

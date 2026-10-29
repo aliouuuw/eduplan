@@ -17,3 +17,10 @@ export async function ensureLogin(email: string, name: string, password: string)
   const { user } = (await res.json()) as { user: { id: string } };
   return user.id;
 }
+
+/** The password for seeded logins: SEED_PASSWORD from the environment, never a value written in git. */
+export function seedPassword(): string {
+  const password = process.env.SEED_PASSWORD;
+  if (!password || password.length < 8) throw new Error('Set SEED_PASSWORD (8+ characters) in .env.local before seeding logins');
+  return password;
+}

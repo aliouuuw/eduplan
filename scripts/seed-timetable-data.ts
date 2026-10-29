@@ -34,7 +34,7 @@ import {
   timeSlots
 } from '../src/db/schema';
 import { eq } from 'drizzle-orm';
-import { ensureLogin } from './neon-login';
+import { ensureLogin, seedPassword } from './neon-login';
 
 // Configuration
 const SCHOOL_NAME = "École Internationale de Dakar";
@@ -194,7 +194,7 @@ async function seedTimetableData() {
     await db.insert(users).values({
       id: adminId,
       email: 'admin@ecole-dakar.edu',
-      authUserId: await ensureLogin('admin@ecole-dakar.edu', 'School Administrator', 'Admin@123'),
+      authUserId: await ensureLogin('admin@ecole-dakar.edu', 'School Administrator', seedPassword()),
       name: 'School Administrator',
       role: 'admin',
       schoolId: schoolId,
@@ -456,7 +456,7 @@ async function seedTimetableData() {
     console.log('🔑 LOGIN CREDENTIALS:');
     console.log('═══════════════════════════════════════════════════════');
     console.log('📧 Admin: admin@ecole-dakar.edu');
-    console.log('🔒 Password: Admin@123');
+    console.log('🔒 Password: the SEED_PASSWORD value');
     console.log('');
     console.log('📧 Teachers: [teacher-email]@school.edu');
     console.log('🔒 No login: invite them from Personnes');

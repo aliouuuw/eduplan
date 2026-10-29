@@ -5,12 +5,11 @@ import { eq } from 'drizzle-orm';
 import { users } from '../src/db/schema';
 import { db } from '../src/lib/db';
 import { DEMO_SCHOOL_ID, seedDemo } from '../src/lib/data/demo-seed';
-import { ensureLogin } from './neon-login';
+import { ensureLogin, seedPassword } from './neon-login';
 
 const EMAIL = 'aissatou.diop@demo.eduplan';
-const PASSWORD = 'Demo@123';
 
 await seedDemo(db);
-const authUserId = await ensureLogin(EMAIL, 'Aïssatou Diop', PASSWORD);
+const authUserId = await ensureLogin(EMAIL, 'Aïssatou Diop', seedPassword());
 await db.update(users).set({ authUserId }).where(eq(users.id, 'demo-aissatou'));
-console.log(`Demo school ready: ${DEMO_SCHOOL_ID} (Aïssatou Diop, 3ème B, 31 élèves). Login: ${EMAIL} / ${PASSWORD}`);
+console.log(`Demo school ready: ${DEMO_SCHOOL_ID} (Aïssatou Diop, 3ème B, 31 élèves). Login: ${EMAIL} with SEED_PASSWORD`);
