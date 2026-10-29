@@ -35,3 +35,15 @@ const DAY = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", y
 export function formatDay(date: Date): string {
   return DAY.format(date);
 }
+
+const SHORT_DAY = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", timeZone: "Africa/Dakar" });
+
+/** "26 oct.", for dates inside the current year. */
+export function formatShortDay(date: Date): string {
+  return SHORT_DAY.format(date);
+}
+
+/** 11.5 -> "11,5". With `decimals`, a fixed count, for averages in a column: 14 -> "14,00". */
+export function formatGrade(value: number, decimals?: number): string {
+  return (decimals === undefined ? String(value) : value.toFixed(decimals)).replace(".", ",");
+}

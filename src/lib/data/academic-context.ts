@@ -39,8 +39,9 @@ export async function getAcademicContext(
   { day, termId, yearId }: { day: string; termId?: string | null; yearId?: string | null },
 ): Promise<AcademicContext> {
   // A term from the URL is trusted only after the school check; anything else falls back to the default.
+  // With a year given, the term must belong to it: a class's tab never shows another year's term.
   const [requested] = termId
-    ? await db.select().from(terms).where(and(eq(terms.id, termId), eq(terms.schoolId, schoolId))).limit(1)
+    ? await db.select().from(terms).where(and(eq(terms.id, termId), eq(terms.schoolId, schoolId), yearId ? eq(terms.academicYearId, yearId) : undefined)).limit(1)
     : [];
   const [year] = await db
     .select()

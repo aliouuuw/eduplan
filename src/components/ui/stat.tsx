@@ -58,7 +58,7 @@ function MeterDots({ total, done, tone = "progress", label }: { total: number; d
 }
 
 /** Split meter: parts side by side, sized by value (e.g. 22 devoirs maison · 31 contrôles papier). */
-function MeterSplit({ parts, label }: { parts: { value: number; tone: Tone | "soft-now" }[]; label: string }) {
+function MeterSplit({ parts, label }: { parts: { value: number; tone: Tone | "soft-now" | "soft-progress" }[]; label: string }) {
   return (
     <div role="img" aria-label={label} className="flex gap-1">
       {parts.map((p, i) => (
@@ -69,7 +69,8 @@ function MeterSplit({ parts, label }: { parts: { value: number; tone: Tone | "so
             "h-2 basis-0 rounded-full",
             p.tone === "progress" && "fill-progress animate-fill",
             p.tone === "now" && "fill-now animate-fill",
-            p.tone === "soft-now" && "bg-now-soft"
+            p.tone === "soft-now" && "bg-now-soft",
+            p.tone === "soft-progress" && "bg-progress-edge"
           )}
         />
       ))}

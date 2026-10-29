@@ -1,10 +1,10 @@
 import { expect, test } from 'bun:test';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull, ne } from 'drizzle-orm';
 
 import { academicYears, grades, posts, submissions, teacherClasses, terms } from '@/db/schema';
 
 import { seedDemo } from './demo-seed';
-import { fromTwenty, getCorrection, gradeSubmission, listTermWork, parseGrade, syncWorkGrades, toTwenty } from './grading';
+import { averageBands, fromTwenty, getCorrection, getGradebook, gradeSubmission, listTermWork, meanOf, parseGrade, syncWorkGrades, toTwenty, weightedAverage } from './grading';
 import { schoolDayStart } from './teacher-home-math';
 import { getTeacherHome } from './teacher-home';
 import { testDb } from './test-db';
@@ -152,4 +152,49 @@ test('day starts follow the school time zone', () => {
   expect(schoolDayStart('2026-10-27', 'Africa/Dakar')).toBe(utcMidnight);
   expect(schoolDayStart('2026-10-27', 'Africa/Lagos')).toBe(utcMidnight - 3600);
   expect(schoolDayStart('2026-10-27', 'America/Martinique')).toBe(utcMidnight + 4 * 3600);
+});
+
+test('the trimestre average weighs each grade by its coefficient; a coefficient 0 or no grade does not count', () => {
+  const khady = [{ value: 12, coefficient: 1 }, { value: 10.5, coefficient: 2 }, { value: 6, coefficient: 1 }, { value: 3.5, coefficient: 1 }];
+  expect(weightedAverage(khady)).toBe(8.5);
+  expect(weightedAverage([...khady, { value: 20, coefficient: 0 }])).toBe(8.5);
+  expect(weightedAverage([{ value: 0, coefficient: 1 }, { value: 13, coefficient: 2 }])).toBe(8.67); // a 0 for "non rendu" counts (D48)
+  expect(weightedAverage([])).toBeNull();
+  expect(weightedAverage([{ value: 15, coefficient: 0 }])).toBeNull();
+  expect(meanOf([8.5, null, 14.5])).toBe(11.5);
+  expect(meanOf([null])).toBeNull();
+  expect(averageBands([9.99, 10, 13.99, 14, null])).toEqual({ low: 1, mid: 2, high: 1 });
+});
+
+test('the gradebook counts every grade of the trimestre, shows each copy state, and follows the course', async () => {
+  const db = await testDb();
+  await seedDemo(db);
+  await db.update(posts).set({ coefficient: 2 }).where(eq(posts.id, 'demo-dm3'));
+  const [copy] = await db.select().from(submissions).where(eq(submissions.id, 'sub-dm3-0'));
+  expect(await gradeSubmission(db, { ...base, submissionId: 'sub-dm3-0', grade: '15', now: NOW })).toEqual({ ok: true });
+  // The seed gives this student a hand-entered 12 (coef. 1) too: (12 + 15 × 2) / 3 = 14.
+  await db.insert(grades).values({ id: 'g-extra', schoolId: 'demo-dakar', studentId: copy.studentId, subjectId: 'demo-math', classId: 'demo-4a', termId: 'demo-t1', value: 12, coefficient: 1, createdAt: NOW, updatedAt: NOW });
+  await db.delete(grades).where(and(eq(grades.studentId, copy.studentId), eq(grades.classId, 'demo-4a'), isNull(grades.submissionId), ne(grades.id, 'g-extra')));
+
+  const view = await getGradebook(db, 'demo-aissatou', 'demo-dakar', 'demo-4a', 'demo-math', { now: NOW });
+  expect(view?.works.map((w) => w.id)).toEqual(['demo-dm3']);
+  expect(view?.works[0]).toMatchObject({ coefficient: 2, average: 15, toGrade: 21 });
+  const student = view?.students.find((s) => s.id === copy.studentId);
+  expect(student).toMatchObject({ cells: [{ kind: 'grade', value: 15 }], other: [12], average: 14 });
+  const kinds = view?.students.map((s) => s.cells[0].kind);
+  expect(kinds?.filter((k) => k === 'missing')).toHaveLength(6);
+  expect(view?.average).toBe(meanOf(view!.students.map((s) => s.average)));
+  const names = view!.students.map((s) => s.name);
+  expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'fr')));
+
+  // Another trimestre of the year shows its own (empty) columns; a term from another school falls back.
+  const [t1] = await db.select().from(terms).where(eq(terms.id, 'demo-t1'));
+  await db.insert(terms).values({ ...t1, id: 'demo-t2', name: 'Trimestre 2', position: 2, startsOn: '2026-12-07', endsOn: '2027-03-14' });
+  const t2 = await getGradebook(db, 'demo-aissatou', 'demo-dakar', 'demo-4a', 'demo-math', { now: NOW, termId: 'demo-t2' });
+  expect(t2).toMatchObject({ works: [], average: null });
+  expect((await getGradebook(db, 'demo-aissatou', 'demo-dakar', 'demo-4a', 'demo-math', { now: NOW, termId: 'nope' }))?.context.term?.id).toBe('demo-t1');
+
+  // No course assignment, no gradebook.
+  expect(await getGradebook(db, 'someone-else', 'demo-dakar', 'demo-4a', 'demo-math', { now: NOW })).toBeNull();
+  expect(await getGradebook(db, 'demo-aissatou', 'other-school', 'demo-4a', 'demo-math', { now: NOW })).toBeNull();
 });

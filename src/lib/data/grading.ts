@@ -1,13 +1,14 @@
 // Correction of graded work (phase 6). A grade belongs to the trimestre of the work's due date,
 // else its publication date (D46). Grades are stored /20; a work marked on another scale is converted.
 import 'server-only';
-import { and, asc, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
 
-import { academicYears, classes, grades, posts, schools, subjects, submissions, terms, users } from '@/db/schema';
+import { academicYears, classes, grades, posts, schools, studentEnrollments, subjects, submissions, terms, users } from '@/db/schema';
 import type { Database } from '@/lib/db';
 import { generateId } from '@/lib/utils';
 
 import { getAcademicContext } from './academic-context';
+import { getClassHeader } from './class-programme';
 import { DEFAULT_SCHOOL_TIME_ZONE, schoolDate, schoolDayStart } from './teacher-home-math';
 import { teachesCourse, teacherTeachesClass } from './teacher-classes';
 
@@ -50,6 +51,16 @@ async function schoolTimeZone(db: Database, schoolId: string) {
 }
 const workDate = sql`coalesce(${posts.dueAt}, ${posts.createdAt})`;
 
+/** The same window as termForDay, in SQL: the works dated in `term`. */
+function termWindow(rows: Term[], term: Term, timeZone: string) {
+  const index = rows.findIndex((row) => row.id === term.id);
+  const previous = rows[index - 1];
+  return and(
+    previous ? gte(workDate, nextDay(previous.endsOn, timeZone)) : undefined,
+    index === rows.length - 1 ? undefined : lt(workDate, nextDay(term.endsOn, timeZone)),
+  );
+}
+
 async function yearTerms(db: Database, schoolId: string, yearId: string | null) {
   if (!yearId) return [];
   return db.select().from(terms).where(and(eq(terms.schoolId, schoolId), eq(terms.academicYearId, yearId))).orderBy(asc(terms.position));
@@ -84,10 +95,6 @@ export async function listTermWork(db: Database, teacherId: string, schoolId: st
   const { year, term, terms: rows } = context;
   if (!year || !term) return { context, works: [] as TermWork[] };
 
-  // The same window as termForDay, in SQL.
-  const index = rows.findIndex((row) => row.id === term.id);
-  const previous = rows[index - 1];
-  const last = index === rows.length - 1;
   const rowsSql = await db
     .select({
       id: posts.id,
@@ -111,8 +118,7 @@ export async function listTermWork(db: Database, teacherId: string, schoolId: st
     .where(and(
       eq(posts.schoolId, schoolId),
       eq(posts.type, 'assignment'),
-      previous ? gte(workDate, nextDay(previous.endsOn, timeZone)) : undefined,
-      last ? undefined : lt(workDate, nextDay(term.endsOn, timeZone)),
+      termWindow(rows, term, timeZone),
       teachesCourse(db, teacherId, schoolId, posts.classId, posts.subjectId),
     ))
     .groupBy(posts.id, classes.id, subjects.id, submissions.status)
@@ -241,4 +247,117 @@ export async function syncWorkGrades(db: Database, schoolId: string, postId: str
     eq(grades.schoolId, schoolId),
     inArray(grades.submissionId, db.select({ id: submissions.id }).from(submissions).where(and(eq(submissions.postId, postId), eq(submissions.schoolId, schoolId)))),
   ));
+}
+
+/**
+ * Trimestre average /20: each grade weighs its coefficient (D46). A grade with coefficient 0 does not
+ * count. Null when nothing counts. A copy never handed in counts only once it has a grade (D48).
+ */
+export function weightedAverage(rows: { value: number; coefficient: number }[]): number | null {
+  let points = 0;
+  let weight = 0;
+  for (const { value, coefficient } of rows) {
+    if (coefficient <= 0) continue;
+    points += value * coefficient;
+    weight += coefficient;
+  }
+  return weight > 0 ? round2(points / weight) : null;
+}
+
+/** Class average: the mean of the students who have an average. */
+export function meanOf(values: (number | null)[]): number | null {
+  const counted = values.filter((value): value is number => value !== null);
+  return counted.length ? round2(counted.reduce((sum, value) => sum + value, 0) / counted.length) : null;
+}
+
+export type GradebookCell = { kind: 'grade'; value: number } | { kind: 'waiting' | 'missing' | 'none' };
+export type GradebookWork = { id: string; title: string; day: string; coefficient: number; average: number | null; toGrade: number };
+export type GradebookStudent = {
+  id: string;
+  name: string;
+  /** One per work, in the order of `works`, /20. */
+  cells: GradebookCell[];
+  /** Grades with no work in this trimestre (entered by hand, or a work moved since), /20. */
+  other: number[];
+  average: number | null;
+};
+
+/** One class and subject in one trimestre: a column per work, a row per enrolled student. */
+export async function getGradebook(
+  db: Database,
+  teacherId: string,
+  schoolId: string,
+  classId: string,
+  subjectId: string,
+  { now = new Date(), termId }: { now?: Date; termId?: string | null } = {},
+) {
+  const header = await getClassHeader(db, teacherId, schoolId, classId, subjectId, now);
+  if (!header) return null;
+  const { classRow, timeZone, ...shown } = header;
+  const context = classRow.academicYearId
+    ? await getAcademicContext(db, schoolId, { day: schoolDate(now, timeZone), yearId: classRow.academicYearId, termId })
+    : { year: null, terms: [], term: null, editable: false };
+  const { term } = context;
+  const empty = { header: shown, context, works: [] as GradebookWork[], students: [] as GradebookStudent[], average: null, hasOther: false };
+  if (!term) return empty;
+
+  const workRows = await db.select().from(posts).where(and(
+    eq(posts.schoolId, schoolId), eq(posts.type, 'assignment'), eq(posts.classId, classId), eq(posts.subjectId, subjectId),
+    termWindow(context.terms, term, timeZone),
+  )).orderBy(asc(workDate), asc(posts.id));
+  const studentRows = await db.select({ id: users.id, name: users.name }).from(studentEnrollments)
+    .innerJoin(users, and(eq(users.id, studentEnrollments.studentId), eq(users.schoolId, schoolId), isNull(users.deletedAt)))
+    .where(and(eq(studentEnrollments.schoolId, schoolId), eq(studentEnrollments.classId, classId), eq(studentEnrollments.isActive, true)));
+  // French order in JS: the database compares bytes, so "Aïda" would land after "Awa".
+  studentRows.sort((a, b) => a.name.localeCompare(b.name, 'fr') || a.id.localeCompare(b.id));
+  const workIds = workRows.map((work) => work.id);
+  const copyRows = workIds.length
+    ? await db.select({ postId: submissions.postId, studentId: submissions.studentId, status: submissions.status }).from(submissions)
+      .where(and(eq(submissions.schoolId, schoolId), inArray(submissions.postId, workIds)))
+    : [];
+  // Every grade of the trimestre counts in the average, with its own stored coefficient (kept in step by syncWorkGrades).
+  const gradeRows = await db.select({ studentId: grades.studentId, value: grades.value, coefficient: grades.coefficient, postId: submissions.postId })
+    .from(grades)
+    .leftJoin(submissions, and(eq(submissions.id, grades.submissionId), eq(submissions.schoolId, schoolId)))
+    .where(and(eq(grades.schoolId, schoolId), eq(grades.termId, term.id), eq(grades.classId, classId), eq(grades.subjectId, subjectId)))
+    .orderBy(asc(grades.createdAt), asc(grades.id));
+
+  const key = (postId: string, studentId: string) => `${postId}:${studentId}`;
+  const copyStatus = new Map(copyRows.map((copy) => [key(copy.postId, copy.studentId), copy.status]));
+  const gradeOf = new Map<string, number>();
+  const gradesBy = new Map<string, typeof gradeRows>();
+  for (const row of gradeRows) {
+    if (row.postId && workIds.includes(row.postId)) gradeOf.set(key(row.postId, row.studentId), row.value);
+    gradesBy.set(row.studentId, [...(gradesBy.get(row.studentId) ?? []), row]);
+  }
+
+  const students: GradebookStudent[] = studentRows.map((student) => {
+    const own = gradesBy.get(student.id) ?? [];
+    const cells = workRows.map((work): GradebookCell => {
+      const value = gradeOf.get(key(work.id, student.id));
+      if (value !== undefined) return { kind: 'grade', value };
+      const status = copyStatus.get(key(work.id, student.id)) ?? null;
+      if (isWaiting(status)) return { kind: 'waiting' };
+      // Same rule as the Notes list: a copy not handed in and not graded is missing.
+      return status === 'assigned' ? { kind: 'missing' } : { kind: 'none' };
+    });
+    const other = own.filter((row) => !row.postId || !workIds.includes(row.postId)).map((row) => row.value);
+    return { ...student, cells, other, average: weightedAverage(own) };
+  });
+
+  const works: GradebookWork[] = workRows.map((work, index) => {
+    const column = students.map((student) => student.cells[index]);
+    return {
+      id: work.id, title: work.title, day: workDay(work, timeZone), coefficient: work.coefficient,
+      average: meanOf(column.map((cell) => (cell.kind === 'grade' ? cell.value : null))),
+      toGrade: column.filter((cell) => cell.kind === 'waiting').length,
+    };
+  });
+  return { ...empty, works, students, average: meanOf(students.map((student) => student.average)), hasOther: students.some((student) => student.other.length > 0) };
+}
+
+/** Students per band of the trimestre average: under 10, 10 to under 14, 14 and up. */
+export function averageBands(averages: (number | null)[]) {
+  const counted = averages.filter((value): value is number => value !== null);
+  return { low: counted.filter((v) => v < 10).length, mid: counted.filter((v) => v >= 10 && v < 14).length, high: counted.filter((v) => v >= 14).length };
 }

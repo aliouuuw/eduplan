@@ -9,7 +9,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Progress } from '@/components/ui/progress';
 import { getCorrection, type Copy } from '@/lib/data/grading';
 import { db } from '@/lib/db';
-import { classLabel, formatDay, frSpaces } from '@/lib/fr';
+import { classLabel, formatDay, formatGrade, frSpaces } from '@/lib/fr';
 import { requireSchoolRole } from '@/lib/session';
 import { cn } from '@/lib/utils';
 import { GradeForm } from './grade-form';
@@ -24,7 +24,6 @@ const LOCK = {
   no_term: { title: () => "Cette classe n'a pas de trimestres", body: "L'administration crée l'année et ses trimestres dans Réglages : la note pourra alors être saisie." },
 } as const;
 
-const grade = (value: number) => String(value).replace('.', ',');
 const time = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Dakar' });
 
 export default async function CorrectionPage({
@@ -117,7 +116,7 @@ export default async function CorrectionPage({
                             <span className="min-w-0 truncate">{c.student}</span>
                             <small className={cn('shrink-0 text-[12.5px] text-muted-foreground', c.status === 'late' && 'text-now-ink')}>
                               {c.grade !== null
-                                ? <b className="font-medium text-foreground tabular-nums">{grade(c.grade)}</b>
+                                ? <b className="font-medium text-foreground tabular-nums">{formatGrade(c.grade)}</b>
                                 : c.status === 'late' ? 'en retard'
                                 : c.submittedAt && !paper ? formatDay(c.submittedAt).replace(/ \d{4}$/, '') : null}
                             </small>
@@ -167,7 +166,7 @@ export default async function CorrectionPage({
                 <div className="flex flex-col gap-3">
                   <p className="text-sm text-muted-foreground">Note sur {max}</p>
                   <p className="font-display text-[56px] leading-none tracking-[-0.04em] tabular-nums">
-                    {current.grade === null ? '–' : grade(current.grade)}
+                    {current.grade === null ? '–' : formatGrade(current.grade)}
                   </p>
                   {current.comment && <p className="text-[14.5px] whitespace-pre-wrap">{current.comment}</p>}
                 </div>
