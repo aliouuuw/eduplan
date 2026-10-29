@@ -32,19 +32,19 @@ export async function getInvitationPage(
   const { page: requestedPage, q } = pageInput.parse(input);
   const status = sql<InvitationStatus>`case
     when ${invitations.usedAt} is not null then 'acceptee'
-    when ${invitations.expiresAt} > ${Math.floor(now.getTime() / 1000)} then 'en_attente'
+    when ${invitations.expiresAt} > ${now.toISOString()}::timestamptz then 'en_attente'
     else 'expiree'
   end`;
   const totals: Record<InvitationStatus, number> = { en_attente: 0, acceptee: 0, expiree: 0 };
   const counts = await db.select({ status, count: count() }).from(invitations)
-    .where(eq(invitations.schoolId, schoolId)).groupBy(status);
+    .where(eq(invitations.schoolId, schoolId)).groupBy(sql`1`); // by position, see teacher-home gradeCounts
   for (const row of counts) totals[row.status] = row.count;
   const total = Object.values(totals).reduce((sum, value) => sum + value, 0);
   // Treat SQL wildcard characters as literal email-search input.
   const pattern = `%${q.replace(/[\\%_]/g, '\\$&')}%`;
   const where = and(
     eq(invitations.schoolId, schoolId),
-    q ? sql`${invitations.email} like ${pattern} escape '\\'` : undefined,
+    q ? sql`${invitations.email} ilike ${pattern} escape '\\'` : undefined,
   );
   const [matches] = q
     ? await db.select({ count: count() }).from(invitations).where(where)

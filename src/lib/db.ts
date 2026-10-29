@@ -1,18 +1,12 @@
-import { drizzle } from 'drizzle-orm/libsql';
-import { createClient } from '@libsql/client';
+import { Pool } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
 import * as schema from '../db/schema';
 import { generateId } from './utils';
 
-// Create the Turso client
-const authToken = process.env.TURSO_AUTH_TOKEN;
-const client = createClient(
-  authToken
-    ? { url: process.env.TURSO_DATABASE_URL!, authToken }
-    : { url: process.env.TURSO_DATABASE_URL! }
-);
+// Neon Postgres (D4). The pooled WebSocket driver supports interactive transactions.
+const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
 
-// Create the Drizzle database instance
-export const db = drizzle(client, { schema });
+export const db = drizzle({ client: pool, schema });
 
 // Export types
 export type Database = typeof db;

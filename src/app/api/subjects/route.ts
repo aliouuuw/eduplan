@@ -54,20 +54,20 @@ export async function GET(request: NextRequest) {
       }).from(subjects),
       db.select({
         subjectId: teacherClasses.subjectId,
-        classCount: sql<number>`count(distinct ${teacherClasses.classId})`,
+        classCount: sql<number>`count(distinct ${teacherClasses.classId})`.mapWith(Number),
       })
         .from(teacherClasses)
         .groupBy(teacherClasses.subjectId),
       db.select({
         subjectId: teacherSubjects.subjectId,
-        teacherCount: sql<number>`count(${teacherSubjects.id})`,
+        teacherCount: sql<number>`count(${teacherSubjects.id})`.mapWith(Number),
       })
         .from(teacherSubjects)
         .groupBy(teacherSubjects.subjectId),
       db.select({
         subjectId: teacherClasses.subjectId,
-        totalActualHours: sql<number>`sum(${teacherClasses.weeklyHours})`,
-        assignedClasses: sql<number>`count(distinct case when ${teacherClasses.teacherId} is not null and ${teacherClasses.teacherId} != '' then ${teacherClasses.classId} end)`,
+        totalActualHours: sql<number>`sum(${teacherClasses.weeklyHours})`.mapWith(Number),
+        assignedClasses: sql<number>`count(distinct case when ${teacherClasses.teacherId} is not null and ${teacherClasses.teacherId} != '' then ${teacherClasses.classId} end)`.mapWith(Number),
       })
         .from(teacherClasses)
         .groupBy(teacherClasses.subjectId),

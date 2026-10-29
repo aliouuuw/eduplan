@@ -1,9 +1,7 @@
 import { expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
-import { academicYears, classes, terms } from '@/db/schema';
+import { academicYears, terms } from '@/db/schema';
 
 import { defaultTerm, getAcademicContext } from './academic-context';
 import { seedDemo } from './demo-seed';
@@ -45,21 +43,4 @@ test('closed terms and past years are read-only; the open current term is editab
   const past = await getAcademicContext(db, 'demo-dakar', { day, termId: 'demo-t1' });
   expect(past.year?.id).toBe('demo-year');
   expect(past.editable).toBe(false);
-});
-
-test('migration 0012 links classes to a year of the same school by label only', async () => {
-  const db = await testDb();
-  await seedDemo(db);
-  const [row] = await db.select().from(classes).where(eq(classes.id, 'demo-3b'));
-  const [year] = await db.select().from(academicYears).limit(1);
-  await db.insert(academicYears).values({ ...year, id: 'foreign-year', schoolId: 'other-school', name: '2030-2031', isCurrent: false });
-  await db.insert(classes).values([
-    { ...row, id: 'unknown-label', academicYear: '2030-2031', academicYearId: null },
-    { ...row, id: 'relinked', academicYearId: null },
-  ]);
-  const migration = readFileSync(join(import.meta.dirname, '..', '..', 'db', 'migrations', '0012_academic_context.sql'), 'utf8');
-  await db.run(sql.raw(migration.split('--> statement-breakpoint').at(-1)!));
-  const linked = new Map((await db.select().from(classes)).map((c) => [c.id, c.academicYearId]));
-  expect(linked.get('relinked')).toBe('demo-year');
-  expect(linked.get('unknown-label')).toBeNull(); // another school's 2030-2031 must not match
 });

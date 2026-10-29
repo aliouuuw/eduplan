@@ -1,14 +1,15 @@
-// Test helper: a fresh in-memory database with the real migrations applied.
+// Test helper: a fresh in-memory Postgres (PGlite) with the real migrations applied.
 import { join } from 'node:path';
-import { createClient } from '@libsql/client';
-import { drizzle } from 'drizzle-orm/libsql';
-import { migrate } from 'drizzle-orm/libsql/migrator';
+import { PGlite } from '@electric-sql/pglite';
+import { drizzle } from 'drizzle-orm/pglite';
+import { migrate } from 'drizzle-orm/pglite/migrator';
 
 import * as schema from '@/db/schema';
 import type { Database } from '@/lib/db';
 
 export async function testDb(queryLog?: string[]): Promise<Database> {
-  const db = drizzle(createClient({ url: ':memory:' }), {
+  const db = drizzle({
+    client: new PGlite(),
     schema,
     logger: queryLog ? { logQuery(query) { queryLog.push(query); } } : undefined,
   });

@@ -11,7 +11,7 @@ Context: `PRODUCT.md` (who and why), `MVP_REWORK_PLAN.md` (scope, IA, flows, ord
 | D1 | Grade scale | /20 with coefficients and trimestres (French system) | 10-25 |
 | D2 | Digest channel | Email first, WhatsApp later | 10-25 |
 | D3 | File storage for submissions | S3-compatible storage (Cloudflare R2) | 10-25 |
-| D4 | Database at scale | Keep libSQL and host it on Turso, or move to Postgres before the first school goes live | 10-25 |
+| D4 | Database at scale | Postgres on Neon (EU region, next to the Vercel functions), before the first school goes live. Drizzle `pg-core`, the pooled `neon-serverless` driver for real transactions, PGlite for in-memory tests. One baseline migration replaces the 14 SQLite ones: no school data existed. Auth (NextAuth or Better Auth) is a separate decision | 10-29 |
 | D5 | Rubrics | /20 only in the MVP. Rubrics come first after the MVP | 10-25 |
 | D15 | Class news feed (stream) | Out of the MVP | 10-25 |
 | D16 | UI language | French, with the French class ladder and school terms (trimestre, conseil de classe, cahier de textes, appréciations) | 10-25 |

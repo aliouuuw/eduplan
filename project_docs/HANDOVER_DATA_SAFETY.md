@@ -53,8 +53,7 @@ Do not use subagents unless the user explicitly requests them.
 - Read indexes for the changed query paths; four access paths have `EXPLAIN QUERY PLAN` checks.
 
 The migration adds indexes only. It deliberately fails on conflicting data rather than deleting or choosing rows.
-`scripts/check-teaching-integrity.ts` is a read-only preflight for those conflicts.
-It has not been run against a configured school database.
+Since D4 (Postgres), these constraints are in the baseline migration from the start, so the SQLite preflight script was removed.
 
 ### Teacher reads
 
@@ -104,7 +103,7 @@ driven by `playwright-core` from the session scratchpad. No browser was installe
 
 Isolated data: a copy of `/tmp/eduplan-review.rKHe2w/preview.db` in the session scratchpad (test school
 `preview-school`, admin `admin@preview.test`, 62 artificial invitations plus one 95-character email).
-The test password was set on the copy only. Server: `TURSO_DATABASE_URL=file:<copy> bunx next dev -p 3107`.
+The test password was set on the copy only. Server (SQLite era, before D4): `TURSO_DATABASE_URL=file:<copy> bunx next dev -p 3107`.
 The normal `local.db` was not read or written, and `seed:demo` was not run.
 
 | Check | Result |

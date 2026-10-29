@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       db
         .select({
           role: users.role,
-          count: sql<number>`count(*)`,
+          count: sql<number>`count(*)`.mapWith(Number),
         })
         .from(users)
         .where(and(
@@ -31,15 +31,15 @@ export async function GET(request: NextRequest) {
         ))
         .groupBy(users.role),
       db
-        .select({ count: sql<number>`count(*)` })
+        .select({ count: sql<number>`count(*)`.mapWith(Number) })
         .from(classes)
         .where(eq(classes.schoolId, schoolId)),
       db
-        .select({ count: sql<number>`count(*)` })
+        .select({ count: sql<number>`count(*)`.mapWith(Number) })
         .from(subjects)
         .where(eq(subjects.schoolId, schoolId)),
       db
-        .select({ count: sql<number>`count(*)` })
+        .select({ count: sql<number>`count(*)`.mapWith(Number) })
         .from(academicLevels)
         .where(eq(academicLevels.schoolId, schoolId)),
     ]);

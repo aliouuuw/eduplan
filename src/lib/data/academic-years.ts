@@ -42,27 +42,27 @@ export async function createYear(db: Database, schoolId: string, input: YearInpu
   }
 
   const id = generateId();
-  await db.batch([
+  await db.transaction(async (tx) => {
     // The first year of a school becomes current; later ones wait for the admin to switch.
-    db.insert(academicYears).values({ id, schoolId, name: input.name, startsOn: input.startsOn, endsOn: input.endsOn, isCurrent: existing.length === 0, createdAt: now, updatedAt: now }),
-    db.insert(terms).values(input.terms.map((term, index) => ({
+    await tx.insert(academicYears).values({ id, schoolId, name: input.name, startsOn: input.startsOn, endsOn: input.endsOn, isCurrent: existing.length === 0, createdAt: now, updatedAt: now });
+    await tx.insert(terms).values(input.terms.map((term, index) => ({
       id: generateId(), schoolId, academicYearId: id, name: term.name, position: index + 1,
       startsOn: term.startsOn, endsOn: term.endsOn, createdAt: now, updatedAt: now,
-    }))),
+    })));
     // Classes created before their year existed carry only the label: link them now.
-    db.update(classes).set({ academicYearId: id }).where(and(eq(classes.schoolId, schoolId), eq(classes.academicYear, input.name), isNull(classes.academicYearId))),
-  ]);
+    await tx.update(classes).set({ academicYearId: id }).where(and(eq(classes.schoolId, schoolId), eq(classes.academicYear, input.name), isNull(classes.academicYearId)));
+  });
   return { ok: true as const, id };
 }
 
 export async function setCurrentYear(db: Database, schoolId: string, yearId: string, now = new Date()) {
   const [year] = await db.select({ id: academicYears.id }).from(academicYears).where(and(eq(academicYears.id, yearId), eq(academicYears.schoolId, schoolId)));
   if (!year) return false;
-  // One batch: the unique index allows one current year, so clear before setting.
-  await db.batch([
-    db.update(academicYears).set({ isCurrent: false, updatedAt: now }).where(and(eq(academicYears.schoolId, schoolId), eq(academicYears.isCurrent, true))),
-    db.update(academicYears).set({ isCurrent: true, updatedAt: now }).where(and(eq(academicYears.id, yearId), eq(academicYears.schoolId, schoolId))),
-  ]);
+  // One transaction: the unique index allows one current year, so clear before setting.
+  await db.transaction(async (tx) => {
+    await tx.update(academicYears).set({ isCurrent: false, updatedAt: now }).where(and(eq(academicYears.schoolId, schoolId), eq(academicYears.isCurrent, true)));
+    await tx.update(academicYears).set({ isCurrent: true, updatedAt: now }).where(and(eq(academicYears.id, yearId), eq(academicYears.schoolId, schoolId)));
+  });
   return true;
 }
 

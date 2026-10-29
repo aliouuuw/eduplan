@@ -64,7 +64,7 @@ export async function listTeacherClasses(db: Database, teacherId: string, school
   if (classIds.length === 0) return [];
 
   const counts = await db
-    .select({ classId: studentEnrollments.classId, count: sql<number>`count(*)` })
+    .select({ classId: studentEnrollments.classId, count: sql<number>`count(*)`.mapWith(Number) })
     .from(studentEnrollments)
     .where(and(inArray(studentEnrollments.classId, classIds), eq(studentEnrollments.isActive, true), eq(studentEnrollments.schoolId, schoolId)))
     .groupBy(studentEnrollments.classId);
