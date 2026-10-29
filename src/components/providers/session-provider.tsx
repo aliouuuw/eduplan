@@ -1,12 +1,17 @@
 'use client';
 
-import { SessionProvider } from 'next-auth/react';
-import { ReactNode } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 
-interface Props {
-  children: ReactNode;
+import type { Session } from '@/lib/auth';
+
+// The dashboard layout reads the session once on the server and hands it down (D49).
+// Same `{ data }` shape as next-auth's useSession, so the legacy pages only changed their import.
+const SessionContext = createContext<Session | null>(null);
+
+export default function AuthSessionProvider({ session, children }: { session: Session; children: ReactNode }) {
+  return <SessionContext value={session}>{children}</SessionContext>;
 }
 
-export default function AuthSessionProvider({ children }: Props) {
-  return <SessionProvider>{children}</SessionProvider>;
+export function useSession() {
+  return { data: useContext(SessionContext) };
 }

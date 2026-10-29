@@ -6,7 +6,7 @@ Status: plan, 2026-10-27. Starts after the design system (D32) landed in code. S
 
 | Area | State |
 |---|---|
-| Stack | Next 16, React 19.3 (React Compiler on), Tailwind v4, Radix, Drizzle on libSQL, NextAuth 5, Bun |
+| Stack | Next 16, React 19.3 (React Compiler on), Tailwind v4, Radix, Drizzle on Neon Postgres, Neon Auth (Better Auth, D49), Bun |
 | Design system | A+ Plat vif in `src/app/globals.css` and `src/components/ui/` (24 restyled, 2 new: `switch`, `progress`). Preview: `/design-system` (dev only) |
 | Checks | `bunx tsc --noEmit` clean · `bun run lint` 0 errors, 30 warnings · `bun test` 1 test · `bun run build` passes |
 | Data | Teaching tables in migration `0008`. Demo school `demo-dakar` via `bun run seed:demo`. Needs a database URL and a migrate before the seed writes |

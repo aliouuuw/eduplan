@@ -22,7 +22,7 @@ Date: 2026-10-26. Source: [Claude Code best practices](https://code.claude.com/d
    - Commit 3: design mocks (`.impeccable/mocks/teacher-home/`, the handover doc).
 2. **Write a short project `CLAUDE.md` (15 min).** Keep it under 40 lines. Each line must prevent a real mistake:
    - Commands: `bun run dev`, `bun run lint`, `bunx tsc --noEmit`, `bun run build`, `bun run db:*`.
-   - Stack notes: Next.js version with breaking changes (read `node_modules/next/dist/docs/` first), Drizzle on libSQL, NextAuth.
+   - Stack notes: Next.js version with breaking changes (read `node_modules/next/dist/docs/` first), Drizzle on Neon Postgres, Neon Auth (D49).
    - UI copy is French. French school vocabulary (trimestre, coef., conseil de classe).
    - Sources of truth: `@PRODUCT.md`, `project_docs/MVP_REWORK_PLAN.md`, `project_docs/DESIGN_HANDOVER_TEACHER_HOME.md`.
    - "When compacting, keep the list of modified files and the check commands."

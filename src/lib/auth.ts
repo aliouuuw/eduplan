@@ -1,97 +1,27 @@
-import NextAuth from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
-import bcrypt from 'bcryptjs';
-import { eq } from 'drizzle-orm';
-import { db } from './db';
+import { cache } from 'react';
+import { and, eq, isNull } from 'drizzle-orm';
+
 import { users } from '../db/schema';
-import { z } from 'zod';
+import { db } from './db';
+import { neonAuth } from './neon-auth';
 
-// Validation schemas
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+export type Session = { user: { id: string; name: string; email: string; role: string; schoolId: string | null } };
+
+/**
+ * The signed-in EduPlan user, or null. Neon Auth proves who it is (D49); our users row gives the role and
+ * school. The row is matched on auth_user_id, never on email: anyone can sign up with an email that has
+ * a profile, so an email match would hand them that account. Inactive and soft-deleted users get null.
+ */
+export const auth = cache(async (): Promise<Session | null> => {
+  const { data } = await neonAuth.getSession();
+  if (!data?.user) return null;
+  const [user] = await db
+    .select({ id: users.id, name: users.name, email: users.email, role: users.role, schoolId: users.schoolId })
+    .from(users)
+    .where(and(eq(users.authUserId, data.user.id), eq(users.isActive, true), isNull(users.deletedAt)))
+    .limit(1);
+  return user ? { user } : null;
 });
-
-export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [
-    Credentials({
-      name: 'credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        try {
-          // Validate input
-          const { email, password } = loginSchema.parse(credentials);
-
-          // Find user in database
-          const user = await db
-            .select()
-            .from(users)
-            .where(eq(users.email, email))
-            .limit(1);
-
-          if (!user.length) {
-            return null;
-          }
-
-          const foundUser = user[0];
-
-          // Check if user is active
-          if (!foundUser.isActive) {
-            return null;
-          }
-
-          // Verify password
-          const isValidPassword = await bcrypt.compare(password, foundUser.password);
-          if (!isValidPassword) {
-            return null;
-          }
-
-          // Return user object for session
-          return {
-            id: foundUser.id,
-            email: foundUser.email,
-            name: foundUser.name,
-            role: foundUser.role,
-            schoolId: foundUser.schoolId,
-          };
-        } catch (error) {
-          console.error('Auth error:', error);
-          return null;
-        }
-      },
-    }),
-  ],
-  callbacks: {
-    async jwt({ token, user }) {
-      // Add user info to JWT token
-      if (user) {
-        token.role = user.role;
-        token.schoolId = user.schoolId;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      // Add user info to session
-      if (token) {
-        session.user.id = token.sub!;
-        session.user.role = token.role as string;
-        session.user.schoolId = token.schoolId as string | null;
-      }
-      return session;
-    },
-  },
-  pages: {
-    signIn: '/login',
-  },
-  session: {
-    strategy: 'jwt',
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-});
-
 // Utility functions for role checking
 export function hasRole(userRole: string, requiredRole: string): boolean {
   const roleHierarchy = {

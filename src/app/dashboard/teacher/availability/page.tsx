@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/components/providers/session-provider';
 import { toast } from 'sonner';
 import AvailabilityCalendar from '@/components/calendar/availability-calendar';
 import { CalendarEvent, Mode } from '@/components/calendar/calendar-types';

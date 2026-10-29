@@ -18,6 +18,14 @@ async function currentViewer(): Promise<Viewer | null> {
   };
 }
 
+/** Role layouts: the signed-in user in one of `roles`, school or not. Otherwise redirect to their own home. */
+export async function requireRole(...roles: Role[]): Promise<Viewer> {
+  const viewer = await currentViewer();
+  if (!viewer) redirect('/login');
+  if (!roles.includes(viewer.role)) redirect('/dashboard');
+  return viewer;
+}
+
 /** Pages: the signed-in user in one of `roles`, attached to a school. Otherwise redirect. */
 export async function requireSchoolRole(...roles: Role[]): Promise<SchoolViewer> {
   const viewer = await currentViewer();

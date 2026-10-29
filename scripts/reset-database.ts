@@ -23,8 +23,6 @@ import {
   studentEnrollments,
   parentStudents,
   invitations,
-  passwordResets,
-  passwordResetRequests
 } from '@/db/schema';
 import { ne } from 'drizzle-orm';
 
@@ -78,14 +76,6 @@ async function resetDatabase() {
     console.log('✉️  Deleting invitations...');
     await db.delete(invitations);
     console.log('✅ Invitations deleted');
-
-    console.log('🔑 Deleting password resets...');
-    await db.delete(passwordResets);
-    console.log('✅ Password resets deleted');
-
-    console.log('🔑 Deleting password reset requests...');
-    await db.delete(passwordResetRequests);
-    console.log('✅ Password reset requests deleted');
 
     console.log('👤 Deleting non-superadmin users...');
     await db.delete(users).where(ne(users.role, 'superadmin'));

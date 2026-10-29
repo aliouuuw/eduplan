@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -34,22 +35,10 @@ export default function ForgotPasswordPage() {
     setError(null);
 
     try {
-      const response = await fetch('/api/password-reset-requests', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: data.email,
-        }),
-      });
-
-      if (response.ok) {
-        setSuccess(true);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Failed to submit password reset request');
-      }
+      // Neon Auth emails the link (D49). It answers the same whether or not the email has an account.
+      const { error } = await authClient.requestPasswordReset({ email: data.email, redirectTo: '/reset-password' });
+      if (error) setError(error.message || 'Failed to send the reset email');
+      else setSuccess(true);
     } catch (err) {
       setError('An error occurred. Please try again.');
       console.error('Error:', err);
@@ -69,9 +58,9 @@ export default function ForgotPasswordPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">Request Submitted!</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Check your email</h2>
               <p className="text-gray-600 mb-6">
-                Your password reset request has been submitted successfully. A system administrator will review your request and send you a reset link if approved.
+                If an account uses this email, a reset link is on its way.
               </p>
               <Link href="/login">
                 <Button variant="outline" className="flex items-center gap-2 mx-auto">
@@ -98,7 +87,7 @@ export default function ForgotPasswordPage() {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">Forgot Password?</CardTitle>
             <CardDescription className="text-center">
-              Enter your email address and we'll notify an administrator to send you a password reset link
+              Enter your email address and we will send you a reset link
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -130,7 +119,7 @@ export default function ForgotPasswordPage() {
                 )}
 
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? 'Submitting Request...' : 'Request Password Reset'}
+                  {isSubmitting ? 'Sending...' : 'Send reset link'}
                 </Button>
               </form>
             </Form>

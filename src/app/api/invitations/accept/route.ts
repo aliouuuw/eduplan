@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import bcrypt from 'bcryptjs';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { db, getCurrentTimestamp } from '@/lib/db';
 import { generateId } from '@/lib/utils';
 import { invitations, users } from '@/db/schema';
 import { isInvitationValid } from '@/lib/invitations';
+import { neonAuth } from '@/lib/neon-auth';
 
 const acceptInvitationSchema = z.object({
   token: z.string().min(1, 'Token is required'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 // POST /api/invitations/accept - Accept invitation and create user account
@@ -65,30 +65,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
+    // Neon Auth holds the login and signs the person in (D49); our row holds the role and school.
+    const signUp = await neonAuth.signUp.email({ email: invitationData.email, name, password });
+    if (signUp.error || !signUp.data) {
+      const taken = signUp.error?.code === 'USER_ALREADY_EXISTS' || signUp.error?.code === 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL';
+      return NextResponse.json(
+        { message: taken ? 'An account with this email already exists' : signUp.error?.message ?? 'Sign-up failed' },
+        { status: taken ? 400 : 502 }
+      );
+    }
 
-    // Create user account
     const userId = generateId();
     const now = getCurrentTimestamp();
-
-    await db.insert(users).values({
-      id: userId,
-      email: invitationData.email,
-      password: hashedPassword,
-      name,
-      role: invitationData.role,
-      schoolId: invitationData.schoolId,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
+    const used = await db.transaction(async (tx) => {
+      // The usedAt guard makes a second accept of the same invitation a no-op.
+      const claimed = await tx
+        .update(invitations)
+        .set({ usedAt: now })
+        .where(and(eq(invitations.id, invitationData.id), isNull(invitations.usedAt)))
+        .returning({ id: invitations.id });
+      if (claimed.length === 0) return false;
+      await tx.insert(users).values({
+        id: userId,
+        authUserId: signUp.data.user.id,
+        email: invitationData.email,
+        name,
+        role: invitationData.role,
+        schoolId: invitationData.schoolId,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      });
+      return true;
     });
-
-    // Mark invitation as used
-    await db
-      .update(invitations)
-      .set({ usedAt: now })
-      .where(eq(invitations.id, invitationData.id));
+    if (!used) {
+      return NextResponse.json({ message: 'This invitation has already been used' }, { status: 400 });
+    }
 
     return NextResponse.json(
       {

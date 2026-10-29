@@ -2,10 +2,10 @@
  * Script to create a superadmin account
  * Run: bun run scripts/seed-superadmin.ts
  */
-import bcrypt from 'bcryptjs';
 import { db, generateId, getCurrentTimestamp } from '../src/lib/db';
 import { users } from '../src/db/schema';
 import { eq } from 'drizzle-orm';
+import { ensureLogin } from './neon-login';
 
 const SUPERADMIN_EMAIL = 'superadmin@eduplan.com';
 const SUPERADMIN_PASSWORD = 'Admin@123'; // Change this in production!
@@ -31,9 +31,8 @@ async function seedSuperAdmin() {
 
     console.log('⚙️  Creating superadmin account...');
     
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(SUPERADMIN_PASSWORD, 12);
-    
+    const authUserId = await ensureLogin(SUPERADMIN_EMAIL, SUPERADMIN_NAME, SUPERADMIN_PASSWORD);
+
     // Create superadmin user
     const userId = generateId();
     const now = getCurrentTimestamp();
@@ -41,7 +40,7 @@ async function seedSuperAdmin() {
     await db.insert(users).values({
       id: userId,
       email: SUPERADMIN_EMAIL,
-      password: hashedPassword,
+      authUserId,
       name: SUPERADMIN_NAME,
       role: 'superadmin',
       schoolId: null, // Superadmin has no school

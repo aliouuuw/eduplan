@@ -8,6 +8,20 @@
       "when": 1793276777286,
       "tag": "0000_postgres_baseline",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793299879554,
+      "tag": "0001_drop_passwords",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793299880132,
+      "tag": "0002_neon_auth_link",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/components/providers/session-provider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DataTable } from '@/components/ui/data-table';
@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Users, UserCheck, GraduationCap, UserPlus, AlertCircle, Plus } from 'lucide-react';
-import type { User } from 'next-auth';
 import { UserForm } from '@/components/forms/user-form';
 
 interface UserWithSchool {
@@ -151,7 +150,7 @@ export default function AdminUsersPage() {
         const result = await response.json();
         toast({
           title: 'Success',
-          description: `User ${result.user.name} created successfully${result.tempPassword ? '. A temporary password has been generated.' : ''}`,
+          description: `User ${result.user.name} created successfully`,
         });
         setShowCreateForm(false);
         fetchUsers(); // Refresh the data
