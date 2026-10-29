@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<title>EduPlan · 3ème B · Notes</title>
+{{HEAD}}
+<style>
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:24px;align-items:start}
+.filters{display:flex;gap:4px;padding:4px;border-radius:22px;background:var(--prog-tt);width:max-content;margin-top:16px}
+.filters a{height:34px;padding:0 14px;border-radius:17px;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:500;color:var(--ink-2)}
+.filters a small{font-size:12.5px;font-weight:400;color:var(--ink-3)}
+.filters a.is-active{background:var(--sheet);color:var(--ink);box-shadow:0 6px 12px -10px rgba(117,99,230,.6)}
+.scroll{overflow-x:auto;margin:18px -14px 0;padding:0 14px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:14.5px}
+thead th{text-align:right;font-weight:500;font-size:13.5px;padding:0 10px 10px;vertical-align:bottom;border-bottom:1px solid var(--line)}
+thead th a{display:block;min-width:84px}
+thead th small{white-space:nowrap}
+thead th:first-child{text-align:left;color:var(--ink-3);font-weight:400}
+thead th small{display:block;font-size:12.5px;font-weight:400;color:var(--ink-3)}
+thead th a:hover{color:var(--prog-ink)}
+thead th.avg{color:var(--ink)}
+tbody th{text-align:left;font-weight:500;padding:10px 10px;border-radius:14px 0 0 14px;white-space:nowrap}
+tbody td{text-align:right;padding:10px 10px;white-space:nowrap}
+/* the average stays in view when the works scroll */
+thead th.avg,td.avg{position:sticky;right:0;background:var(--sheet);padding-left:16px}
+tbody tr:hover td.avg{background:var(--prog-tt)}
+tbody tr.is-selected td.avg{background:#fff6f3}
+tbody td:last-child{border-radius:0 14px 14px 0}
+tbody tr{transition:background .2s}
+tbody tr:hover{background:var(--prog-tt)}
+tbody tr.is-selected{background:linear-gradient(100deg,#fdeee9,#fff6f3)}
+td.low{color:var(--now-ink)}
+td.avg{font-weight:600}
+td.avg.low{color:var(--now-ink)}
+.wait{font-size:13px;color:var(--prog-ink);font-weight:500}
+.na{font-size:13px;color:var(--ink-3)}
+.flag{font-size:12.5px;font-weight:500;color:var(--now-ink);margin-left:10px}
+.foot{display:flex;justify-content:space-between;margin-top:14px;padding:0 12px;font-size:13.5px;color:var(--ink-3)}
+
+/* class panel */
+.big{font-size:52px;font-weight:500;letter-spacing:-.03em;line-height:1;margin-top:14px}
+.big span{font-size:18px;color:var(--ink-3);letter-spacing:0;margin-left:6px}
+.split{display:flex;gap:3px;height:8px;margin-top:18px}
+.split i{border-radius:4px}
+.split .a{background:var(--now)}
+.split .b{background:#c4bcef}
+.split .c{background:var(--prog-2)}
+.legend{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.legend b{display:block;font-size:22px;font-weight:500}
+.legend span{font-size:13px;color:var(--ink-3)}
+.sec{margin-top:24px}
+.sec h3{font-size:15px;font-weight:500}
+.works div{display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:10px 0;font-size:14px;align-items:baseline}
+.works small{display:block;font-size:12.5px;color:var(--ink-3)}
+.works .c{color:var(--ink-3);font-size:13px;text-align:right}
+.works b,.works .link{font-weight:500;text-align:right;white-space:nowrap}
+.rule{margin-top:20px;font-size:13.5px;color:var(--ink-3);line-height:1.55}
+</style></head><body>
+{{DOCK:classes}}
+<main class="page">
+  <div>
+    <a class="crumb" href="#"><svg viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6"/></svg>Mes classes</a>
+    <div class="top" style="margin-top:10px">
+      <div class="grow"><h1>3ème B · Mathématiques</h1><p>31 élèves · salle 7 · trimestre 1, semaine 8 sur 12</p></div>
+    </div>
+  </div>
+  <nav class="tabs" aria-label="Espace de la classe">
+    <a class="tab" href="#">Travail</a>
+    <a class="tab" href="#">Programme</a>
+    <a class="tab" href="#">Élèves <small>31</small></a>
+    <a class="tab is-active" href="#" aria-current="page">Notes</a>
+    <a class="tab" href="#">Présences</a>
+    <a class="tab" href="#">Emploi du temps</a>
+  </nav>
+  <div class="grid">
+    <section class="card">
+      <div class="card-head"><h2>Carnet de notes</h2><span class="sub">notes sur 20, moyennes pondérées par coefficient</span></div>
+      <div class="filters"><a class="is-active" href="#">Trimestre 1</a><a href="#">Trimestre 2</a><a href="#">Trimestre 3</a></div>
+      <div class="scroll"><table>
+        <thead><tr><th scope="col">Élève</th>
+          <th scope="col"><a href="#">Devoir maison n°1</a><small>14 sept. · coef. 1</small></th>
+          <th scope="col"><a href="#">Contrôle n°1</a><small>28 sept. · coef. 2</small></th>
+          <th scope="col"><a href="#">Devoir maison n°2</a><small>12 oct. · coef. 1</small></th>
+          <th scope="col"><a href="#">Interrogation</a><small>19 oct. · coef. 1</small></th>
+          <th scope="col"><a href="#">Devoir maison n°3</a><small>26 oct. · coef. 1</small></th>
+          <th scope="col" class="avg">Moyenne<small>/ 20</small></th></tr></thead>
+        <tbody>
+<tr><th scope='row'>Aminata Ba</th><td>16</td><td>14,5</td><td>13</td><td>14,5</td><td><span class='wait'>à corriger</span></td><td class='avg'>14,50</td></tr>
+<tr><th scope='row'>Rokhaya Ba</th><td class='low'>9,5</td><td>10,5</td><td>11,5</td><td>10,5</td><td><span class='wait'>à corriger</span></td><td class='avg'>10,50</td></tr>
+<tr><th scope='row'>Lamine Camara</th><td>16</td><td>14</td><td>12</td><td>14</td><td><span class='wait'>à corriger</span></td><td class='avg'>14,00</td></tr>
+<tr><th scope='row'>Coumba Diagne</th><td>14,5</td><td>14</td><td>13,5</td><td>14</td><td><span class='wait'>à corriger</span></td><td class='avg'>14,00</td></tr>
+<tr><th scope='row'>Cheikh Diallo</th><td class='low'>8,25</td><td>10,25</td><td>12,25</td><td>10</td><td><span class='na'>non rendu</span></td><td class='avg'>10,20</td></tr>
+<tr><th scope='row'>Alioune Dieng</th><td>14,5</td><td>13,5</td><td>12,5</td><td>13,5</td><td><span class='wait'>à corriger</span></td><td class='avg'>13,50</td></tr>
+<tr><th scope='row'>Pape Diouf</th><td>12,75</td><td>11</td><td class='low'>9,75</td><td>11</td><td><span class='wait'>à corriger</span></td><td class='avg'>11,10</td></tr>
+<tr><th scope='row'>Awa Diop</th><td>14</td><td>15</td><td>16</td><td>15</td><td><span class='wait'>à corriger</span></td><td class='avg'>15,00</td></tr>
+<tr><th scope='row'>Ibrahima Fall</th><td>15,25</td><td>13,5</td><td>11,25</td><td>13,5</td><td><span class='wait'>à corriger</span></td><td class='avg'>13,40</td></tr>
+<tr class='is-selected'><th scope='row'>Khady Fall<span class='flag'>À suivre</span></th><td>12</td><td>10,5</td><td class='low'>6</td><td class='low'>3,5</td><td><span class='wait'>à corriger</span></td><td class='avg low'>8,50</td></tr>
+<tr><th scope='row'>Ndeye Faye</th><td>11</td><td>13</td><td>15</td><td>13</td><td><span class='na'>non rendu</span></td><td class='avg'>13,00</td></tr>
+<tr><th scope='row'>Moustapha Gaye</th><td>16</td><td>15</td><td>14</td><td>15</td><td><span class='wait'>à corriger</span></td><td class='avg'>15,00</td></tr>
+<tr><th scope='row'>Khadija Gueye</th><td>11,5</td><td>10</td><td class='low'>8,5</td><td>10</td><td><span class='wait'>à corriger</span></td><td class='avg'>10,00</td></tr>
+<tr><th scope='row'>Yacine Kâ</th><td>14,5</td><td>15,5</td><td>16,5</td><td>15,5</td><td><span class='wait'>à corriger</span></td><td class='avg'>15,50</td></tr>
+<tr><th scope='row'>Fatou Kane</th><td>12</td><td>10</td><td class='low'>8</td><td>10</td><td><span class='wait'>à corriger</span></td><td class='avg'>10,00</td></tr>
+<tr><th scope='row'>Ibou Lô</th><td>11,5</td><td>11</td><td>10,5</td><td>11</td><td><span class='wait'>à corriger</span></td><td class='avg'>11,00</td></tr>
+<tr><th scope='row'>Ousmane Mbaye</th><td>10</td><td>12</td><td>14</td><td>12</td><td><span class='wait'>à corriger</span></td><td class='avg'>12,00</td></tr>
+<tr><th scope='row'>Sokhna Mbengue</th><td>11,5</td><td>10,5</td><td class='low'>9,5</td><td>10,5</td><td><span class='wait'>à corriger</span></td><td class='avg'>10,50</td></tr>
+<tr><th scope='row'>Djibril Ndao</th><td>11,5</td><td>10</td><td class='low'>8,5</td><td>10</td><td><span class='wait'>à corriger</span></td><td class='avg'>10,00</td></tr>
+<tr><th scope='row'>Mariama Ndiaye</th><td>13</td><td>14</td><td>15</td><td>14</td><td><span class='wait'>à corriger</span></td><td class='avg'>14,00</td></tr>
+<tr><th scope='row'>Awa Ndour</th><td>15,5</td><td>13,5</td><td>11,5</td><td>13,5</td><td><span class='wait'>à corriger</span></td><td class='avg'>13,50</td></tr>
+<tr><th scope='row'>Adama Niang</th><td>13,5</td><td>13</td><td>12,5</td><td>13</td><td><span class='wait'>à corriger</span></td><td class='avg'>13,00</td></tr>
+<tr><th scope='row'>Maïmouna Sall</th><td>13</td><td>15</td><td>17</td><td>15</td><td><span class='wait'>à corriger</span></td><td class='avg'>15,00</td></tr>
+<tr><th scope='row'>Babacar Sarr</th><td>12,5</td><td>11,5</td><td>10,5</td><td>11,5</td><td><span class='wait'>à corriger</span></td><td class='avg'>11,50</td></tr>
+<tr><th scope='row'>Abdou Seck</th><td>17</td><td>15,5</td><td>14</td><td>15,5</td><td><span class='wait'>à corriger</span></td><td class='avg'>15,50</td></tr>
+<tr><th scope='row'>Seydou Sow</th><td>12,5</td><td>13,5</td><td>14,5</td><td>13,5</td><td><span class='wait'>à corriger</span></td><td class='avg'>13,50</td></tr>
+<tr><th scope='row'>Marème Sy</th><td>16</td><td>14</td><td>12</td><td>14</td><td><span class='wait'>à corriger</span></td><td class='avg'>14,00</td></tr>
+<tr><th scope='row'>Cheikh Tall</th><td>11</td><td>10,5</td><td>10</td><td>10,5</td><td><span class='wait'>à corriger</span></td><td class='avg'>10,50</td></tr>
+<tr><th scope='row'>Astou Thiam</th><td class='low'>8,5</td><td>10,5</td><td>12,5</td><td>10,5</td><td><span class='wait'>à corriger</span></td><td class='avg'>10,50</td></tr>
+<tr><th scope='row'>Saliou Touré</th><td>15,5</td><td>14,5</td><td>13,5</td><td>14,5</td><td><span class='wait'>à corriger</span></td><td class='avg'>14,50</td></tr>
+<tr><th scope='row'>Modou Wade</th><td>11,5</td><td>10</td><td class='low'>8,5</td><td>10</td><td><span class='wait'>à corriger</span></td><td class='avg'>10,00</td></tr>
+        </tbody>
+      </table></div>
+      <div class="foot"><span>31 élèves · triés par nom</span><span>4 devoirs notés sur 5</span></div>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>Moyenne de la classe</h2></div>
+      <p class="big">12,49<span>/ 20</span></p>
+      <div class="split" aria-hidden="true"><i class="a" style="flex:1"></i><i class="b" style="flex:19"></i><i class="c" style="flex:11"></i></div>
+      <div class="legend"><div><b class="late">1</b><span>sous 10</span></div><div><b>19</b><span>de 10 à 14</span></div><div><b class="ahead">11</b><span>14 et plus</span></div></div>
+      <div class="sec"><h3>Par devoir</h3>
+        <div class="works rows">
+          <div><span>Devoir maison n°1<small>14 sept.</small></span><span class="c">coef. 1</span><b>12,96</b></div>
+          <div><span>Contrôle n°1<small>28 sept.</small></span><span class="c">coef. 2</span><b>12,56</b></div>
+          <div><span>Devoir maison n°2<small>12 oct.</small></span><span class="c">coef. 1</span><b>12,06</b></div>
+          <div><span>Interrogation<small>19 oct.</small></span><span class="c">coef. 1</span><b>12,32</b></div>
+          <div><span>Devoir maison n°3<small>26 oct.</small></span><span class="c">coef. 1</span><a class="link" href="#">29 à corriger</a></div>
+        </div>
+      </div>
+      <p class="rule">Chaque note compte selon le coefficient de son devoir. Une copie non rendue compte seulement si vous lui donnez une note.</p>
+    </section>
+  </div>
+</main>
+</body></html>
