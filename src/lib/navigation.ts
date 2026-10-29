@@ -76,7 +76,6 @@ export const NAV: Record<Role, NavItem[]> = {
     { href: SA, label: "Accueil", icon: "home" },
     { href: `${SA}/schools`, label: "Écoles", icon: "schools" },
     { href: `${SA}/users`, label: "Comptes", icon: "people" },
-    { href: `${SA}/password-resets`, label: "Demandes", icon: "requests" },
   ],
 }
 

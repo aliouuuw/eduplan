@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useCalendarContext } from '../../calendar-context';
 import { useGlobalSaving } from '@/lib/global-saving-context';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/components/providers/session-provider';
 import { calendarEventToAvailability } from '@/lib/availability-calendar-adapter';
 import {
   generateWorkWeekTemplate,

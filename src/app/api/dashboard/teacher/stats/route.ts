@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     const [subjectsResult, classesResult, studentsResult, periodsResult] = await Promise.all([
       db
-        .select({ count: sql<number>`count(*)` })
+        .select({ count: sql<number>`count(*)`.mapWith(Number) })
         .from(teacherSubjects)
         .where(
           and(
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
           )
         ),
       db
-        .select({ count: sql<number>`count(distinct ${teacherClasses.classId})` })
+        .select({ count: sql<number>`count(distinct ${teacherClasses.classId})`.mapWith(Number) })
         .from(teacherClasses)
         .where(
           and(
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
           )
         ),
       db
-        .select({ count: sql<number>`count(distinct ${studentEnrollments.studentId})` })
+        .select({ count: sql<number>`count(distinct ${studentEnrollments.studentId})`.mapWith(Number) })
         .from(teacherClasses)
         .innerJoin(
           studentEnrollments,
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
           )
         ),
       db
-        .select({ count: sql<number>`count(*)` })
+        .select({ count: sql<number>`count(*)`.mapWith(Number) })
         .from(timetables)
         .where(
           and(

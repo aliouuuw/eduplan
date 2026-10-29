@@ -1,95 +1,21 @@
-import NextAuth from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
-import bcrypt from 'bcryptjs';
-import { eq } from 'drizzle-orm';
+import { connection } from 'next/server';
+import { cache } from 'react';
+
+import { profileForAuthUser } from './data/profiles';
 import { db } from './db';
-import { users } from '../db/schema';
-import { z } from 'zod';
+import { neonAuth } from './neon-auth';
 
-// Validation schemas
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
+export type Session = { user: { id: string; name: string; email: string; role: string; schoolId: string | null } };
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [
-    Credentials({
-      name: 'credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        try {
-          // Validate input
-          const { email, password } = loginSchema.parse(credentials);
-
-          // Find user in database
-          const user = await db
-            .select()
-            .from(users)
-            .where(eq(users.email, email))
-            .limit(1);
-
-          if (!user.length) {
-            return null;
-          }
-
-          const foundUser = user[0];
-
-          // Check if user is active
-          if (!foundUser.isActive) {
-            return null;
-          }
-
-          // Verify password
-          const isValidPassword = await bcrypt.compare(password, foundUser.password);
-          if (!isValidPassword) {
-            return null;
-          }
-
-          // Return user object for session
-          return {
-            id: foundUser.id,
-            email: foundUser.email,
-            name: foundUser.name,
-            role: foundUser.role,
-            schoolId: foundUser.schoolId,
-          };
-        } catch (error) {
-          console.error('Auth error:', error);
-          return null;
-        }
-      },
-    }),
-  ],
-  callbacks: {
-    async jwt({ token, user }) {
-      // Add user info to JWT token
-      if (user) {
-        token.role = user.role;
-        token.schoolId = user.schoolId;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      // Add user info to session
-      if (token) {
-        session.user.id = token.sub!;
-        session.user.role = token.role as string;
-        session.user.schoolId = token.schoolId as string | null;
-      }
-      return session;
-    },
-  },
-  pages: {
-    signIn: '/login',
-  },
-  session: {
-    strategy: 'jwt',
-  },
-  secret: process.env.NEXTAUTH_SECRET,
+/** The signed-in EduPlan user, or null. Neon Auth proves who it is (D49); the profile gives role and school. */
+export const auth = cache(async (): Promise<Session | null> => {
+  // Per-request by nature. Saying so up front stops the build from trying to prerender the page, which
+  // the Neon SDK would otherwise log as a cookie error for every route.
+  await connection();
+  const { data } = await neonAuth.getSession();
+  if (!data?.user) return null;
+  const user = await profileForAuthUser(db, data.user.id);
+  return user ? { user } : null;
 });
 
 // Utility functions for role checking

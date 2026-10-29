@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@/components/providers/session-provider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, BookOpen, GraduationCap, UserCheck, Calendar, FolderTree, BookText } from 'lucide-react';
 import { DashboardStats } from '@/lib/types';

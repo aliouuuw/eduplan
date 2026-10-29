@@ -1,6 +1,5 @@
 // Demo slice for the teacher-home mock (studio-vif): Aïssatou Diop, maths,
 // trimestre 1 week 8, 3ème B with 31 students. Idempotent for school id `demo-dakar`.
-import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
 
 import {
@@ -83,7 +82,6 @@ export async function seedDemo(db: Database) {
   await db.insert(users).values({
     id: 'demo-aissatou',
     email: 'aissatou.diop@demo.eduplan',
-    password: await bcrypt.hash('Demo@123', 10),
     name: 'Aïssatou Diop',
     role: 'teacher',
     schoolId: DEMO_SCHOOL_ID,
@@ -176,7 +174,6 @@ export async function seedDemo(db: Database) {
       await db.insert(users).values({
         id,
         email: `${id}@demo.eduplan`,
-        password: 'not-a-login',
         name,
         role: 'student',
         schoolId: DEMO_SCHOOL_ID,

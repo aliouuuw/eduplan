@@ -33,6 +33,7 @@ School platform for francophone schools (Senegal first). Product: `PRODUCT.md`. 
 - Data tests use `testDb()` (`src/lib/data/test-db.ts`, in-memory with the real migrations). `bun run test` passes `--conditions react-server` so `server-only` modules load.
 - Legacy pages still fetch in `useEffect` + setState; they are listed in `eslint.config.mjs` as warnings. Every other file gets those React Compiler rules as errors. Remove a file from the list when you rebuild it.
 - `@radix-ui/react-slot` is pinned to ^1.5 through `overrides`: older copies render nothing for lazy server children inside `asChild`.
+- Auth (D49): read the user with `auth()` (`src/lib/auth.ts`) or `requireSchoolRole`/`requireRole` (`src/lib/session.ts`), never the Neon Auth SDK directly. Role checks live in the role layouts under `src/app/dashboard/`, not in `proxy.ts`. Dev logins come from `bun run seed:demo` and `bun run seed:superadmin`.
 - Public routes live in `src/lib/public-routes.ts`. Every page under `src/app/(auth)` must be listed there; the test reads that folder. Every other route needs a session.
 - Select teachers with `activeTeacher()` (`src/lib/teacher-scope.ts`), never `eq(users.role, 'teacher')`: it also excludes soft-deleted accounts. A test fails on the bare form.
 - Teacher hours come from `getWorkloadByTeacher` / `getTeacherMetrics` (`src/lib/teacher-utils.ts`). Do not re-sum `teacher_classes` by hand: it has no foreign keys, and orphaned rows must not count.

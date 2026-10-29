@@ -1,12 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { SQLiteSyncDialect } from 'drizzle-orm/sqlite-core';
+import { PgDialect } from 'drizzle-orm/pg-core';
 import { activeTeacher } from './teacher-scope';
 
 test('activeTeacher excludes soft-deleted accounts', () => {
-  const { sql } = new SQLiteSyncDialect().sqlToQuery(activeTeacher());
-  expect(sql).toContain('"role" = ?');
+  const { sql } = new PgDialect().sqlToQuery(activeTeacher());
+  expect(sql).toContain('"role" = $1');
   expect(sql).toContain('"deleted_at" is null');
 });
 

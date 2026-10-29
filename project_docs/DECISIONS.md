@@ -10,8 +10,8 @@ Context: `PRODUCT.md` (who and why), `MVP_REWORK_PLAN.md` (scope, IA, flows, ord
 |---|---|---|---|
 | D1 | Grade scale | /20 with coefficients and trimestres (French system) | 10-25 |
 | D2 | Digest channel | Email first, WhatsApp later | 10-25 |
-| D3 | File storage for submissions | S3-compatible storage (Cloudflare R2) | 10-25 |
-| D4 | Database at scale | Keep libSQL and host it on Turso, or move to Postgres before the first school goes live | 10-25 |
+| D3 | File storage for submissions | Neon object storage, bucket `uploads`, in the same Neon project as the database (was Cloudflare R2) | 10-29 |
+| D4 | Database at scale | Postgres on Neon (EU region, next to the Vercel functions), before the first school goes live. Drizzle `pg-core`, the pooled `neon-serverless` driver for real transactions, PGlite for in-memory tests. One baseline migration replaces the 14 SQLite ones: no school data existed. Auth: D49 | 10-29 |
 | D5 | Rubrics | /20 only in the MVP. Rubrics come first after the MVP | 10-25 |
 | D15 | Class news feed (stream) | Out of the MVP | 10-25 |
 | D16 | UI language | French, with the French class ladder and school terms (trimestre, conseil de classe, cahier de textes, appréciations) | 10-25 |
@@ -66,6 +66,7 @@ Context: `PRODUCT.md` (who and why), `MVP_REWORK_PLAN.md` (scope, IA, flows, ord
 | D46 | Which trimestre a grade belongs to | The trimestre that contains the work's due date, else its publication date. A closed trimestre or a past year refuses new grades. Grades are stored /20; a work on another scale is converted. Each work carries its own coefficient (`posts.coefficient`, default 1) | 10-28 |
 | D47 | Work dated between trimestres (refines D46) | Each trimestre owns the days after the previous one ends, up to its own end; the last has no end. A work due in a holiday gap counts in the next trimestre. A trimestre left open in a past year is read-only too. When a work's date or coefficient changes, its grades follow (`syncWorkGrades`) | 10-28 |
 | D48 | Grade on a copy never handed in | Allowed (for example 0 for "non rendu"). The copy keeps status "not handed in"; it counts as graded, not missing. `syncWorkGrades` stays and is wired into the work edit path in the next slice | 10-28 |
+| D49 | Auth | Managed Neon Auth (Better Auth) replaces NextAuth. Neon Auth holds logins and sessions in the `neon_auth` schema of our database; our `users` row keeps role, school and status, linked by `users.auth_user_id` (never by email: anyone can sign up with an email). Only `neon-auth.ts`, `auth-client.ts`, `/api/auth/[...path]` and `proxy.ts` import the SDK; `auth()` and `useSession` keep their shape. Password reset is Neon Auth's email; the superadmin reset links and their tables are gone. Accounts come from invitations only: public sign-up is closed on `/api/auth`, and an admin-created profile gets its login when its invitation is accepted. A login that exists without a profile is linked only with its password, and its other sessions are deleted. Exit: self-hosted Better Auth on the same tables; hashes are Better Auth scrypt (`salt:key` hex), so no password resets | 10-29 |
 
 ## Open
 

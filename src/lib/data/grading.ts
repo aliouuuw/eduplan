@@ -41,7 +41,7 @@ export function termForDay(rows: Term[], day: string): Term | null {
 
 // Days follow the school's own clock (schools.time_zone), like the home.
 const nextDay = (day: string, timeZone: string) =>
-  schoolDayStart(new Date(Date.parse(`${day}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10), timeZone);
+  new Date(schoolDayStart(new Date(Date.parse(`${day}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10), timeZone) * 1000);
 const workDay = (post: { dueAt: Date | null; createdAt: Date }, timeZone: string) => schoolDate(post.dueAt ?? post.createdAt, timeZone);
 
 async function schoolTimeZone(db: Database, schoolId: string) {
@@ -115,7 +115,7 @@ export async function listTermWork(db: Database, teacherId: string, schoolId: st
       last ? undefined : lt(workDate, nextDay(term.endsOn, timeZone)),
       teachesCourse(db, teacherId, schoolId, posts.classId, posts.subjectId),
     ))
-    .groupBy(posts.id, submissions.status)
+    .groupBy(posts.id, classes.id, subjects.id, submissions.status)
     .orderBy(desc(workDate), posts.id);
 
   const works = new Map<string, TermWork>();
@@ -212,14 +212,14 @@ export async function gradeSubmission(
   if (value === null) return { ok: false, reason: 'invalid_grade' };
 
   const fields = { value: toTwenty(value, max), coefficient: row.post.coefficient, comment: comment.trim() || null, termId: term.id, updatedAt: now };
-  await db.batch([
+  await db.transaction(async (tx) => {
     // One statement: two saves of the same copy at once update the one row instead of colliding.
-    db.insert(grades)
+    await tx.insert(grades)
       .values({ id: generateId(), schoolId, submissionId, studentId: row.studentId, subjectId: row.post.subjectId, classId: row.post.classId, createdAt: now, ...fields })
-      .onConflictDoUpdate({ target: [grades.schoolId, grades.submissionId], targetWhere: sql`${grades.submissionId} is not null`, set: fields }),
+      .onConflictDoUpdate({ target: [grades.schoolId, grades.submissionId], targetWhere: sql`${grades.submissionId} is not null`, set: fields });
     // A missing copy keeps "assigned": the grade (often 0) never makes it look handed in.
-    db.update(submissions).set({ status: row.copyStatus === 'assigned' ? 'assigned' : 'returned', returnedAt: now, updatedAt: now }).where(eq(submissions.id, submissionId)),
-  ]);
+    await tx.update(submissions).set({ status: row.copyStatus === 'assigned' ? 'assigned' : 'returned', returnedAt: now, updatedAt: now }).where(eq(submissions.id, submissionId));
+  });
   return { ok: true };
 }
 

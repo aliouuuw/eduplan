@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { eq, and, or, ne, isNull } from 'drizzle-orm';
-import bcrypt from 'bcryptjs';
 import { auth } from '@/lib/auth';
 import { db, getCurrentTimestamp } from '@/lib/db';
 import { users } from '@/db/schema';
@@ -11,7 +10,6 @@ import { generateId } from '@/lib/utils';
 const createUserSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters').optional(),
   role: z.enum(['admin', 'teacher', 'parent', 'student']),
   schoolId: z.string().optional(),
   isActive: z.boolean().default(true),
@@ -162,16 +160,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Generate password if not provided
-    let hashedPassword: string;
-    if (userData.password) {
-      hashedPassword = await bcrypt.hash(userData.password, 12);
-    } else {
-      // Generate a temporary password
-      const tempPassword = Math.random().toString(36).slice(-8);
-      hashedPassword = await bcrypt.hash(tempPassword, 12);
-    }
-
+    // A profile only: the person gets a login by accepting an invitation (D49).
     // Create user
     const userId = generateId();
     const now = getCurrentTimestamp();
@@ -179,7 +168,6 @@ export async function POST(request: NextRequest) {
     const newUser = await db.insert(users).values({
       id: userId,
       email: userData.email,
-      password: hashedPassword,
       name: userData.name,
       role: userData.role,
       schoolId: targetSchoolId,
@@ -199,8 +187,7 @@ export async function POST(request: NextRequest) {
           schoolId: newUser[0].schoolId,
           isActive: newUser[0].isActive,
           createdAt: newUser[0].createdAt,
-        },
-        tempPassword: userData.password ? undefined : 'A temporary password has been generated. Please inform the user to reset their password.'
+        }
       },
       { status: 201 }
     );

@@ -1,21 +1,3 @@
-import { DefaultSession } from 'next-auth';
-
-// Extend NextAuth types
-declare module 'next-auth' {
-  interface Session {
-    user: {
-      id: string;
-      role: string;
-      schoolId: string | null;
-    } & DefaultSession['user'];
-  }
-
-  interface User {
-    role: string;
-    schoolId: string | null;
-  }
-}
-
 // Application types
 export type UserRole = 'superadmin' | 'admin' | 'teacher' | 'parent' | 'student';
 

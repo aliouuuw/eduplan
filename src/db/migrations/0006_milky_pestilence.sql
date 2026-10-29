@@ -1,1 +1,0 @@
-ALTER TABLE `subjects` ADD `weekly_hours` integer DEFAULT 0;

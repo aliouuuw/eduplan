@@ -1,103 +1,26 @@
 {
   "version": "7",
-  "dialect": "sqlite",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "6",
-      "when": 1760063350430,
-      "tag": "0000_low_red_wolf",
+      "version": "7",
+      "when": 1793276777286,
+      "tag": "0000_postgres_baseline",
       "breakpoints": true
     },
     {
       "idx": 1,
-      "version": "6",
-      "when": 1760073216161,
-      "tag": "0001_elite_felicia_hardy",
+      "version": "7",
+      "when": 1793299879554,
+      "tag": "0001_drop_passwords",
       "breakpoints": true
     },
     {
       "idx": 2,
-      "version": "6",
-      "when": 1760077540331,
-      "tag": "0002_swift_phantom_reporter",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1760079511892,
-      "tag": "0003_rainy_shadowcat",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1760079862269,
-      "tag": "0004_ancient_machine_man",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1760095446457,
-      "tag": "0005_calm_bruce_banner",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "6",
-      "when": 1760299629998,
-      "tag": "0006_milky_pestilence",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "6",
-      "when": 1760358750979,
-      "tag": "0007_yellow_iron_patriot",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "6",
-      "when": 1793121810317,
-      "tag": "0008_lonely_matthew_murdock",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "6",
-      "when": 1793125178892,
-      "tag": "0009_teacher_home_data",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "6",
-      "when": 1793125997567,
-      "tag": "0010_school_class_subject_identity",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "6",
-      "when": 1793131349952,
-      "tag": "0011_teaching_integrity_and_read_indexes",
-      "breakpoints": true
-    },
-    {
-      "idx": 12,
-      "version": "6",
-      "when": 1793209604116,
-      "tag": "0012_academic_context",
-      "breakpoints": true
-    },
-    {
-      "idx": 13,
-      "version": "6",
-      "when": 1793210358760,
-      "tag": "0013_post_coefficient",
+      "version": "7",
+      "when": 1793299880132,
+      "tag": "0002_neon_auth_link",
       "breakpoints": true
     }
   ]

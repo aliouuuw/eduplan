@@ -245,7 +245,7 @@ export async function getTeacherHome(
       eq(classes.academicYearId, year.id),
       teachesCourse(db, teacherId, schoolId, posts.classId, posts.subjectId),
     ))
-    .groupBy(posts.id, submissions.status)
+    .groupBy(posts.id, classes.id, submissions.status)
     .orderBy(posts.createdAt, posts.id, submissions.status);
   const correctionMap = new Map<string, HomeCorrection>();
   let copiesHomework = 0;
@@ -274,8 +274,8 @@ export async function getTeacherHome(
   const corrections = [...correctionMap.values()].filter((row) => row.waiting > 0);
 
   const gradeWeek = term
-    ? sql<number>`min(${weeks}, max(1, cast((${grades.createdAt} - ${Date.parse(`${term.startsOn}T00:00:00Z`) / 1000}) / 604800 as integer) + 1))`.mapWith(Number)
-    : sql<number>`1`;
+    ? sql<number>`least(${weeks}, greatest(1, floor(extract(epoch from ${grades.createdAt} - ${`${term.startsOn}T00:00:00Z`}::timestamptz) / 604800)::int + 1))`.mapWith(Number)
+    : sql<number>`1`.mapWith(Number);
   const gradeCounts = term
     ? await db
         .select({ week: gradeWeek, count: sql<number>`count(*)`.mapWith(Number) })
@@ -286,7 +286,7 @@ export async function getTeacherHome(
           inArray(grades.classId, classIds),
           teachesCourse(db, teacherId, schoolId, grades.classId, grades.subjectId),
         ))
-        .groupBy(gradeWeek)
+        .groupBy(sql`1`) // by position: Postgres sees the parameterized expression twice as different
     : [];
   const weekly = new Map(gradeCounts.map((row) => [row.week, row.count]));
   let gradesEntered = 0;
@@ -301,7 +301,7 @@ export async function getTeacherHome(
     .select({
       id: studentFlags.id,
       student: users.name,
-      className: sql<string>`group_concat(distinct ${classes.name})`,
+      className: sql<string>`string_agg(distinct ${classes.name}, ',')`,
       reason: studentFlags.reason,
       source: studentFlags.source,
       ruleKind: studentFlags.ruleKind,
@@ -323,7 +323,7 @@ export async function getTeacherHome(
         teachesCourse(db, teacherId, schoolId, classes.id, studentFlags.subjectId),
       ),
     ))
-    .groupBy(studentFlags.id)
+    .groupBy(studentFlags.id, users.id)
     .orderBy(studentFlags.createdAt, studentFlags.id);
 
   const weekday = schoolWeekday(now, timeZone);

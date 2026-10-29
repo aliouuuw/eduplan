@@ -19,7 +19,6 @@
  * - Superadmin accounts will be preserved
  */
 
-import bcrypt from 'bcryptjs';
 import { db, getCurrentTimestamp } from '../src/lib/db';
 import { generateId } from '../src/lib/utils';
 import {
@@ -35,6 +34,7 @@ import {
   timeSlots
 } from '../src/db/schema';
 import { eq } from 'drizzle-orm';
+import { ensureLogin, seedPassword } from './neon-login';
 
 // Configuration
 const SCHOOL_NAME = "École Internationale de Dakar";
@@ -191,11 +191,10 @@ async function seedTimetableData() {
     // 2. Create School Admin
     console.log('👨‍💼 Creating school admin...');
     const adminId = generateId();
-    const hashedPassword = await bcrypt.hash('Admin@123', 12);
     await db.insert(users).values({
       id: adminId,
       email: 'admin@ecole-dakar.edu',
-      password: hashedPassword,
+      authUserId: await ensureLogin('admin@ecole-dakar.edu', 'School Administrator', seedPassword()),
       name: 'School Administrator',
       role: 'admin',
       schoolId: schoolId,
@@ -270,7 +269,6 @@ async function seedTimetableData() {
     // 6. Create Teachers
     console.log('👨‍🏫 Creating teachers...');
     const teacherIds: { [key: string]: string } = {};
-    const hashedTeacherPassword = await bcrypt.hash('Teacher@123', 12);
     
     for (const teacher of TEACHERS) {
       const teacherId = generateId();
@@ -278,7 +276,6 @@ async function seedTimetableData() {
       await db.insert(users).values({
         id: teacherId,
         email: teacher.email,
-        password: hashedTeacherPassword,
         name: teacher.name,
         role: 'teacher',
         schoolId: schoolId,
@@ -381,7 +378,6 @@ async function seedTimetableData() {
 
     // 10. Create Students
     console.log('👨‍🎓 Creating students...');
-    const hashedStudentPassword = await bcrypt.hash('Student@123', 12);
     const studentIds: string[] = [];
     
     for (const className of Object.keys(classIds)) {
@@ -394,7 +390,6 @@ async function seedTimetableData() {
         await db.insert(users).values({
           id: studentId,
           email: studentEmail,
-          password: hashedStudentPassword,
           name: studentName,
           role: 'student',
           schoolId: schoolId,
@@ -461,13 +456,13 @@ async function seedTimetableData() {
     console.log('🔑 LOGIN CREDENTIALS:');
     console.log('═══════════════════════════════════════════════════════');
     console.log('📧 Admin: admin@ecole-dakar.edu');
-    console.log('🔒 Password: Admin@123');
+    console.log('🔒 Password: the SEED_PASSWORD value');
     console.log('');
     console.log('📧 Teachers: [teacher-email]@school.edu');
-    console.log('🔒 Password: Teacher@123');
+    console.log('🔒 No login: invite them from Personnes');
     console.log('');
     console.log('📧 Students: [student-email]@school.edu');
-    console.log('🔒 Password: Student@123');
+    console.log('🔒 No login: invite them from Personnes');
     console.log('');
     console.log('✅ READY FOR TIMETABLE BUILDING!');
     console.log('═══════════════════════════════════════════════════════');

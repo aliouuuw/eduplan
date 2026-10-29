@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
       .select({
         role: users.role,
         isActive: users.isActive,
-        count: sql<number>`count(*)`,
+        count: sql<number>`count(*)`.mapWith(Number),
       })
       .from(users)
       .where(isNull(users.deletedAt))

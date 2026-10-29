@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { teacherClasses, classes, subjects, academicLevels, studentEnrollments, users } from '@/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, inArray, sql } from 'drizzle-orm';
 
 /**
  * GET /api/dashboard/teacher/classes
@@ -59,12 +59,12 @@ export async function GET(request: NextRequest) {
       ? await db
           .select({
             classId: studentEnrollments.classId,
-            count: sql<number>`count(*)`,
+            count: sql<number>`count(*)`.mapWith(Number),
           })
           .from(studentEnrollments)
           .where(
             and(
-              sql`${studentEnrollments.classId} IN ${classIds}`,
+              inArray(studentEnrollments.classId, classIds),
               eq(studentEnrollments.isActive, true)
             )
           )

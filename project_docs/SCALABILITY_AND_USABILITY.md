@@ -38,15 +38,10 @@ The dashboard flag list and correction list are still unbounded within the curre
 
 ## Safe migration procedure
 
-1. Back up the database using the deployment's existing backup process.
-2. Run the read-only preflight against the target environment (it also counts classes whose year label has no `academic_years` row; 0012 leaves those unlinked):
-   `bun --env-file=.env.local run scripts/check-teaching-integrity.ts`.
-3. Stop if any duplicate-group count is non-zero. Review the rows with the school owner. Do not delete automatically.
-4. Apply checked-in migrations through the deployment migration runner. Do not use `db:push` as a substitute.
-5. Run the preflight again and verify the teacher home.
-
-Migration 0011 adds indexes only. It does not merge rows, rewrite grades, or remove duplicates.
-No configured local or remote school database was migrated during this work.
+1. Take a Neon branch (or a backup) of the target database before migrating.
+2. Apply checked-in migrations with `DATABASE_URL=<target> bunx drizzle-kit migrate`. Do not use `db:push` as a substitute.
+3. If a migration adds a unique index to a table with data, it fails on duplicates instead of deleting rows. Review the rows with the school owner. Do not delete automatically.
+4. Verify the teacher home.
 
 ## Remaining delivery gates
 

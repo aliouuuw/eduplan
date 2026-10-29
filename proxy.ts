@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { auth } from '@/lib/auth';
+import { neonAuth } from '@/lib/neon-auth';
 import { isPublicRoute } from '@/lib/public-routes';
 
+const requireSession = neonAuth.middleware({ loginUrl: '/login' });
+
 export async function proxy(request: NextRequest) {
-  const session = await auth();
   const { pathname } = request.nextUrl;
 
   // Define redirect map for old to new routes
@@ -25,62 +26,11 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // If not authenticated and trying to access protected route
-  if (!session && !isPublicRoute(pathname)) {
-    return NextResponse.redirect(new URL('/login', request.url));
-  }
+  if (isPublicRoute(pathname)) return NextResponse.next();
 
-  // If authenticated and trying to access auth pages, redirect to role-specific dashboard
-  if (session && (pathname.startsWith('/login') || pathname.startsWith('/register'))) {
-    const userRole = session.user.role;
-    const roleRoutes = {
-      superadmin: '/dashboard/superadmin',
-      admin: '/dashboard/admin',
-      teacher: '/dashboard/teacher',
-      parent: '/dashboard/parent',
-      student: '/dashboard/student',
-    };
-    const defaultRoute = roleRoutes[userRole as keyof typeof roleRoutes];
-    if (defaultRoute) {
-      return NextResponse.redirect(new URL(defaultRoute, request.url));
-    }
-  }
-
-  // Role-based route protection
-  if (session && pathname.startsWith('/dashboard')) {
-    const userRole = session.user.role;
-    
-    // Route access rules
-    const roleRoutes = {
-      superadmin: ['/dashboard/superadmin'],
-      admin: ['/dashboard/admin'],
-      teacher: ['/dashboard/teacher'],
-      parent: ['/dashboard/parent'],
-      student: ['/dashboard/student'],
-    };
-
-    // Check if user is accessing their allowed routes
-    const allowedRoutes = roleRoutes[userRole as keyof typeof roleRoutes] || [];
-    const isAccessingAllowedRoute = allowedRoutes.some(route => pathname.startsWith(route));
-    
-    // If accessing /dashboard root, redirect to role-specific dashboard
-    if (pathname === '/dashboard') {
-      const defaultRoute = allowedRoutes[0];
-      if (defaultRoute) {
-        return NextResponse.redirect(new URL(defaultRoute, request.url));
-      }
-    }
-
-    // If trying to access unauthorized route, redirect to their dashboard
-    if (!isAccessingAllowedRoute && pathname !== '/dashboard') {
-      const defaultRoute = allowedRoutes[0];
-      if (defaultRoute) {
-        return NextResponse.redirect(new URL(defaultRoute, request.url));
-      }
-    }
-  }
-
-  return NextResponse.next();
+  // Signed out: to /login. Signed in: refreshes the Neon Auth session cookies (D49).
+  // Role checks live in each role's layout (src/app/dashboard/*/layout.tsx), which can read the database.
+  return requireSession(request);
 }
 
 export const config = {

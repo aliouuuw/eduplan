@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
-import AuthSessionProvider from "@/components/providers/session-provider";
 import { Toaster } from "@/components/ui/toaster";
 
 // D33: Poppins. next/font downloads it at build time and serves it from our domain (SIL OFL).
@@ -25,10 +24,8 @@ export default function RootLayout({
   return (
     <html lang="fr" className={poppins.variable}>
       <body>
-        <AuthSessionProvider>
-          {children}
-          <Toaster />
-        </AuthSessionProvider>
+        {children}
+        <Toaster />
       </body>
     </html>
   );
