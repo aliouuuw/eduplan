@@ -12,18 +12,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { authClient } from '@/lib/auth-client';
+import { frSpaces } from '@/lib/fr';
 
 const resetPasswordSchema = z
   .object({
-    newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+    newPassword: z.string().min(8, '8 caractères au minimum.'),
     confirmPassword: z.string(),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords don't match",
+    message: 'Les deux mots de passe diffèrent.',
     path: ['confirmPassword'],
   });
 
 type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
+
+const DEAD_LINK = frSpaces('Ce lien ne marche plus : il a déjà servi ou il a expiré.');
 
 // The reset email links here with ?token=…, or ?error=INVALID_TOKEN once the link is used or expired (D49).
 export default function ResetPasswordPage() {
@@ -38,7 +41,7 @@ function ResetPassword() {
   const params = useSearchParams();
   const router = useRouter();
   const token = params.get('token');
-  const [error, setError] = useState<string | null>(params.get('error') || !token ? 'This reset link is invalid or has expired.' : null);
+  const [error, setError] = useState<string | null>(params.get('error') || !token ? DEAD_LINK : null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<ResetPasswordForm>({
@@ -52,16 +55,16 @@ function ResetPassword() {
     setError(null);
     const result = await authClient.resetPassword({ newPassword: data.newPassword, token });
     setIsSubmitting(false);
-    if (result.error) return setError(result.error.message || 'This reset link is invalid or has expired.');
+    if (result.error) return setError(DEAD_LINK);
     router.push('/login');
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-background px-5 py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Choose a new password</CardTitle>
-          <CardDescription>You will sign in with it right after.</CardDescription>
+          <CardTitle className="font-display text-2xl">Nouveau mot de passe</CardTitle>
+          <CardDescription>Vous vous connecterez avec lui juste après.</CardDescription>
         </CardHeader>
         <CardContent>
           {token ? (
@@ -72,7 +75,7 @@ function ResetPassword() {
                   name="newPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>New password</FormLabel>
+                      <FormLabel>Nouveau mot de passe</FormLabel>
                       <FormControl>
                         <Input type="password" autoComplete="new-password" {...field} disabled={isSubmitting} />
                       </FormControl>
@@ -85,7 +88,7 @@ function ResetPassword() {
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Confirm password</FormLabel>
+                      <FormLabel>Confirmez-le</FormLabel>
                       <FormControl>
                         <Input type="password" autoComplete="new-password" {...field} disabled={isSubmitting} />
                       </FormControl>
@@ -95,7 +98,7 @@ function ResetPassword() {
                 />
                 {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
                 <Button type="submit" className="w-full" loading={isSubmitting}>
-                  Save password
+                  Enregistrer
                 </Button>
               </form>
             </Form>
@@ -103,8 +106,8 @@ function ResetPassword() {
             <p role="alert" className="text-sm text-destructive">{error}</p>
           )}
           <p className="mt-6 text-sm text-muted-foreground">
-            <Link href="/forgot-password" className="font-semibold text-primary">
-              Request a new link
+            <Link href="/forgot-password" className="font-medium text-foreground underline underline-offset-4">
+              Demander un nouveau lien
             </Link>
           </p>
         </CardContent>

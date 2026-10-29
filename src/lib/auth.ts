@@ -1,27 +1,19 @@
 import { cache } from 'react';
-import { and, eq, isNull } from 'drizzle-orm';
 
-import { users } from '../db/schema';
+import { profileForAuthUser } from './data/profiles';
 import { db } from './db';
 import { neonAuth } from './neon-auth';
 
 export type Session = { user: { id: string; name: string; email: string; role: string; schoolId: string | null } };
 
-/**
- * The signed-in EduPlan user, or null. Neon Auth proves who it is (D49); our users row gives the role and
- * school. The row is matched on auth_user_id, never on email: anyone can sign up with an email that has
- * a profile, so an email match would hand them that account. Inactive and soft-deleted users get null.
- */
+/** The signed-in EduPlan user, or null. Neon Auth proves who it is (D49); the profile gives role and school. */
 export const auth = cache(async (): Promise<Session | null> => {
   const { data } = await neonAuth.getSession();
   if (!data?.user) return null;
-  const [user] = await db
-    .select({ id: users.id, name: users.name, email: users.email, role: users.role, schoolId: users.schoolId })
-    .from(users)
-    .where(and(eq(users.authUserId, data.user.id), eq(users.isActive, true), isNull(users.deletedAt)))
-    .limit(1);
+  const user = await profileForAuthUser(db, data.user.id);
   return user ? { user } : null;
 });
+
 // Utility functions for role checking
 export function hasRole(userRole: string, requiredRole: string): boolean {
   const roleHierarchy = {

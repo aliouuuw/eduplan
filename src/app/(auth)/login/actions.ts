@@ -1,10 +1,9 @@
 'use server';
 
-import { and, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { users } from '@/db/schema';
 import { fail, ok, type ActionResult } from '@/lib/action-result';
+import { profileForAuthUser } from '@/lib/data/profiles';
 import { db } from '@/lib/db';
 import { neonAuth } from '@/lib/neon-auth';
 
@@ -19,12 +18,7 @@ export async function signInAction(input: z.input<typeof credentials>): Promise<
   const { data, error } = await neonAuth.signIn.email(parsed.data);
   if (error || !data) return fail(error?.status === 401 ? 'E-mail ou mot de passe incorrect.' : 'Connexion impossible. Réessayez.');
 
-  const [profile] = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(and(eq(users.authUserId, data.user.id), eq(users.isActive, true), isNull(users.deletedAt)))
-    .limit(1);
-  if (!profile) {
+  if (!(await profileForAuthUser(db, data.user.id))) {
     await neonAuth.signOut();
     return fail("Ce compte n'a pas accès à EduPlan.");
   }
